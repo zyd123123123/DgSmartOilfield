@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.PcUnitCuopDao">
+	<!-- 新应用开始 -->
+	<select id="select" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity"
+		resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+		select
+		id,
+		parentid,
+		unitname,
+		oilfield,
+		uniteproperty,
+		uniteproperty1,
+		parentname,
+		org_id,
+		parent_id,
+		order_id,
+		org_level
+		from PC_SYS_UNIT_CODE
+		<where> parentid like'dq%' and parentid in (select id from PC_SYS_UNIT_CODE)
+			<if test="oilfield!=null   and oilfield.length() &gt;0">
+				and oilfield like '${oilfield}%'
+			</if>
+			<if test="id!=null and id.length() &gt;0">
+				and id=#{id}
+			</if>
+			<if test="parentid!=null and parentid.length() &gt;0">
+				and parentid=#{parentid}
+			</if>
+			<if test="whc!=null and whc.length() &gt;0">
+				and ${whc}
+			</if>
+		</where>
+		order by to_number(substr(id,3))
+	</select>
+	
+	<!-- 手机版查询作业分配1 -->
+	<select id="selectByParam2" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity"
+		resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+	select * from PC_SYS_UNIT_CODE
+		<where>
+		<if test="unitname!=null and unitname.length() &gt; 0">
+			unitname=#{unitname}
+		</if>
+		<if test="id!=null and id.length() &gt; 0">
+			id=#{id}
+		</if>
+		<if test="org_id!=null and org_id.length() &gt; 0">
+			org_id=#{org_id}
+		</if>
+		${whc}
+		</where>
+	
+	</select>
+		<!-- 手机版查询作业分配2 -->
+	<select id="selectByParam6" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity"
+		resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+	select * from PC_SYS_UNIT_CODE
+	<where>
+		<if test="unitname!=null and unitname.length() &gt; 0">
+			unitname=#{unitname}
+		</if>
+		<if test="id!=null and id.length() &gt; 0">
+			id=#{id}
+		</if>
+		<if test="org_id!=null and org_id.length() &gt; 0">
+			org_id=#{org_id}
+		</if>
+		${whc}
+		</where>
+	</select>
+	
+	<!-- 手机 作业分配1  分配涉及 -->
+	<select id="queryObject" resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+		select * from PC_SYS_UNIT_CODE
+		<where>
+		<if test="unitname!=null and unitname.length() &gt; 0">
+			unitname=#{unitname}
+		</if>
+		<if test="id!=null and id.length() &gt; 0">
+			id=#{id}
+		</if>
+		<if test="org_id!=null and org_id.length() &gt; 0">
+			org_id=#{org_id}
+		</if>
+		${whc}
+		</where>
+	</select>
+	<select id="queryList" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity" resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+		${whc}
+	</select>
+	
+	<select id="selectByParam" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity"
+		resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+		select
+		id,
+		parentid,
+		unitname,
+		oilfield,
+		uniteproperty,
+		uniteproperty1,
+		parentname,
+		org_id,
+		parent_id,
+		order_id,
+		org_level
+		from PC_SYS_UNIT_CODE
+		<where> parentid in (select id from PC_SYS_UNIT_CODE)
+			<if test="parentid!=null and parentid.length() &gt;0">
+				and parentid like'${parentid}%'
+			</if>
+			<if test="whc!=null and whc.length() &gt;0">
+				and ${whc}
+			</if>
+		</where>
+		order by id
+	</select>
+	
+	<select id="selectById" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity"
+		resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+		select * from PC_SYS_UNIT_CODE
+		<where>
+			<if test="parm!=null and parm.length() &gt; 0">
+				${parm}
+			</if>
+		</where>
+	</select>
+	
+	<!-- 模糊查询 -->
+	<select id="selectByParam1" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity"
+		resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+		select id,parentid,unitname,parentname from PC_SYS_UNIT_CODE
+		<where>
+			<if test="whc!=null and whc.length() &gt; 0">
+				  ${whc}
+			</if>
+		</where>
+		order by order_id
+	</select>
+	
+	
+	
+	<!-- 通用查询 -->
+	<select id="selectByParam3" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity"
+		resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+		${whc}
+	</select>
+	
+	<!-- 查询厂级生产单位编码、名称-->
+		<select id="selectByParam4" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity"
+		resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+		
+		SELECT PC_SYS_UNIT_CODE.id, PC_SYS_UNIT_CODE.UNITNAME  from  PC_CBS_FIRST_PARTY  
+		INNER JOIN  PC_SYS_UNIT_CODE ON PC_CBS_FIRST_PARTY.ID=PC_SYS_UNIT_CODE.ID
+		<where>
+		PC_SYS_UNIT_CODE.OILFIELD=#{oilfield}
+		<if test="unitname!=null and unitname.length() &gt; 0">
+		  and 	PC_SYS_UNIT_CODE.unitname=#{unitname}
+		</if>
+		<if test="id!=null and id.length() &gt; 0">
+		  and	 PC_SYS_UNIT_CODE.id  like  #{id}||'%'
+		</if>
+		</where>
+		ORDER BY PC_CBS_FIRST_PARTY.ord
+		
+	</select>
+	
+	<select id="selectByParam5" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity"
+		resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+		
+<!-- 		SELECT id, UNITNAME  from PC_SYS_UNIT_CODE -->
+<!-- 		where  PC_SYS_UNIT_CODE.parentid='pc0dq' and PC_SYS_UNIT_CODE.uniteproperty in ('生产','作业')  -->
+<!-- 		ORDER BY id -->
+		SELECT PC_SYS_UNIT_CODE.id, PC_SYS_UNIT_CODE.UNITNAME  from PC_SYS_UNIT_CODE
+		LEFT JOIN PC_CBS_COMPANY ON PC_CBS_COMPANY.DWDM = PC_SYS_UNIT_CODE.id 
+		where  PC_SYS_UNIT_CODE.oilfield=#{oilfield} and (PC_SYS_UNIT_CODE.uniteproperty2 like  '%作业(外)%'  or   PC_SYS_UNIT_CODE.uniteproperty2 like  '%作业(内)%')and PC_CBS_COMPANY.DWDM is null
+		ORDER BY PC_SYS_UNIT_CODE.id
+		
+	</select>
+	
+	
+	<select id="selectByParam60" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity"
+		resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+		
+		SELECT id, UNITNAME,uniteproperty2  from PC_SYS_UNIT_CODE
+		where    PC_SYS_UNIT_CODE.uniteproperty2  like '%作业队%'
+			<if test="parentid!=null and parentid.length() &gt;0">
+				and PC_SYS_UNIT_CODE.parentid=#{parentid}
+			</if>
+			<if test="parentname!=null and parentname.length() &gt;0">
+				and PC_SYS_UNIT_CODE.parentid=(select id from PC_SYS_UNIT_CODE where UNITNAME=#{parentname} )
+			</if>
+		ORDER BY id
+		
+	</select>
+	<select id="selectByParam61" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity"
+		resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+		
+		SELECT A . ID, A .UNITNAME, A .uniteproperty2, b.sjid  FROM PC_SYS_UNIT_CODE A 
+		LEFT JOIN PC_CBS_QUALIFICATION_INFO B ON  B.termid = A .id  
+		WHERE a.parentid=#{parentid}  and A .uniteproperty2  like '%作业队%' AND b.sjid is null
+		ORDER BY ID
+	</select>
+	
+	<select id="selectByParam7" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity"
+		resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+		
+		SELECT id, UNITNAME,uniteproperty2  from PC_SYS_UNIT_CODE
+		left JOIN PC_CBS_PERSON on  PC_CBS_PERSON.TERMID =PC_SYS_UNIT_CODE.id
+		where  PC_SYS_UNIT_CODE.parentid=#{parentid} and  PC_SYS_UNIT_CODE.oilfield=#{oilfield} and PC_SYS_UNIT_CODE.uniteproperty2 like '%作业队%' and PC_CBS_PERSON.TERMID is null
+		ORDER BY id
+		
+	</select>
+	<!-- 大庆权限查询，判断场内生产作业，场外作业队 -->
+	<select id="selectByParam8" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity"
+		resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+		
+		select * from PC_SYS_UNIT_CODE
+		<where>
+		<if test="unitname!=null and unitname.length() &gt; 0">
+			unitname=#{unitname}
+		</if>
+		<if test="id!=null and id.length() &gt; 0">
+			id=#{id}
+		</if>
+		${whc}
+		</where>
+		</select>
+		<!-- 大庆权限查询，判断场内生产作业，场外作业队 -->
+	<select id="selectDq" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity"
+		resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+		
+		SELECT 	ID, UNITNAME, uniteproperty FROM PC_SYS_UNIT_CODE 
+		<where>
+		 PC_SYS_UNIT_CODE.uniteproperty IN ('生产', '作业') 
+		<if test="oilfield!=null and oilfield.length() &gt; 0">
+			and oilfield =#{oilfield}
+		</if>
+		<if test="id!=null and id.length() &gt; 0">
+			AND PC_SYS_UNIT_CODE.parentid = (select parentid from PC_SYS_UNIT_CODE where id = #{id})
+		</if>
+		</where>
+		 ORDER BY ID 
+	</select>
+
+
+
+
+</mapper>

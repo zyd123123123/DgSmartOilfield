@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydx.oauth2.domain.UserDTO">
+
+    <select id="loadUserByUsername" resultType="com.sydx.oauth2.domain.UserDTO">
+		select * from IDA_USER where user_name=#{user_name}
+	</select>
+
+    <select id="getKey" resultType="com.sydx.oauth2.entity.KeyEntity">
+           select * from a5jxupc.PC_SYS_SECRETKEY where  KEYNAME='cuop1'
+	</select>
+
+    <select id="getUserByName"  parameterType="com.sydx.oauth2.domain.UserDTO" resultType="com.sydx.oauth2.domain.UserDTO">
+        SELECT user_account,user_password,user_role_names
+        FROM ida_USER
+        WHERE user_account = #{userAccount}
+    </select>
+
+    <select id="getUserPermissions" resultType="String">
+        SELECT d.permission_auth as permission
+        FROM ida_user a
+        LEFT JOIN ida_user_role b
+        on a.user_id= b.user_id
+        LEFT JOIN ida_role_permission c
+        on b.role_id = c.role_id
+        LEFT JOIN ida_permission d
+        on c.permission_id = d.permission_id
+        WHERE a.user_account = #{userAccount} and d.permission_auth is not null
+    </select>
+
+    <select id="getAllRolesByPermission" resultType="com.sydx.oauth2.domain.UserDTO">
+        SELECT a.permission_url as permissionUrl,CONCAT(CONCAT('roles[',group_concat(c.role_name,',')),']') as roleName
+        from ida_permission a
+        left join ida_role_permission b
+        on a.permission_id = b.permission_id
+        left join ida_role c
+        on b.role_id = c.role_id
+        WHERE a.permission_url is not NULL and a.permission_url != ''
+        GROUP BY a.permission_url
+        HAVING roleName is not null
+    </select>
+</mapper>

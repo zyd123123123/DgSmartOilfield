@@ -1,0 +1,1785 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydx.aqsc.dao.Security.GxDao">
+    <!--标准工序查询 查询总页数 -->
+    <select id="selectCount" parameterType="com.sydx.aqsc.entity.Security.GxEntity" resultType="int">
+        select count(*) from PC_AQSC_STA_PROCESS
+        <where>
+            is_use = '1' and (oilfield = #{oilfield} or oilfield='pc')
+            <if test="spname!=null and spname.length() &gt; 0">
+                and spname like '%'||#{spname}||'%'
+            </if>
+            <if test="aothname!=null and aothname.length() &gt; 0">
+                and aothname like '%'||#{aothname}||'%'
+            </if>
+            <if test="circuit_id!=null and circuit_id.length() &gt; 0">
+                and CIRCUIT_ID = #{circuit_id}
+            </if>
+            <if test="dzzt!=null and dzzt.length() &gt; 0">
+                and dzzt =#{dzzt}
+            </if>
+            <!-- and WHETHER_AUDIT='1' -->
+        </where>
+    </select>
+    <!--标准工序查询  -->
+    <select id="findAll" parameterType="com.sydx.aqsc.entity.Security.GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxEntity">
+        select * from (
+        select p.*,rownum row_num from (
+        SELECT
+        K.SPID,
+        K.SPNAME,
+        K.OILFIELD,
+        K.STATE,
+        K.USER_ID,
+        K.INTIME,
+        K.ENG_CODE,
+        K.AOTHNAME,
+        K.IS_EXTRA,
+        K.IS_USE,
+        K.BZGS,
+        K.CIRCUIT_ID,
+        K.DZZT,
+        K.DZSM,
+        k.ZYLX,
+        K.GXLB,
+        K.BZCS
+        FROM PC_AQSC_STA_PROCESS K
+        <where>
+            is_use = '1' and (K.oilfield = #{oilfield} or K.oilfield='pc')
+            <if test="spname!=null and spname.length() &gt; 0">
+                and spname like '%'||#{spname}||'%'
+            </if>
+            <if test="aothname!=null and aothname.length() &gt; 0">
+                and aothname like '%'||#{aothname}||'%'
+            </if>
+            <if test="circuit_id!=null and circuit_id.length() &gt; 0">
+                and K.CIRCUIT_ID = #{circuit_id}
+            </if>
+            <if test="dzzt!=null and dzzt.length() &gt; 0">
+                and dzzt =#{dzzt}
+            </if>
+        </where>
+        order by nlssort(K.SPNAME,'NLS_SORT=SCHINESE_PINYIN_M')
+        ) p
+        ) where row_num &lt;= #{endRow} and row_num &gt;= #{startRow}
+    </select>
+    <select id="circuitSelect" parameterType="com.sydx.aqsc.entity.Security.GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxEntity">
+
+             select  SPID,CASE WHEN AOTHNAME is NOT NULL THEN SPNAME||'('||AOTHNAME||')' ELSE SPNAME END SPNAME       from PC_AQSC_STA_PROCESS
+             WHERE IS_EXTRA='1' and IS_USE='1' and (PC_AQSC_STA_PROCESS.oilfield = #{oilfield} or PC_AQSC_STA_PROCESS.oilfield='pc')
+              ORDER BY nlssort(SPNAME,'NLS_SORT=SCHINESE_PINYIN_M')
+        </select>
+    <select id="tygxSelect" parameterType="com.sydx.aqsc.entity.Security.GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxEntity">
+
+            SELECT CIRCUIT_ID,CIRCUIT_NAME  FROM PC_AQSC_PRO_CIRCUIT_CODE
+            where STATE='1'
+            ORDER BY nlssort(CIRCUIT_NAME,'NLS_SORT=SCHINESE_PINYIN_M')
+        </select>
+    <select id="findAll1" parameterType="com.sydx.aqsc.entity.Security.GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxEntity">
+
+			 SELECT
+				a.table_head_chs PARAM,
+				a.field_sq ID,
+				a.unit units,
+				a.FIELD_TYPE,
+				a.IS_NULL,
+				a.CELL_TYPE datatype,
+				a.STIPULATE tempdata,
+				a.CODE_ASSOCIATE_TABLE,
+				a.CODE_ASSOCIATE_FIELD,
+				a.circuit_id,
+				a.TABLE_HEAD,
+				b.IS_SHOW_OIL,
+				b.IS_NULL_OIL,
+				b.UNIT_ID
+			FROM   PC_AQSC_PRO_TABLE_HEAD a
+			inner JOIN (select distinct * from PC_AQSC_PRO_TABLE_HEAD_FACTORY where  UNIT_ID in ('${oilfield}','${customtype}') and spid= #{spid} and IS_SHOW_OIL='1' ) b on a.circuit_id=b.circuit_id and a.TABLE_HEAD=b.TABLE_HEAD
+			WHERE  a.circuit_id = #{circuit_id}    AND a.table_head != 'TIME'
+			ORDER BY   a.field_sq
+
+        </select>
+    <select id="gxsgcs" parameterType="com.sydx.aqsc.entity.Security.GxcsEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxcsEntity">
+			SELECT
+				P .*, ROWNUM row_num
+			FROM
+				(
+					SELECT
+			DISTINCT
+						a.CIRCUIT_ID,
+						a.TABLE_HEAD,
+						a.TABLE_HEAD_CHS,
+						a.SHOW_OR_NOT,
+						a.FIELD_SQ,
+						a.UNIT,
+						a.CELL_TYPE,
+						a.CODE_ASSOCIATE_FIELD,
+						a.CODE_ASSOCIATE_TABLE,
+						a.MULTI_ROW,
+						a.IS_NULL,
+						b.IS_NULL_OIL,
+						b.IS_SHOW_OIL,
+						a.FIELD_TYPE,
+						a.STIPULATE
+					FROM
+						PC_AQSC_PRO_TABLE_HEAD a LEFT JOIN PC_AQSC_PRO_TABLE_HEAD_FACTORY b on a.CIRCUIT_ID = b.CIRCUIT_ID and a.TABLE_HEAD=b.TABLE_HEAD
+						and b.UNIT_ID=#{oilfield} and SPID =#{spid}
+					WHERE
+						a. CIRCUIT_ID=#{circuit_id,jdbcType=VARCHAR}
+					ORDER BY
+						a.FIELD_SQ
+				) P
+        </select>
+
+    <delete id="removeParamBd" parameterType="com.sydx.aqsc.entity.Security.GxcsEntity">
+
+		delete from PC_AQSC_PRO_TABLE_HEAD_FACTORY where  unit_id=#{oilfield} and  circuit_id=#{circuit_id} and spid=#{spid}
+
+	</delete>
+    <insert id="saveParamBd" parameterType="com.sydx.aqsc.entity.Security.GxcsEntity">
+        insert into
+        PC_AQSC_PRO_TABLE_HEAD_FACTORY(
+        circuit_id,
+        unit_id,
+        is_null_oil,
+        is_show_oil,
+        table_head,
+        spid,
+        oilfield,
+        create_user,
+        create_time
+        )
+        (
+        <foreach collection="entityList" index="" item="item" separator="union all">
+            select
+            #{circuit_id,jdbcType=VARCHAR},
+            #{oilfield,jdbcType=VARCHAR},
+            #{item.is_null_oil,jdbcType=VARCHAR},
+            #{item.is_show_oil,jdbcType=VARCHAR},
+            #{item.table_head,jdbcType=VARCHAR},
+            #{spid,jdbcType=INTEGER},
+            #{oilfield,jdbcType=VARCHAR},
+            #{create_user,jdbcType=VARCHAR},
+            sysdate
+            from dual
+        </foreach>
+        )
+    </insert>
+
+    <!--<select id="findAll2" parameterType="com.sydx.aqsc.entity.Security.GxcsEntity"	resultType="com.sydx.aqsc.entity.Security.GxcsEntity">-->
+    <!--SELECT-->
+    <!--CIRCUIT_ID,-->
+    <!--TABLE_HEAD,-->
+    <!--TABLE_HEAD_CHS,-->
+    <!--SHOW_OR_NOT,-->
+    <!--FIELD_SQ,-->
+    <!--UNIT,-->
+    <!--CELL_TYPE,-->
+    <!--CODE_ASSOCIATE_FIELD,-->
+    <!--CODE_ASSOCIATE_TABLE,-->
+    <!--MULTI_ROW,-->
+    <!--IS_NULL,-->
+    <!--FIELD_TYPE,-->
+    <!--STIPULATE-->
+    <!--from  PC_AQSC_PRO_TABLE_HEAD-->
+    <!--where   show_or_not ='1' and  CIRCUIT_ID=#{circuit_id,jdbcType=VARCHAR}-->
+    <!--order by FIELD_SQ-->
+    <!--</select>-->
+    <select id="findAll2" parameterType="com.sydx.aqsc.entity.Security.GxcsEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxcsEntity">
+        SELECT
+			A .CIRCUIT_ID,
+			A .TABLE_HEAD,
+			A .IS_SHOW,
+			A .UNIT_ID,
+			b.TABLE_HEAD_CHS,
+			b.SHOW_OR_NOT,
+			b.FIELD_SQ,
+			b.UNIT,
+			b.CELL_TYPE,
+			b.CODE_ASSOCIATE_FIELD,
+			b.CODE_ASSOCIATE_TABLE,
+			b.MULTI_ROW,
+			b.IS_NULL,
+			b.FIELD_TYPE,
+			b.STIPULATE
+		FROM
+			PC_AQSC_PRO_TABLE_HEAD_FACTORY A
+		LEFT JOIN PC_AQSC_PRO_TABLE_HEAD b ON A .TABLE_HEAD = b.TABLE_HEAD
+		AND A .CIRCUIT_ID = b.CIRCUIT_ID
+		WHERE
+			A .CIRCUIT_ID = #{circuit_id,jdbcType=VARCHAR}
+		AND A .UNIT_ID = #{oilfield} AND A .spid = #{spid}
+		AND A .IS_SHOW_OIL IS NOT NULL
+		ORDER BY
+			b.FIELD_SQ
+        </select>
+
+    <select id="selectMaxId" parameterType="com.sydx.aqsc.entity.Security.GxEntity" resultType="string">
+            select max(spid) as spid from PC_AQSC_STA_PROCESS
+        </select>
+
+    <update id="insertGx" parameterType="com.sydx.aqsc.entity.Security.GxEntity">
+            insert into
+            PC_AQSC_STA_PROCESS(
+            spid,
+            spname,
+            circuit_id,
+            oilfield,
+            user_id,
+            state,
+            buildcontent,
+            intime,
+            eng_code,
+            aothname,
+            is_extra,
+            is_use,
+            bzgs,
+            zylx,
+            gxlb,
+            bzcs
+            )
+            values(
+            #{spid,jdbcType=INTEGER},
+            #{spname,jdbcType=VARCHAR},
+            #{circuit_id,jdbcType=VARCHAR},
+            #{oilfield,jdbcType=VARCHAR},
+            #{user_id,jdbcType=INTEGER},
+            #{state,jdbcType=INTEGER},
+            #{buildcontent,jdbcType=VARCHAR},
+            sysdate,
+            #{eng_code,jdbcType=VARCHAR},
+            #{aothname,jdbcType=VARCHAR},
+            #{is_extra,jdbcType=VARCHAR},
+            #{is_use,jdbcType=VARCHAR},
+            #{bzgs,jdbcType=VARCHAR},
+            #{zylx,jdbcType=VARCHAR},
+            #{gxlb,jdbcType=VARCHAR},
+            #{bzcs,jdbcType=VARCHAR}
+            )
+        </update>
+    <select id="selectGxProcess" parameterType="com.sydx.aqsc.entity.Security.GxnrmbEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxnrmbEntity">
+            select *  from PC_AQSC_STA_PROCESS_CONTENT where   SPID=#{spid} and CUSTOMTYPE=#{customtype} and TAB=#{tab}
+        </select>
+    <update id="updateGxProcess" parameterType="com.sydx.aqsc.entity.Security.GxnrmbEntity">
+            update PC_AQSC_STA_PROCESS_CONTENT
+            set customname=#{customname,jdbcType=VARCHAR},
+            BUILDCONTENT=#{buildcontent,jdbcType=VARCHAR} ,
+            REQUIREMENT=#{requirement,jdbcType=VARCHAR},
+            STATE=1,
+            LAST_USER=#{last_user},
+            LAST_TIME=sysdate
+            where  SPID=#{spid}  and customid=#{customid}
+        </update>
+    <update id="gx_mb_remove" parameterType="com.sydx.aqsc.entity.Security.GxnrmbEntity">
+            update PC_AQSC_STA_PROCESS_CONTENT
+            set STATE=0,
+            LAST_USER=#{last_user},
+            LAST_TIME=sysdate
+            where customid=#{customid}
+        </update>
+
+    <insert id="insertGxProcess" parameterType="com.sydx.aqsc.entity.Security.GxnrmbEntity">
+
+        insert into PC_AQSC_STA_PROCESS_CONTENT (OILFIELD,SPID,CUSTOMID,CUSTOMNAME,BUILDCONTENT,CUSTOMTYPE,STATE,CREATE_USER,CREATE_TIME,IP,CIRCUIT_ID,TAB,REQUIREMENT)
+        values
+        (#{oilfield,jdbcType=VARCHAR},
+        #{spid,jdbcType=INTEGER},
+        #{customid,jdbcType=VARCHAR},
+        #{customname,jdbcType=VARCHAR},
+        #{buildcontent,jdbcType=VARCHAR},
+        #{customtype,jdbcType=VARCHAR},
+        '1',
+        #{create_user,jdbcType=VARCHAR},
+        sysdate,
+        #{ip,jdbcType=VARCHAR},
+        #{circuit_id,jdbcType=VARCHAR},
+        #{tab,jdbcType=VARCHAR},
+        #{requirement,jdbcType=VARCHAR}
+        )
+
+        </insert>
+
+    <update id="removeSave"
+            parameterType="com.sydx.aqsc.entity.Security.GxEntity">
+            update PC_AQSC_STA_PROCESS set
+            is_use='2',intime=sysdate
+            where spid=#{spid}
+        </update>
+
+    <update id="updateGx" parameterType="com.sydx.aqsc.entity.Security.GxEntity">
+        <if test="oilfield!=null and oilfield.length() &gt; 0 and oilfield=='pc0dq'">
+            update PC_AQSC_STA_PROCESS
+            set spname=#{spname,jdbcType=VARCHAR},
+            aothname=#{aothname,jdbcType=VARCHAR},
+            circuit_id=#{circuit_id,jdbcType=VARCHAR},
+            bzgs=#{bzgs,jdbcType=VARCHAR},
+            zylx=#{zylx,jdbcType=VARCHAR},
+            gxlb=#{gxlb,jdbcType=VARCHAR},
+            intime=sysdate
+            where spid=#{spid}
+        </if>
+        <if test="oilfield!=null and oilfield.length() &gt; 0 and oilfield=='pc0jd'">
+            update PC_AQSC_STA_PROCESS
+            set spname=#{spname,jdbcType=VARCHAR},
+            aothname=#{aothname,jdbcType=VARCHAR},
+            bzgs=#{bzgs,jdbcType=VARCHAR},
+            DZZT=#{dzzt,jdbcType=VARCHAR},
+            DZSM=#{dzsm,jdbcType=VARCHAR},
+            zylx=#{zylx,jdbcType=VARCHAR},
+            gxlb=#{gxlb,jdbcType=VARCHAR},
+            bzcs=#{bzcs,jdbcType=VARCHAR},
+            intime=sysdate
+            where spid=#{spid}
+        </if>
+
+    </update>
+
+    <!-- 施工工序施工单元 -->
+    <select id="sgdyList" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgdyEntity">
+		SELECT
+		    xh,
+			spid,
+			spname,
+			sgdymc,
+			sgdyid,
+			sgdylb,
+			zysb,
+			ptsb,
+			ryyq,
+			jkyq,
+			aqyq,
+			hbyq,
+			gyjzlyq,
+			sbyq,
+			zlyq,
+			bggl,
+			jiaf,
+			yif,
+			bingf,
+			lrr,
+			lrsj,
+			to_char(lrsj,'yyyy-mm-dd hh24:mi:ss') lrsjs,
+			lrrip,
+			xgr,
+			xgsj,
+			ytid
+		FROM
+			PC_AQSC_SAFETY_ENVIRONMENT
+		where spid=#{spid} and ytid =#{ytid}
+		order by to_number(xh) asc
+	</select>
+    <!-- 施工工序施工单元 -->
+    <select id="gx_sgdy_list" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgdyEntity">
+		SELECT
+		    A.xh,
+			A.spid,
+			A.spname,
+			B.sgdymc,
+			B.sgdyid,
+           DECODE(B.sgdylb,'1','作业准备','2','井筒（含完井）部分','3','地面部分','')sgdylb,
+			B.zysb,
+			B.ptsb,
+			B.ryyq,
+			B.jkyq,
+			B.aqyq,
+			B.hbyq,
+			B.gyjzlyq,
+			B.sbyq,
+			B.zlyq,
+			B.bggl,
+			B.jiaf,
+			B.yif,
+			B.bingf,
+			B.circuit_id
+		FROM PC_AQSC_SAFETY_ENVIRONMENT A
+		inner join  PC_AQSC_CONSTRUCTION_UNIT B on  A.sgdyid=B.sgdyid
+		where A.spid=#{spid} and A.ytid =#{ytid}
+		order by to_number(A.xh) asc
+	</select>
+    <delete id="sgdyDelect" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity">
+
+		delete from PC_AQSC_SAFETY_ENVIRONMENT where  spid=#{spid}
+
+	</delete>
+
+    <insert id="sgdyInsert" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity">
+
+
+        insert into
+        PC_AQSC_SAFETY_ENVIRONMENT(
+        xh,
+        spid,
+        spname,
+        sgdymc,
+        SGDYID,
+        sgdylb,
+        zysb,
+        ptsb,
+        ryyq,
+        jkyq,
+        aqyq,
+        hbyq,
+        gyjzlyq,
+        sbyq,
+        zlyq,
+        bggl,
+        jiaf,
+        yif,
+        bingf,
+        lrr,
+        lrsj,
+        ytid
+        )
+        (
+        <foreach collection="entityList" index="" item="item" separator="union all">
+            select
+            #{item.xh,jdbcType=VARCHAR},
+            #{spid,jdbcType=VARCHAR},
+            #{spname,jdbcType=VARCHAR},
+            #{item.sgdymc,jdbcType=VARCHAR},
+            #{item.sgdyid,jdbcType=VARCHAR},
+            #{item.sgdylb,jdbcType=VARCHAR},
+            #{item.zysb,jdbcType=VARCHAR},
+            #{item.ptsb,jdbcType=VARCHAR},
+            #{item.ryyq,jdbcType=VARCHAR},
+            #{item.jkyq,jdbcType=VARCHAR},
+            #{item.aqyq,jdbcType=VARCHAR},
+            #{item.hbyq,jdbcType=VARCHAR},
+            #{item.gyjzlyq,jdbcType=VARCHAR},
+            #{item.sbyq,jdbcType=VARCHAR},
+            #{item.zlyq,jdbcType=VARCHAR},
+            #{item.bggl,jdbcType=VARCHAR},
+            #{item.jiaf,jdbcType=VARCHAR},
+            #{item.yif,jdbcType=VARCHAR},
+            #{item.bingf,jdbcType=VARCHAR},
+            #{lrr,jdbcType=VARCHAR},
+            sysdate,
+            #{ytid,jdbcType=VARCHAR}
+            from dual
+        </foreach>
+        )
+    </insert>
+
+    <select id="hseSelect" parameterType="com.sydx.aqsc.entity.Security.GxHseEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxHseEntity">
+        select  ID hseid,NAME hsename from  PC_AQSC_RISK_PREVENTION where  FLAG=#{flag}  ORDER BY nlssort(NAME,'NLS_SORT=SCHINESE_PINYIN_M')
+	</select>
+
+    <select id="gxhseList" parameterType="com.sydx.aqsc.entity.Security.GxHseEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxHseEntity">
+				SELECT B.ID hseid,B.NAME hsename ,B.flag FROM PC_AQSC_STA_PROCESS_HSE A
+				INNER JOIN PC_AQSC_RISK_PREVENTION B ON B.ID = A.HSEID
+				WHERE A.SPID=#{spid}
+	</select>
+    <select id="hsenrSelect" parameterType="com.sydx.aqsc.entity.Security.GxHseEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxHseEntity">
+        select  ID hseid,NAME hsename ,CONTENT,FLAG  from  PC_AQSC_RISK_PREVENTION where  ID=#{hseid}
+	</select>
+    <delete id="hse_bdDelete" parameterType="com.sydx.aqsc.entity.Security.GxHseEntity">
+          delete from PC_AQSC_STA_PROCESS_HSE where  spid=#{spid} and flag=#{flag}
+	</delete>
+
+    <insert id="hse_bdInsert" parameterType="com.sydx.aqsc.entity.Security.GxHseEntity">
+
+
+       insert into  PC_AQSC_STA_PROCESS_HSE (
+       OILFIELD,
+       SPID,
+       HSEID,
+       FLAG,
+       CREATE_USER,
+       CREATE_TIME,
+       IP
+       )
+       VALUES
+        (
+        #{oilfield,jdbcType=VARCHAR},
+        #{spid,jdbcType=INTEGER},
+        #{hseid,jdbcType=INTEGER},
+        #{flag,jdbcType=VARCHAR},
+        #{create_user,jdbcType=VARCHAR},
+        sysdate,
+        #{ip,jdbcType=VARCHAR}
+        )
+
+	</insert>
+    <!-- 根据spid查询 -->
+    <select id="selectById"
+            parameterType="com.sydx.aqsc.entity.Security.GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxEntity">
+		select
+		id,
+		param,
+		spid,
+		spname,
+		oilfield,
+		state,
+		remark,
+		datatype,
+		units,
+		tempdata
+		from PC_AQSC_STA_PROCESS_PARAM
+		where OILFIELD =#{oilfield} and  spid = #{spid} order by id
+	</select>
+
+    <select id="gxmbSelect" parameterType="com.sydx.aqsc.entity.Security.GxnrmbEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxnrmbEntity">
+        select
+        K.SPID,
+        K.SPNAME,
+        K.circuit_id,
+        H.BUILDCONTENT,
+        H.requirement,
+        H.customname
+        from PC_AQSC_STA_PROCESS K
+        left join (select SPID,BUILDCONTENT,requirement ,customname from PC_AQSC_STA_PROCESS_CONTENT where
+        CUSTOMID=#{customid,jdbcType=VARCHAR} and STATE=1) H on H.SPID=K.SPID
+        where K.spid=#{spid}
+        <if test="spname!=null and spname.length() &gt; 0">
+            and K.spname=#{spname}
+        </if>
+    </select>
+
+
+    <delete id="deleteParam" parameterType="com.sydx.aqsc.entity.Security.GxEntity">
+        delete from PC_AQSC_STA_PROCESS_PARAM
+        <where>
+            1=1
+            and spid=#{spid}
+        </where>
+    </delete>
+
+
+    <!-- 查询 -->
+    <select id="select" parameterType="com.sydx.aqsc.entity.Security.GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxEntity">
+		select distinct 
+		YL ENG_CODE
+		from GYSJ_LB
+		where
+		LX='工程'
+		</select>
+
+
+    <select id="countSgmbdz" parameterType="com.sydx.aqsc.entity.Security.SgmbdzEntity" resultType="int">
+
+        select count(*) from PC_AQSC_CON_FORMWORK
+        where OILFIELD=#{oilfield} and IS_USE='1' and CUSTOMTYPE in(#{oilfield},#{customtype})
+        <if test="templatename !=null  and  templatename.length()>0">
+            and templatename like '%${templatename}%'
+        </if>
+    </select>
+
+    <select id="listSgmbdz" parameterType="com.sydx.aqsc.entity.Security.SgmbdzEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgmbdzEntity">
+        select * from (
+        select p.*,rownum row_num from (
+        select
+        OILFIELD,
+        CREATE_USER,
+        to_char(CREATE_TIME,'yy-mm-dd') CREATE_TIME,
+        IP,
+        TEMPLATEID,
+        TEMPLATENAME,
+        PURPOSE,
+        TAB,
+        CASE WHEN TAB=1 THEN '通用' WHEN TAB=2 THEN '油田' WHEN TAB=3 THEN '厂级' end TABS,
+        IS_USE
+        from PC_AQSC_CON_FORMWORK
+        where OILFIELD=#{oilfield} and IS_USE='1' and CUSTOMTYPE in(#{oilfield},#{customtype})
+        <if test="templatename !=null  and  templatename.length()>0">
+            and templatename like '%${templatename}%'
+        </if>
+        ) p
+        ) where row_num &lt;= #{endRow} and row_num &gt;= #{startRow}
+
+    </select>
+
+    <!-- 新增模板 -->
+    <insert id="sgmbdzInsert1" parameterType="com.sydx.aqsc.entity.Security.SgmbdzEntity">
+		insert into
+		PC_AQSC_CON_FORMWORK(
+		OILFIELD,
+		CREATE_USER,
+		CREATE_TIME,
+		IP,
+		TEMPLATEID,
+		TEMPLATENAME,
+		PURPOSE,
+		TAB,
+		IS_USE,
+		CUSTOMTYPE
+		)values(
+		#{oilfield,jdbcType=VARCHAR},
+		#{create_user,jdbcType=VARCHAR},
+	    sysdate,
+	    #{ip,jdbcType=VARCHAR},
+		#{templateid,jdbcType=VARCHAR},
+		#{templatename,jdbcType=VARCHAR},
+		#{purpose,jdbcType=VARCHAR},
+		#{tab,jdbcType=VARCHAR},
+		'1',
+		#{customtype,jdbcType=VARCHAR}
+		)
+	</insert>
+
+    <!-- 插入模板绑定工序 -->
+    <insert id="sgmbdzInsert2" parameterType="com.sydx.aqsc.entity.Security.SgmbdzEntity">
+        insert into
+        PC_AQSC_CON_FORMWORK_PROCESS(
+        OILFIELD,
+        CREATE_USER,
+        CREATE_TIME,
+        TEMPLATEID,
+        SORT,
+        SPID,
+        use_hours
+        )
+        (
+        <foreach collection="entity_list" index="" item="item" separator="union all">
+            select
+            #{oilfield,jdbcType=VARCHAR},
+            #{create_user,jdbcType=VARCHAR},
+            sysdate,
+            #{templateid,jdbcType=VARCHAR},
+            #{item.sort,jdbcType=INTEGER},
+            #{item.spid,jdbcType=INTEGER},
+            #{item.use_hours,jdbcType=DOUBLE}
+            from dual
+        </foreach>
+        )
+    </insert>
+
+    <!-- 根据模板id查询模板 -->
+    <select id="sgmbdzEditSelect" parameterType="com.sydx.aqsc.entity.Security.SgmbdzEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgmbdzEntity">
+			 select
+				OILFIELD,
+				CREATE_USER,
+				to_char(CREATE_TIME,'yy-mm-dd') CREATE_TIME,
+				IP,
+				TEMPLATEID,
+				TEMPLATENAME,
+				PURPOSE,
+				TAB,
+				CASE WHEN TAB=1 THEN '标准' WHEN TAB=2 THEN '用户自定义'  end TABS,
+				IS_USE
+             from PC_AQSC_CON_FORMWORK
+			 where TEMPLATEID =#{templateid}
+</select>
+    <!-- 根据模板id查询绑定工序-->
+    <select id="sgmbdzEditList" parameterType="com.sydx.aqsc.entity.Security.SgmbdzEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgmbdzEntity">
+			 select
+				TEMPLATEID,
+				SORT,
+				PC_AQSC_CON_FORMWORK_PROCESS.SPID,
+				CASE WHEN AOTHNAME is NOT NULL THEN SPNAME||'('||AOTHNAME||')' ELSE SPNAME END SPNAME,
+				PC_AQSC_CON_FORMWORK_PROCESS.USE_HOURS
+             from PC_AQSC_CON_FORMWORK_PROCESS
+             INNER join PC_AQSC_STA_PROCESS ON PC_AQSC_STA_PROCESS. SPID=PC_AQSC_CON_FORMWORK_PROCESS.SPID
+			 where TEMPLATEID =#{templateid}
+			 order by SORT
+</select>
+
+    <!-- 修改模板 -->
+    <update id="updateSgmbdzEdit" parameterType="com.sydx.aqsc.entity.Security.SgmbdzEntity">
+	   update PC_AQSC_CON_FORMWORK
+	   set TEMPLATENAME =#{templatename},
+			 PURPOSE =#{purpose},
+			 TAB =#{tab},
+			 LAST_USER=#{last_user},
+			 LAST_TIME= sysdate
+			where TEMPLATEID=#{templateid}
+    </update>
+    <!-- 删除模板定制工序 -->
+    <delete id="deleteSgmbdzEdit" parameterType="com.sydx.aqsc.entity.Security.SgmbdzEntity">
+      delete from PC_AQSC_CON_FORMWORK_PROCESS where TEMPLATEID=#{templateid}
+    </delete>
+
+    <select id="zylxselect" parameterType="com.sydx.aqsc.entity.Security.SgmbdzEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgmbdzEntity">
+
+   select
+             CASE WHEN length(csid)=4 THEN (SELECT name   from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR (csid,0,2))||'-'||(SELECT name   from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=csid)
+             WHEN length(csid)=6 THEN (SELECT name   from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR (csid,0,2))||'-'||(SELECT name   from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR (csid,0,4))||'-'||(SELECT name   from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=csid)
+             WHEN length(csid)=8 THEN (SELECT name   from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR (csid,0,2))||'-'||(SELECT name   from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR (csid,0,4))||'-'||(SELECT name   from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR (csid,0,6))||'-'||(SELECT name   from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=csid)
+               end zylx
+   from PC_AQSC_CON_FORMWORK_BINDING A
+   where A.TEMPLATEID=#{templateid} and A.is_use ='1'
+
+</select>
+
+    <delete id="sgmbdzRemove" parameterType="com.sydx.aqsc.entity.Security.SgmbdzEntity">
+  begin
+   delete from  PC_AQSC_CON_FORMWORK       where TEMPLATEID=#{templateid};
+   delete from  PC_AQSC_CON_FORMWORK_PROCESS       where TEMPLATEID=#{templateid};
+  end;
+</delete>
+
+    <!-- 查询总页数 -->
+    <select id="sgmbbdCount" parameterType="com.sydx.aqsc.entity.Security.ZylxEntity" resultType="int">
+        select count(*) from PC_AQSC_CON_FORMWORK_BINDING
+        where OILFIELD =#{oilfield} and IS_USE='1'
+        <if test="jb!=null and jb.length() &gt;0">
+            and jb=#{jb}
+        </if>
+        <if test="csid!=null and csid.length() &gt;0">
+            and csid like '%'||#{csid}||'%'
+        </if>
+    </select>
+    <select id="sgmbbdList" parameterType="com.sydx.aqsc.entity.Security.ZylxEntity"
+            resultType="com.sydx.aqsc.entity.Security.ZylxEntity">
+        select * from (
+        select p.* ,rownum row_num from (
+        SELECT
+        jb,
+        csid,
+        CASE WHEN length(csid)=4 THEN (SELECT name from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR
+        (csid,0,2))||'-'||(SELECT name from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=csid)
+        WHEN length(csid)=7 THEN (SELECT name from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR
+        (csid,0,3))||'-'||(SELECT name from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR
+        (csid,0,5))||'-'||(SELECT name from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=csid)
+        WHEN length(csid)=9 THEN (SELECT name from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR
+        (csid,0,3))||'-'||(SELECT name from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR
+        (csid,0,5))||'-'||(SELECT name from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR
+        (csid,0,7))||'-'||(SELECT name from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=csid)
+        end zylx
+        FROM PC_AQSC_CON_FORMWORK_BINDING
+        where OILFIELD =#{oilfield}and IS_USE='1'
+        <if test="jb!=null and jb.length() &gt;0">
+            and jb=#{jb}
+        </if>
+        <if test="csid!=null and csid.length() &gt;0">
+            and csid like '%'||#{csid}||'%'
+        </if>
+        group by JB,csid
+        order by JB,csid
+
+        ) p
+        )
+        where row_num &lt;= #{endRow} and row_num &gt;= #{startRow}
+
+    </select>
+
+
+    <select id="jbSelect" parameterType="com.sydx.aqsc.entity.Security.MeasureEntity"
+            resultType="com.sydx.aqsc.entity.Security.MeasureEntity">
+         select *  from PK_MEASURE_CODE where OILFIELD =#{oilfield} and PARENTID =#{oilfield}
+	</select>
+    <select id="csSelect" parameterType="com.sydx.aqsc.entity.Security.MeasureEntity"
+            resultType="com.sydx.aqsc.entity.Security.MeasureEntity">
+        <!--作业类型
+           select A.* ,B.CSID checked from PK_MEASURE_CODE A
+           LEFT JOIN (select CSID from PC_AQSC_CON_FORMWORK_BINDING where TEMPLATEID=#{templateid} and IS_FH='1')B on
+             A.ID=B.CSID
+            where A.OILFIELD =#{entity.oilfield}-->
+            select A.* from PK_MEASURE_CODE A  where A.OILFIELD =#{entity.oilfield}
+    </select>
+    <select id="checkSelect" parameterType="com.sydx.aqsc.entity.Security.MeasureEntity"  resultType="java.lang.String">
+           select CSID from PC_AQSC_CON_FORMWORK_BINDING where TEMPLATEID=#{templateid} and IS_FH='1' and OILFIELD =#{entity.oilfield}
+
+    </select>
+    <select id="gxmbList" parameterType="com.sydx.aqsc.entity.Security.SgmbbdEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgmbdzEntity">
+
+         	 select
+				A.TEMPLATEID,
+				A.TEMPLATENAME,
+				A.PURPOSE,
+				A.TAB,
+				CASE WHEN A.TAB=1 THEN '标准' WHEN A.TAB=2 THEN '用户自定义'  end TABS
+             from PC_AQSC_CON_FORMWORK  A
+             left join (select *  from    PC_AQSC_CON_FORMWORK_BINDING where csid=#{csid} and IS_USE='1') B on B.TEMPLATEID=A.TEMPLATEID
+			 where A.OILFIELD=#{oilfield}   and  A.IS_USE='1' and (A.TAB='1' or (A.TAB='2' and A.CREATE_USER=#{create_user}))
+                        and B.TEMPLATEID is null
+	</select>
+
+    <insert id="sgmbbdInsert" parameterType="com.sydx.aqsc.entity.Security.SgmbbdEntity">
+
+        insert into PC_AQSC_CON_FORMWORK_BINDING(
+        JB,
+        CSID,
+        TEMPLATEID,
+        IS_USE,
+        OILFIELD,
+        CREATE_USER,
+        CREATE_TIME
+        )
+        (
+        <foreach collection="entity_list" index="" item="item" separator="union all">
+            select
+            #{jb,jdbcType=VARCHAR},
+            #{csid ,jdbcType=VARCHAR},
+            #{item.templateid,jdbcType=VARCHAR},
+            '1',
+            #{oilfield,jdbcType=VARCHAR},
+            #{create_user,jdbcType=VARCHAR},
+            sysdate
+            from dual
+        </foreach>
+        )
+    </insert>
+
+
+    <select id="sgmbList" parameterType="com.sydx.aqsc.entity.Security.SgmbbdEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgmbdzEntity">
+         select p.*,rownum row_num from (
+         	 select
+         	 '${csid}' csid,
+				A.TEMPLATEID,
+				A.TEMPLATENAME,
+				A.PURPOSE,
+				A.TAB,
+				CASE WHEN A.TAB=1 THEN '标准' WHEN A.TAB=2 THEN '用户自定义'  end TABS
+             from PC_AQSC_CON_FORMWORK_BINDING B
+             inner join PC_AQSC_CON_FORMWORK  A on B.TEMPLATEID=A.TEMPLATEID
+              where B.OILFIELD=#{oilfield} and  B.csid=#{csid} and b.jb=#{jb}  and B.IS_USE='1'
+              and  A.IS_USE='1' and (A.TAB='1' or (A.TAB='2' and A.CREATE_USER=#{create_user}))
+              )p
+
+	</select>
+
+    <delete id="sgmbbdRemove" parameterType="com.sydx.aqsc.entity.Security.SgmbbdEntity">
+
+	delete from  PC_AQSC_CON_FORMWORK_BINDING where OILFIELD=#{oilfield} and CSID=#{csid} and TEMPLATEID=#{templateid}
+	</delete>
+
+    <!--工时维护分页查询 -->
+    <select id="getGxwh" parameterType="com.sydx.aqsc.entity.Security.GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxEntity">
+        select * from(
+        select
+        a.*,
+        rownum row_num
+        from PC_AQSC_STA_PROCESS a
+        <where>
+            is_use = '1'
+            <if test="oilfield!=null and oilfield.length() &gt; 0">
+                and (oilfield='${oilfield}'OR oilfield = 'pc')
+            </if>
+        </where>
+        order by spid)
+        <where>
+            <if test="endRow!=0">
+                row_num &lt;= #{endRow}
+            </if>
+            <if test="startRow!=0">
+                and row_num &gt;= #{startRow}
+            </if>
+        </where>
+    </select>
+    <!--公司维护分页查询 -->
+    <select id="gxwh_ById" parameterType="com.sydx.aqsc.entity.Security.GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxEntity">
+        select
+        a.*
+        from PC_AQSC_STA_PROCESS a
+        <where>
+            is_use = '1'
+            <if test="spid!=0">
+                and spid=${spid}
+            </if>
+            <if test="oilfield!=null and oilfield.length() &gt; 0">
+                and (oilfield='${oilfield}'OR oilfield = 'pc')
+            </if>
+        </where>
+    </select>
+    <update id="update" parameterType="com.sydx.aqsc.entity.Security.GxEntity">
+		update PC_AQSC_STA_PROCESS
+		 set	working_hours=#{working_hours},
+		        use_hours=#{use_hours},
+		        coefficient=#{coefficient}
+		where spid=#{spid}
+	</update>
+
+    <select id="gmbbd_zylx_count" parameterType="com.sydx.aqsc.entity.Security.SgmbbdEntity" resultType="int">
+         select count(*) from PC_AQSC_CON_FORMWORK_BINDING  A where  A.TEMPLATEID=#{templateid} and   A.OILFIELD = #{oilfield} and is_use='1'
+	</select>
+    <select id="sgmbbd_zylx_List" parameterType="com.sydx.aqsc.entity.Security.SgmbbdEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgmbbdEntity">
+        select * from(
+          select   P.*,  rownum row_num from  (
+         select  OILFIELD,BINDINGID,TEMPLATEID,JB,CSID,ZYLX,IS_FH, DECODE(JB,'1','油井','2','气井','3','水井','') jbname  from PC_AQSC_CON_FORMWORK_BINDING  A where  A.TEMPLATEID=#{templateid} and   A.OILFIELD = #{oilfield} and is_use='1'
+           ) p  ) where row_num &lt;= #{endRow} and row_num &gt;= #{startRow}
+	</select>
+
+
+    <select id="zylxName" parameterType="com.sydx.aqsc.entity.Security.SgmbbdEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgmbbdEntity">
+
+			SELECT	CASE WHEN length(id)=4 THEN (SELECT	NAME	FROM	PK_MEASURE_CODE WHERE      OILFIELD =#{oilfield}	AND ID = SUBSTR ('${csid}', 0, 2)) || '-' ||NAME
+				WHEN length(id)=7 THEN (SELECT name   from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR ('${csid}',0,3))||'-'||(SELECT name   from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR ('${csid}',0,5))||'-'||NAME
+	            WHEN length(id)=9 THEN (SELECT name   from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR ('${csid}',0,3))||'-'||(SELECT name   from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR ('${csid}',0,5))||'-'||(SELECT name   from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR ('${csid}',0,7))||'-'||NAME
+			end zylx
+	        FROM PK_MEASURE_CODE WHERE OILFIELD = #{oilfield} AND ID = #{csid}
+
+	</select>
+
+    <insert id="sgmbbd_zylx_addSave" parameterType="com.sydx.aqsc.entity.Security.SgmbbdEntity">
+
+
+        insert into PC_AQSC_CON_FORMWORK_BINDING(
+        JB,
+        CSID,
+        ZYLX,
+        TEMPLATEID,
+        IS_USE,
+        IS_FH,
+        OILFIELD,
+        CREATE_USER,
+        CREATE_TIME,
+        BINDINGID
+        )
+        (
+        <foreach collection="entity_list" index="" item="item" separator="union all">
+            select
+            #{item.jb,jdbcType=VARCHAR},
+            #{item.csid ,jdbcType=VARCHAR},
+            #{item.zylx ,jdbcType=VARCHAR},
+            #{templateid,jdbcType=VARCHAR},
+            #{item.is_use ,jdbcType=VARCHAR},
+            #{item.is_fh ,jdbcType=VARCHAR},
+            #{oilfield,jdbcType=VARCHAR},
+            #{create_user,jdbcType=VARCHAR},
+            sysdate,
+            #{item.bindingid ,jdbcType=VARCHAR}
+            from dual
+        </foreach>
+        )
+    </insert>
+
+    <delete id="sgmbbd_zylx_remove" parameterType="com.sydx.aqsc.entity.Security.SgmbbdEntity">
+               delete from  PC_AQSC_CON_FORMWORK_BINDING where  bindingid=#{bindingid}
+	</delete>
+
+    <delete id="sgmbbd_remove" parameterType="com.sydx.aqsc.entity.Security.SgmbbdEntity">
+               delete from  PC_AQSC_CON_FORMWORK_BINDING where  TEMPLATEID=#{templateid} and  IS_FH='1'
+	</delete>
+
+    <insert id="sgmbbd_Save" parameterType="com.sydx.aqsc.entity.Security.SgmbbdEntity">
+
+
+        insert into PC_AQSC_CON_FORMWORK_BINDING(
+        JB,
+        CSID,
+        ZYLX,
+        TEMPLATEID,
+        IS_USE,
+        IS_FH,
+        OILFIELD,
+        CREATE_USER,
+        CREATE_TIME,
+        BINDINGID
+        )
+        (
+        <foreach collection="entity_list" index="" item="item" separator="union all">
+            <if test="item.is_use!=null and item.is_use.length() &gt; 0 and item.is_use==1 ">
+                select
+                SUBSTR ('${item.csid}', 0,1),
+                #{item.csid ,jdbcType=VARCHAR},
+                (SELECT CASE WHEN length(id)=4 THEN (SELECT NAME FROM PK_MEASURE_CODE WHERE OILFIELD =#{oilfield} AND ID
+                = SUBSTR ('${item.csid}', 0, 2)) || '-' ||NAME
+                WHEN length(id)=7 THEN (SELECT name from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR
+                ('${item.csid}',0,3))||'-'||(SELECT name from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR
+                ('${item.csid}',0,5))||'-'||NAME
+                WHEN length(id)=9 THEN (SELECT name from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR
+                ('${item.csid}',0,3))||'-'||(SELECT name from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR
+                ('${item.csid}',0,5))||'-'||(SELECT name from PK_MEASURE_CODE where OILFIELD =#{oilfield} and id=SUBSTR
+                ('${item.csid}',0,7))||'-'||NAME
+                else ''
+                end zylx FROM PK_MEASURE_CODE WHERE OILFIELD = #{oilfield} AND ID = #{item.csid}),
+                #{templateid,jdbcType=VARCHAR},
+                #{item.is_use},
+                '1',
+                #{oilfield,jdbcType=VARCHAR},
+                #{create_user,jdbcType=VARCHAR},
+                sysdate,
+                #{item.bindingid ,jdbcType=VARCHAR}
+                from dual
+            </if>
+            <if test="item.is_use!=null and item.is_use.length() &gt; 0 and item.is_use==0 ">
+                select
+                SUBSTR ('${item.csid}', 0,1),
+                #{item.csid ,jdbcType=VARCHAR},
+                '',
+                '',
+                #{item.is_use},
+                '1',
+                #{oilfield,jdbcType=VARCHAR},
+                #{create_user,jdbcType=VARCHAR},
+                sysdate,
+                #{item.bindingid ,jdbcType=VARCHAR}
+                from dual
+            </if>
+        </foreach>
+        )
+    </insert>
+
+    <select id="zylx" parameterType="com.sydx.aqsc.entity.Security.SgmbbdEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgmbbdEntity">
+        select wmsys.wm_concat(csid) csid ,wmsys.wm_concat(zylx) zylx from (
+        SELECT A.id csid, CASE
+        WHEN length(A.id)=4 THEN (SELECT NAME FROM PK_MEASURE_CODE B WHERE B.OILFIELD =#{oilfield} AND B.ID = SUBSTR
+        (A.id, 0, 2)) || '-' ||NAME
+        WHEN length(A.id)=7 THEN (SELECT name from PK_MEASURE_CODE B where B.OILFIELD =#{oilfield} and B.id=SUBSTR
+        (A.id,0,3))||'-'||
+        (SELECT name from PK_MEASURE_CODE B where B.OILFIELD =#{oilfield} and B.id=SUBSTR (A.id,0,5))||'-'||NAME
+        WHEN length(A.id)=9 THEN (SELECT name from PK_MEASURE_CODE B where B.OILFIELD =#{oilfield} and B.id=SUBSTR
+        (A.id,0,3))||'-'||
+        (SELECT name from PK_MEASURE_CODE B where B.OILFIELD =#{oilfield} and B.id=SUBSTR (A.id,0,5))||'-'||(SELECT name
+        from PK_MEASURE_CODE B where B.OILFIELD =#{oilfield} and B.id=SUBSTR(A.id,0,7))||'-'||NAME
+        else '' end zylx FROM PK_MEASURE_CODE A WHERE
+        <foreach collection="entity_list" index="index" item="item" separator="or" open="(" close=")">
+            (OILFIELD = #{oilfield} and ID=#{item.csid})
+        </foreach>
+        )
+    </select>
+
+    <!--工时维护分页查询 -->
+    <select id="gxwh_list" parameterType="com.sydx.aqsc.entity.Security.GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxEntity">
+        select
+        a.spid,
+        a.spname,
+        b.working_hours,
+        nvl(b.use_hours,A.BZGS) use_hours,
+        b.coefficient
+        from
+        (select *
+        from PC_AQSC_STA_PROCESS
+        <where>
+            is_use = '1'
+            <if test="oilfield!=null and oilfield.length() &gt; 0">
+                and (oilfield='${oilfield}'OR oilfield = 'pc')
+            </if>
+        </where>
+        )a,
+        (
+        select * from PC_AQSC_STA_PROCESS_WORK_HORS
+        <where>
+            <if test="unit_id!=null and unit_id.length() &gt; 0">
+                and unit_id='${unit_id}'
+            </if>
+            <if test="oilfield!=null and oilfield.length() &gt; 0">
+                and (oilfield='${oilfield}'OR oilfield = 'pc')
+            </if>
+        </where>
+        )b
+        where
+        a.spid=b.spid(+)
+        ORDER BY nlssort(a.SPNAME,'NLS_SORT=SCHINESE_PINYIN_M')
+    </select>
+
+    <insert id="batch_insert" parameterType="com.sydx.aqsc.entity.Security.WorkHoursEntity">
+        insert into
+        PC_AQSC_STA_PROCESS_WORK_HORS(
+        id,
+        spid,
+        spname,
+        oilfield,
+        working_hours,
+        use_hours,
+        coefficient,
+        unit_name,
+        unit_id
+        )
+        select aqsc_seq.nextval,da.* from(
+        <foreach collection="el" index="" item="item" separator="union all">
+            select
+            #{item.spid,jdbcType=INTEGER},
+            #{item.spname,jdbcType=VARCHAR},
+            #{oilfield,jdbcType=VARCHAR},
+            #{item.working_hours,jdbcType=DOUBLE},
+            #{item.use_hours,jdbcType=DOUBLE},
+            #{item.coefficient,jdbcType=DOUBLE},
+            #{unit_name,jdbcType=VARCHAR},
+            #{unit_id,jdbcType=VARCHAR}
+            from dual
+        </foreach>)da
+    </insert>
+    <!-- 4、删除 -->
+    <delete id="delete_workhours" parameterType="com.sydx.aqsc.entity.Security.WorkHoursEntity">
+        delete from PC_AQSC_STA_PROCESS_WORK_HORS
+        <where>
+            <if test="id &gt; 0">
+                and id = '${id}'
+            </if>
+            <if test="unit_id!=null and unit_id.length() &gt; 0">
+                and unit_id = '${unit_id}'
+            </if>
+
+        </where>
+    </delete>
+
+    <select id="use_hours" parameterType="com.sydx.aqsc.entity.Security.GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxEntity">
+     SELECT nvl(USE_HOURS,(SELECT bzgs  FROM PC_AQSC_STA_PROCESS WHERE SPID=#{spid}) )USE_HOURS FROM PC_AQSC_STA_PROCESS_WORK_HORS WHERE SPID= #{spid} AND UNIT_ID=#{unit_id}
+	</select>
+
+    <update id="updateParam" parameterType="com.sydx.aqsc.entity.Security.GxcsEntity">
+        <foreach collection="entityList" index="" item="item" open="begin" close=";end;" separator=";">
+            UPDATE PC_AQSC_PRO_TABLE_HEAD
+            <set>
+                is_show_oil = #{item.is_show_oil,jdbcType=VARCHAR},
+                is_null_oil = #{item.is_null_oil,jdbcType=VARCHAR},
+            </set>
+            where table_head = #{item.table_head,jdbcType=VARCHAR} and CIRCUIT_ID=#{circuit_id,jdbcType=VARCHAR}
+        </foreach>
+    </update>
+
+    <select id="selectByParam1" parameterType="com.sydx.aqsc.entity.Security.GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxEntity">
+		select * from PC_AQSC_STA_PROCESS_CONTENT
+		  where spid=#{spid} AND STATE = '1' AND  TAB=#{tab}  and   CUSTOMTYPE in(#{oilfield},#{customtype}, (select ZYQID from   JDJXZY.pc_moving_plan where  MOVING_PLAN_ID=#{did}))
+		order by create_time desc
+	</select>
+    <select id="selectByParam2"
+            parameterType="com.sydx.aqsc.entity.Security.GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.AqhbwhEntity">
+        <!-- 		select * from PC_PUMP_WORK where ENG_CODE=(select ENG_CODE from PC_V_STA_PROCESS where customid=#{customid}) order by order1 -->
+        select * from PC_AQSC_SAFETY_ENVIRONMENT where SPID= #{spid} ORDER BY
+        to_number(regexp_substr(xh,'[0-9]*[0-9]',1))
+    </select>
+    <select id="circuit_id" parameterType="com.sydx.aqsc.entity.Security.GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxEntity">
+		  select SPID,  CIRCUIT_ID from PC_AQSC_STA_PROCESS where SPID=#{spid}
+		</select>
+
+    <select id="tableName" parameterType="com.sydx.aqsc.entity.Security.RbEntity" resultType="java.lang.String">
+	    select CIRCUIT_TABLE from PC_AQSC_PRO_CIRCUIT_CODE where CIRCUIT_ID =#{circuit_id}
+	 </select>
+
+    <select id="selectPPData" parameterType="com.sydx.aqsc.entity.Security.RbEntity" resultType="java.util.Map">
+       select * from ${circuit_table}   where parame_val_num=#{parame_val_num}
+     </select>
+
+    <select id="gjclList" parameterType="com.sydx.aqsc.entity.Security.SgdygjclEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgdygjclEntity">
+        SELECT Q.* ,rownum xh from (
+        SELECT
+        SPID,
+        BZHSG,
+        TOOL_NAME,
+        MODEL,
+        UNIT,
+        NUMB,
+        PRODUCT_UNIT,
+        PREPARE_UNIT,
+        NOTE,
+        CREATE_USER,
+        CREATE_TIME,
+        IP,
+        OILFIELD,
+        SGDYMC
+        FROM
+        PC_AQSC_STA_PROCESS_TOOLS
+        WHERE oilfield=#{oilfield} and SPID =#{spid}
+        <if test="sgdymc!=null and sgdymc.length() &gt; 0">
+            AND SGDYMC =#{sgdymc}
+        </if>
+        )Q
+    </select>
+
+    <delete id="gjclDelete" parameterType="com.sydx.aqsc.entity.Security.SgdygjclEntity">
+	  delete FROM	PC_AQSC_STA_PROCESS_TOOLS
+	   WHERE oilfield=#{oilfield} and  SPID =#{spid}	  AND SGDYMC =#{sgdymc}
+	</delete>
+
+    <insert id="gjclSave" parameterType="com.sydx.aqsc.entity.Security.SgdygjclEntity">
+
+        insert into PC_AQSC_STA_PROCESS_TOOLS(
+        spid,
+        tool_name,
+        model,
+        unit,
+        numb,
+        product_unit,
+        prepare_unit,
+        note,
+        xh,
+        bzhsg,
+        CREATE_USER,
+        CREATE_TIME,
+        IP,
+        OILFIELD ,
+        sgdymc
+        )
+        (
+        <foreach collection="entityList" index="" item="item" separator="union all">
+            select
+            #{spid,jdbcType=INTEGER},
+            #{item.tool_name,jdbcType=VARCHAR},
+            #{item.model,jdbcType=VARCHAR},
+            #{item.unit,jdbcType=VARCHAR},
+            #{item.numb,jdbcType=INTEGER},
+            #{item.product_unit,jdbcType=VARCHAR},
+            #{item.prepare_unit,jdbcType=VARCHAR},
+            #{item.note,jdbcType=VARCHAR},
+            #{item.xh,jdbcType=INTEGER},
+            #{item.bzhsg,jdbcType=VARCHAR},
+            #{create_user,jdbcType=VARCHAR},
+            sysdate,
+            #{ip,jdbcType=VARCHAR},
+            #{oilfield,jdbcType=VARCHAR},
+            #{sgdymc,jdbcType=VARCHAR}
+            from dual
+        </foreach>
+        )
+
+    </insert>
+
+    <select id="gx_mb_list" parameterType="com.sydx.aqsc.entity.Security.GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxEntity">
+		 select p.*,rownum row_num from (
+				select  A.SPID,A.CUSTOMID,A.CUSTOMNAME,A.BUILDCONTENT,A.CUSTOMTYPE,A.REQUIREMENT,B.CIRCUIT_ID,B.SPNAME from  PC_AQSC_STA_PROCESS_CONTENT A
+				INNER JOIN PC_AQSC_STA_PROCESS B  ON B.SPID=A.SPID
+				where A.OILFIELD=#{oilfield} and A.SPID=#{spid} and  A.STATE='1' and  A.CUSTOMTYPE=#{oilfield} and  A.TAB=#{tab}
+				order by  A.CREATE_TIME desc  )P
+	</select>
+
+    <select id="sgdy_List" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgdyEntity">
+        select * from (
+        select p.*,rownum row_num from (
+        select
+        SGDYID,
+        NVL2(AOTHNAME,SGDYMC||'('||AOTHNAME||')',SGDYMC) SGDYMC,
+        SGDYLB,
+        ZYSB,
+        PTSB,
+        RYYQ,
+        JKYQ,
+        AQYQ,
+        HBYQ,
+        GYJZLYQ,
+        SBYQ,
+        ZLYQ,
+        BGGL,
+        JIAF,
+        YIF,
+        BINGF,
+        stim_key_id
+        from PC_AQSC_CONSTRUCTION_UNIT where OILFIELD=#{oilfield} and state='1'
+        <if test="sgdymc!=null and sgdymc.length() &gt; 0">
+            and sgdymc like '%'||#{sgdymc}||'%'
+        </if>
+        <if test="stim_key_id!=null and stim_key_id.length() &gt; 0">
+            and stim_key_id =#{stim_key_id}
+        </if>
+        <if test="sgdylb!=null and sgdylb.length() &gt; 0">
+            and sgdylb = #{sgdylb}
+        </if>
+        order by SGDYMC
+        ) p
+        ) where row_num &lt;= #{endRow} and row_num &gt;= #{startRow}
+    </select>
+    <select id="sgdy_count" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity" resultType="int">
+        select count(*) from PC_AQSC_CONSTRUCTION_UNIT where OILFIELD=#{oilfield} and state='1'
+        <if test="sgdymc!=null and sgdymc.length() &gt; 0">
+            and sgdymc like '%'||#{sgdymc}||'%'
+        </if>
+        <if test="stim_key_id!=null and stim_key_id.length() &gt; 0">
+            and stim_key_id =#{stim_key_id}
+        </if>
+        <if test="sgdylb!=null and sgdylb.length() &gt; 0">
+            and sgdylb = #{sgdylb}
+        </if>
+    </select>
+
+    <insert id="sgdy_Save" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity">
+
+
+        insert into
+        PC_AQSC_CONSTRUCTION_UNIT(
+        sgdymc,
+        aothname,
+        SGDYID,
+        sgdylb,
+        zysb,
+        ptsb,
+        ryyq,
+        jkyq,
+        aqyq,
+        hbyq,
+        gyjzlyq,
+        sbyq,
+        zlyq,
+        bggl,
+        jiaf,
+        yif,
+        bingf,
+        CREATE_USER,
+        CREATE_TIME,
+        OILFIELD,
+        state,
+        STIM_KEY_ID
+        )
+        (
+        <foreach collection="entityList" index="" item="item" separator="union all">
+            select
+            #{item.sgdymc,jdbcType=VARCHAR},
+            #{item.aothname,jdbcType=VARCHAR},
+            #{item.sgdyid,jdbcType=VARCHAR},
+            #{item.sgdylb,jdbcType=VARCHAR},
+            #{item.zysb,jdbcType=VARCHAR},
+            #{item.ptsb,jdbcType=VARCHAR},
+            #{item.ryyq,jdbcType=VARCHAR},
+            #{item.jkyq,jdbcType=VARCHAR},
+            #{item.aqyq,jdbcType=VARCHAR},
+            #{item.hbyq,jdbcType=VARCHAR},
+            #{item.gyjzlyq,jdbcType=VARCHAR},
+            #{item.sbyq,jdbcType=VARCHAR},
+            #{item.zlyq,jdbcType=VARCHAR},
+            #{item.bggl,jdbcType=VARCHAR},
+            #{item.jiaf,jdbcType=VARCHAR},
+            #{item.yif,jdbcType=VARCHAR},
+            #{item.bingf,jdbcType=VARCHAR},
+            #{create_user,jdbcType=VARCHAR},
+            sysdate,
+            #{oilfield,jdbcType=VARCHAR},
+            '1',
+            #{item.stim_key_id,jdbcType=VARCHAR}
+            from dual
+        </foreach>
+        )
+    </insert>
+    <delete id="sgdy_remove" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity">
+        update PC_AQSC_CONSTRUCTION_UNIT
+        set state='0',
+        last_user=#{last_user},
+        LAST_TIME=sysdate
+        where SGDYID in
+        <foreach collection="entityList" index="" item="item" separator="," open="(" close=")">
+            #{item.sgdyid}
+        </foreach>
+    </delete>
+    <select id="sgdy_editAllSelect" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgdyEntity">
+        select * from PC_AQSC_CONSTRUCTION_UNIT
+        <where>state='1' and
+            SGDYID in
+            <foreach collection="entityList" index="" item="item" separator="," open="(" close=")">
+                #{item.sgdyid}
+            </foreach>
+        </where>
+        order by SGDYMC
+    </select>
+    <select id="sgdy_editSelect" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgdyEntity">
+        select  *  from  PC_AQSC_CONSTRUCTION_UNIT where  SGDYID=#{sgdyid} and  state='1'
+    </select>
+    <update id="sgdy_editAll_Save" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity">
+        <foreach collection="entityList" item="item" index="index" open="begin" close=";end;" separator=";">
+            UPDATE PC_AQSC_CONSTRUCTION_UNIT
+            <set>
+                SGDYMC = #{item.sgdymc,jdbcType=VARCHAR},
+                AOTHNAME = #{item.aothname,jdbcType=VARCHAR},
+                SGDYLB = #{item.sgdylb,jdbcType=VARCHAR},
+                ZYSB = #{item.zysb,jdbcType=VARCHAR},
+                PTSB = #{item.ptsb,jdbcType=VARCHAR},
+                RYYQ = #{item.ryyq,jdbcType=VARCHAR},
+                JKYQ = #{item.jkyq,jdbcType=VARCHAR},
+                AQYQ = #{item.aqyq,jdbcType=VARCHAR},
+                HBYQ = #{item.hbyq,jdbcType=VARCHAR},
+                GYJZLYQ = #{item.gyjzlyq,jdbcType=VARCHAR},
+                SBYQ = #{item.sbyq,jdbcType=VARCHAR},
+                ZLYQ = #{item.zlyq,jdbcType=VARCHAR},
+                BGGL = #{item.bggl,jdbcType=VARCHAR},
+                JIAF = #{item.jiaf,jdbcType=VARCHAR},
+                YIF = #{item.yif,jdbcType=VARCHAR},
+                BINGF = #{item.bingf,jdbcType=VARCHAR},
+                STIM_KEY_ID = #{item.stim_key_id,jdbcType=VARCHAR},
+                LAST_USER = #{last_user,jdbcType=VARCHAR},
+                LAST_TIME=sysdate
+            </set>
+            where SGDYID = #{item.sgdyid,jdbcType=VARCHAR}
+        </foreach>
+
+    </update>
+
+    <update id="sgdy_edit_Save" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity">
+            UPDATE PC_AQSC_CONSTRUCTION_UNIT
+           set
+                SGDYMC = #{sgdymc,jdbcType=VARCHAR},
+                AOTHNAME = #{aothname,jdbcType=VARCHAR},
+                SGDYLB = #{sgdylb,jdbcType=VARCHAR},
+                ZYSB = #{zysb,jdbcType=VARCHAR},
+                PTSB = #{ptsb,jdbcType=VARCHAR},
+                RYYQ = #{ryyq,jdbcType=VARCHAR},
+                JKYQ = #{jkyq,jdbcType=VARCHAR},
+                AQYQ = #{aqyq,jdbcType=VARCHAR},
+                HBYQ = #{hbyq,jdbcType=VARCHAR},
+                GYJZLYQ = #{gyjzlyq,jdbcType=VARCHAR},
+                SBYQ = #{sbyq,jdbcType=VARCHAR},
+                ZLYQ = #{zlyq,jdbcType=VARCHAR},
+                BGGL = #{bggl,jdbcType=VARCHAR},
+                JIAF = #{jiaf,jdbcType=VARCHAR},
+                YIF = #{yif,jdbcType=VARCHAR},
+                BINGF = #{bingf,jdbcType=VARCHAR},
+                STIM_KEY_ID = #{stim_key_id,jdbcType=VARCHAR},
+                LAST_USER = #{last_user,jdbcType=VARCHAR},
+                LAST_TIME=sysdate
+            where  SGDYID = #{sgdyid,jdbcType=VARCHAR}
+    </update>
+    <select id="sgdy_gjcl_editList" parameterType="com.sydx.aqsc.entity.Security.SgdygjclEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgdygjclEntity">
+        SELECT
+        BZHSG,
+        TOOL_NAME,
+        MODEL,
+        UNIT,
+        NUMB,
+        PRODUCT_UNIT,
+        PREPARE_UNIT,
+        NOTE,
+        XH
+        FROM  PC_AQSC_CONS_UNIT_TOOLS
+        WHERE oilfield=#{oilfield} and SGDYID =#{sgdyid}
+    </select>
+    <select id="sgdy_gjcl_List" parameterType="com.sydx.aqsc.entity.Security.SgdygjclEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgdygjclEntity">
+        SELECT
+        DECODE(A.BZHSG,'1','作业准备','2','井筒（含完井）部分','3','地面部分','')BZHSG,
+        b.kind TOOL_NAME,
+        A.MODEL,
+        A.UNIT,
+        A.NUMB,
+        A.PRODUCT_UNIT,
+        A.PREPARE_UNIT,
+        A.NOTE,
+        A.XH
+        FROM  PC_AQSC_CONS_UNIT_TOOLS A
+        INNER JOIN PC_AQSC_TOOLS B ON A.TOOL_NAME=B.spid
+        WHERE A.oilfield=#{oilfield} and A.SGDYID =#{sgdyid}
+    </select>
+    <insert id="sgdy_gjclSave" parameterType="com.sydx.aqsc.entity.Security.SgdygjclEntity">
+
+        begin
+        delete FROM PC_AQSC_CONS_UNIT_TOOLS WHERE oilfield=#{oilfield} AND sgdyid =#{sgdyid};
+        insert into PC_AQSC_CONS_UNIT_TOOLS(
+        OILFIELD ,
+        sgdyid,
+        sgdymc,
+        BZHSG,
+        tool_name,
+        model,
+        unit,
+        numb,
+        product_unit,
+        prepare_unit,
+        note,
+        xh,
+        CREATE_USER,
+        CREATE_TIME,
+        IP
+        )
+        (
+        <foreach collection="entityList" index="" item="item" separator="union all">
+            select
+            #{oilfield,jdbcType=VARCHAR},
+            #{sgdyid,jdbcType=VARCHAR},
+            (select SGDYMC from PC_AQSC_CONSTRUCTION_UNIT where SGDYID= #{sgdyid,jdbcType=VARCHAR}),
+            #{item.bzhsg,jdbcType=VARCHAR},
+            #{item.tool_name,jdbcType=VARCHAR},
+            #{item.model,jdbcType=VARCHAR},
+            #{item.unit,jdbcType=VARCHAR},
+            #{item.numb,jdbcType=INTEGER},
+            #{item.product_unit,jdbcType=VARCHAR},
+            #{item.prepare_unit,jdbcType=VARCHAR},
+            #{item.note,jdbcType=VARCHAR},
+            #{item.xh,jdbcType=INTEGER},
+            #{create_user,jdbcType=VARCHAR},
+            sysdate,
+            #{ip,jdbcType=VARCHAR}
+            from dual
+        </foreach>
+        );
+        end;
+    </insert>
+    <update id="sgdy_gx_editSave" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity">
+
+ update  PC_AQSC_CONSTRUCTION_UNIT
+ set CIRCUIT_ID=#{circuit_id}
+ where SGDYID=#{sgdyid}
+</update>
+
+    <select id="sgdy_gx_List" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgdyEntity">
+        select * from (
+        select p.*,rownum row_num from (
+        select
+        A.SGDYID,
+        NVL2(A.AOTHNAME,A.SGDYMC||'('||A.AOTHNAME||')',A.SGDYMC) SGDYMC,
+        A.SGDYLB,
+        A.CIRCUIT_ID,
+        A.stim_key_id,
+        B.CIRCUIT_NAME
+        from PC_AQSC_CONSTRUCTION_UNIT A
+        left join PC_AQSC_PRO_CIRCUIT_CODE B on A.CIRCUIT_ID=B.CIRCUIT_ID
+        where A.OILFIELD=#{oilfield} and A.state='1'
+        <if test="sgdymc!=null and sgdymc.length() &gt; 0">
+            and A.sgdymc like '%'||#{sgdymc}||'%'
+        </if>
+        <if test="stim_key_id!=null and stim_key_id.length() &gt; 0">
+            and stim_key_id =#{stim_key_id}
+        </if>
+        <if test="circuit_id!=null and circuit_id.length() &gt; 0">
+            and A.circuit_id = #{circuit_id}
+        </if>
+        order by A.SGDYMC
+        ) p
+        ) where row_num &lt;= #{endRow} and row_num &gt;= #{startRow}
+    </select>
+    <select id="sgdy_gx_count" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity" resultType="int">
+        select count(*) from PC_AQSC_CONSTRUCTION_UNIT where OILFIELD=#{oilfield} and state='1'
+        <if test="sgdymc!=null and sgdymc.length() &gt; 0">
+            and sgdymc like '%'||#{sgdymc}||'%'
+        </if>
+        <if test="stim_key_id!=null and stim_key_id.length() &gt; 0">
+            and stim_key_id =#{stim_key_id}
+        </if>
+        <if test="circuit_id!=null and circuit_id.length() &gt; 0">
+            and circuit_id = #{circuit_id}
+        </if>
+    </select>
+    <select id="sgdy_param_view_list" parameterType="com.sydx.aqsc.entity.Security.GxcsEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxcsEntity">
+			SELECT P .*, ROWNUM row_num FROM (
+					SELECT DISTINCT
+						a.CIRCUIT_ID,
+						a.TABLE_HEAD,
+						a.TABLE_HEAD_CHS,
+						a.SHOW_OR_NOT,
+						a.FIELD_SQ,
+						a.UNIT,
+						a.CELL_TYPE,
+						a.CODE_ASSOCIATE_FIELD,
+						a.CODE_ASSOCIATE_TABLE,
+						a.MULTI_ROW,
+						a.IS_NULL,
+						b.IS_NULL_OIL,
+						b.IS_SHOW_OIL,
+						a.FIELD_TYPE,
+						a.STIPULATE
+					FROM PC_AQSC_PRO_TABLE_HEAD a
+						LEFT JOIN PC_AQSC_CONS_UNIT_PARAMS b on a.CIRCUIT_ID = b.CIRCUIT_ID and a.TABLE_HEAD=b.TABLE_HEAD
+						and b.UNIT_ID=#{oilfield} and SGDYID =#{sgdyid}
+					WHERE a. CIRCUIT_ID=#{circuit_id,jdbcType=VARCHAR}
+					ORDER BY a.FIELD_SQ
+				) P
+        </select>
+    <insert id="sgdy_param_Save" parameterType="com.sydx.aqsc.entity.Security.GxcsEntity">
+        begin
+        delete from PC_AQSC_CONS_UNIT_PARAMS where unit_id=#{oilfield} and circuit_id=#{circuit_id} and
+        SGDYID=#{sgdyid};
+        insert into PC_AQSC_CONS_UNIT_PARAMS(
+        circuit_id,
+        SGDYID,
+        table_head,
+        unit_id,
+        is_null_oil,
+        is_show_oil,
+        oilfield,
+        create_user,
+        create_time
+        )
+        (
+        <foreach collection="entityList" index="" item="item" separator="union all">
+            select
+            #{circuit_id,jdbcType=VARCHAR},
+            #{sgdyid,jdbcType=VARCHAR},
+            #{item.table_head,jdbcType=VARCHAR},
+            #{oilfield,jdbcType=VARCHAR},
+            #{item.is_null_oil,jdbcType=VARCHAR},
+            #{item.is_show_oil,jdbcType=VARCHAR},
+            #{oilfield,jdbcType=VARCHAR},
+            #{create_user,jdbcType=VARCHAR},
+            sysdate
+            from dual
+        </foreach>
+        );
+        end;
+    </insert>
+
+    <select id="sgdy_mb_list" parameterType="com.sydx.aqsc.entity.Security.GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxEntity">
+		 select p.*,rownum row_num from (
+				select  A.SGDYID,A.CUSTOMID,A.CUSTOMNAME,A.BUILDCONTENT,A.CUSTOMTYPE,A.REQUIREMENT,B.CIRCUIT_ID,B.SGDYMC from  PC_AQSC_CONS_UNIT_CONTENT A
+				INNER JOIN PC_AQSC_CONSTRUCTION_UNIT B  ON B.SGDYID=A.SGDYID
+				where A.OILFIELD=#{oilfield} and A.SGDYID=#{sgdyid} and  A.STATE='1' and  A.CUSTOMTYPE=#{oilfield} and  A.TAB=#{tab}
+				order by  A.CREATE_TIME desc  )P
+	</select>
+
+
+    <select id="sgdy_mbSelect" parameterType="com.sydx.aqsc.entity.Security.GxnrmbEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxnrmbEntity">
+        select
+        K.SGDYID,
+        K.SGDYMC,
+        K.circuit_id,
+        H.BUILDCONTENT,
+        H.requirement,
+        H.customname
+        from PC_AQSC_CONSTRUCTION_UNIT K
+        left join (select SGDYID,BUILDCONTENT,requirement ,customname from PC_AQSC_CONS_UNIT_CONTENT where CUSTOMID=#{customid,jdbcType=VARCHAR} and STATE=1) H on H.SGDYID=K.SGDYID
+        where K.SGDYID=#{sgdyid}
+    </select>
+
+    <select id="sgdy_paramSelect" parameterType="com.sydx.aqsc.entity.Security.GxcsEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxcsEntity">
+        SELECT
+			A.CIRCUIT_ID,
+			A.TABLE_HEAD,
+			A.IS_SHOW,
+			A.UNIT_ID,
+			b.TABLE_HEAD_CHS,
+			b.SHOW_OR_NOT,
+			b.FIELD_SQ,
+			b.UNIT,
+			b.CELL_TYPE,
+			b.CODE_ASSOCIATE_FIELD,
+			b.CODE_ASSOCIATE_TABLE,
+			b.MULTI_ROW,
+			b.IS_NULL,
+			b.FIELD_TYPE,
+			b.STIPULATE
+		FROM PC_AQSC_CONS_UNIT_PARAMS A
+		inner JOIN PC_AQSC_PRO_TABLE_HEAD b ON A.TABLE_HEAD = b.TABLE_HEAD AND A.CIRCUIT_ID = b.CIRCUIT_ID
+		WHERE A.CIRCUIT_ID = #{circuit_id,jdbcType=VARCHAR} AND A.UNIT_ID = #{oilfield} AND A.SGDYID = #{sgdyid} AND A .IS_SHOW_OIL IS NOT NULL
+		ORDER BY b.FIELD_SQ
+        </select>
+    <update id="sgdy_mb_update" parameterType="com.sydx.aqsc.entity.Security.GxnrmbEntity">
+            update PC_AQSC_CONS_UNIT_CONTENT
+            set customname=#{customname,jdbcType=VARCHAR},
+            BUILDCONTENT=#{buildcontent,jdbcType=VARCHAR} ,
+            REQUIREMENT=#{requirement,jdbcType=VARCHAR},
+            STATE=1,
+            LAST_USER=#{last_user},
+            LAST_TIME=sysdate
+            where  SGDYID=#{sgdyid}  and customid=#{customid}
+        </update>
+    <insert id="sgdy_mb_Insert" parameterType="com.sydx.aqsc.entity.Security.GxnrmbEntity">
+
+        insert into PC_AQSC_CONS_UNIT_CONTENT (OILFIELD,SGDYID,CUSTOMID,CUSTOMNAME,BUILDCONTENT,CUSTOMTYPE,STATE,CREATE_USER,CREATE_TIME,IP,CIRCUIT_ID,TAB,REQUIREMENT)
+        values
+        (#{oilfield,jdbcType=VARCHAR},
+        #{sgdyid,jdbcType=VARCHAR},
+        #{customid,jdbcType=VARCHAR},
+        #{customname,jdbcType=VARCHAR},
+        #{buildcontent,jdbcType=VARCHAR},
+        #{customtype,jdbcType=VARCHAR},
+        '1',
+        #{create_user,jdbcType=VARCHAR},
+        sysdate,
+        #{ip,jdbcType=VARCHAR},
+        #{circuit_id,jdbcType=VARCHAR},
+        #{tab,jdbcType=VARCHAR},
+        #{requirement,jdbcType=VARCHAR}
+        )
+
+        </insert>
+
+    <update id="sgdy_mb_remove" parameterType="com.sydx.aqsc.entity.Security.GxnrmbEntity">
+            update PC_AQSC_CONS_UNIT_CONTENT
+            set STATE=0,
+            LAST_USER=#{last_user},
+            LAST_TIME=sysdate
+            where customid=#{customid}
+        </update>
+
+    <select id="sgdySelect" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgdyEntity">
+
+             select  SGDYID,
+             CASE WHEN AOTHNAME is NOT NULL and STIM_KEY_ID is  not null THEN SGDYMC||'('||STIM_KEY_ID||'—'||AOTHNAME||')'
+                  WHEN AOTHNAME is NOT NULL and STIM_KEY_ID is   null THEN SGDYMC||'('||AOTHNAME||')'
+                  WHEN AOTHNAME is  NULL and STIM_KEY_ID is  not null THEN SGDYMC||'('||STIM_KEY_ID||')'
+             ELSE SGDYMC END SGDYMC
+             from PC_AQSC_CONSTRUCTION_UNIT
+             WHERE STATE='1' and OILFIELD=#{oilfield}
+              ORDER BY nlssort(SGDYMC,'NLS_SORT=SCHINESE_PINYIN_M')
+        </select>
+
+    <insert id="gx_sgdy_bdSave" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity">
+        begin
+        delete from PC_AQSC_SAFETY_ENVIRONMENT where spid=#{spid};
+        insert into
+        PC_AQSC_SAFETY_ENVIRONMENT(
+        xh,
+        spid,
+        spname,
+        sgdymc,
+        SGDYID,
+        lrr,
+        lrsj,
+        ytid
+        )
+        (
+        <foreach collection="entityList" index="" item="item" separator="union all">
+            select
+            #{item.xh,jdbcType=VARCHAR},
+            #{spid,jdbcType=VARCHAR},
+            (select SPNAME from PC_AQSC_STA_PROCESS where spid=#{spid}),
+            (select SGDYMC from PC_AQSC_CONSTRUCTION_UNIT where SGDYID= #{item.sgdyid,jdbcType=VARCHAR}),
+            #{item.sgdyid,jdbcType=VARCHAR},
+            #{lrr,jdbcType=VARCHAR},
+            sysdate,
+            #{ytid,jdbcType=VARCHAR}
+            from dual
+        </foreach>
+        );
+        end;
+    </insert>
+    <select id="zylSelect" parameterType="com.sydx.aqsc.entity.Security.ZylxEntity"
+            resultType="com.sydx.aqsc.entity.Security.ZylxEntity">
+             select DISTINCT  NAME zylx  FROM PK_MEASURE_CODE WHERE OILFIELD=#{oilfield} AND PARENTID IN ('1','2','3')
+        </select>
+    <select id="gx_lb_wh_List" parameterType="com.sydx.aqsc.entity.Security.Gx_lbEntity"
+            resultType="com.sydx.aqsc.entity.Security.Gx_lbEntity">
+             select *    FROM PC_AQSC_STA_PROCESS_TYPE WHERE OILFIELD=#{oilfield} AND ZYLX =#{zylx}
+        </select>
+
+    <insert id="gx_lb_wh_Save" parameterType="com.sydx.aqsc.entity.Security.Gx_lbEntity">
+        begin
+        delete from PC_AQSC_STA_PROCESS_TYPE WHERE OILFIELD=#{oilfield} AND ZYLX =#{zylx};
+        insert into
+        PC_AQSC_STA_PROCESS_TYPE(
+        id,
+        ZYLX,
+        GXLB,
+        CREATE_USER,
+        CREATE_TIME,
+        OILFIELD
+        )
+        (
+        <foreach collection="entityList" index="" item="item" separator="union all">
+            select
+            #{item.id,jdbcType=VARCHAR},
+            #{zylx,jdbcType=VARCHAR},
+            #{item.gxlb,jdbcType=VARCHAR},
+            #{create_user,jdbcType=VARCHAR},
+            sysdate,
+            #{oilfield,jdbcType=VARCHAR}
+            from dual
+        </foreach>
+        );
+        end ;
+    </insert>
+
+    <select id="getgxlb" parameterType="com.sydx.aqsc.entity.Security.GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.GxEntity">
+             select gxlb
+             from PC_AQSC_STA_PROCESS_TYPE
+             WHERE
+              zylx = '${zylx}'
+        </select>
+</mapper>

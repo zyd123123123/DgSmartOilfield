@@ -1,0 +1,67 @@
+server:
+  port: 30006
+spring:
+  profiles:
+    active: dev
+  application:
+    name: wg
+  cloud:
+    gateway:
+      routes: #配置路由路径
+        - id: md-sys
+          uri: lb://sys
+          predicates:
+            - Path=/sys/**
+          filters:
+            - StripPrefix=1
+        - id: sc-yz
+          uri: lb://yz
+          predicates:
+            - Path=/yz/**
+          filters:
+            - StripPrefix=1
+        - id: md-yw1
+          uri: lb://yw1
+          predicates:
+            - Path=/yw1/**
+          filters:
+            - StripPrefix=1
+        - id: md-yw2
+          uri: lb://yw2
+          predicates:
+            - Path=/yw2/**
+          filters:
+            - StripPrefix=1
+      discovery:
+        locator:
+          enabled: true #开启从注册中心动态创建路由的功能
+          lower-case-service-id: true #使用小写服务名，默认是大写
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:30005/rsa/publicKey #配置RSA的公钥访问地址
+#  redis:
+#    database: 0
+#    port: 6379
+#    host: 127.0.0.1
+#    password:
+secure:
+  ignore:
+    urls: #配置白名单路径
+      - "/actuator/**"
+      - "/yz/oauth/token"
+      - "/yz/decode"
+      - "/yz/redirect"
+      - "/webjars/**"
+      - "/doc.html"
+      - "/swagger-resources/**"
+      - "/*/v2/api-docs"
+      - "/mall-pms/app-api/v1/categories/**"
+      - "/mall-pms/app-api/v1/products/**"
+      - "/mall-pms/app-api/v1/skus/**"
+      - "/mall-sms/app-api/v1/adverts"
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:30001/eureka/

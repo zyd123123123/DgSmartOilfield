@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.DwsbDao">
+
+<!-- <select id="selectByParam3" parameterType="com.cyrj.jxzy.entity.Constractor.DwsbEntity" resultType="com.cyrj.jxzy.entity.Constractor.DwsbEntity">
+${whc}
+</select>
+<update id="update"  parameterType="com.cyrj.jxzy.entity.Constractor.DwsbEntity">
+${whc}
+</update> -->
+
+
+<select id="selectA1" parameterType="com.cyrj.jxzy.entity.Constractor.DwsbEntity" resultType="com.cyrj.jxzy.entity.Constractor.DwsbEntity">
+SELECT
+	sjid,
+	dwmc,
+	termname,
+	xhjcs,
+	zzcj,
+	cph,
+	sbm,
+	fileurl,
+	sb,
+	sbbz,
+	dwzzbh
+FROM
+	PC_CBS_QUALIFICATION_EQU
+	<where>
+<if test="sjid!=null and sjid.length() &gt;0">
+ and sjid = #{sjid} 
+</if>
+</where>
+
+
+</select>
+
+
+
+<insert id="insert1" parameterType="com.cyrj.jxzy.entity.Constractor.DwsbEntity">
+insert into
+PC_CBS_QUALIFICATION_EQU(
+sjid,
+dwzzbh,
+dwmc,
+termname,
+xhjcs,
+zzcj,
+cph,
+sbm,
+fileurl,
+sbbz,
+	sb,
+	OILFIELD,
+	CREATE_USER_ID
+)
+(
+ <foreach collection="el" index="" item="item" separator="union all">
+  select
+    #{item.sjid,jdbcType=VARCHAR},
+    #{item.dwzzbh,jdbcType=VARCHAR},
+	(SELECT PC_CBS_COMPANY.DWMC dwmc FROM PC_CBS_COMPANY WHERE PC_CBS_COMPANY.dwdm = #{item.dwmc} ),
+	(SELECT PC_SYS_UNIT_CODE.UNITNAME termname FROM PC_SYS_UNIT_CODE WHERE PC_SYS_UNIT_CODE.ID = #{item.termname} ),
+	#{item.xhjcs,jdbcType=VARCHAR},
+	#{item.zzcj,jdbcType=VARCHAR},
+	#{item.cph,jdbcType=VARCHAR},
+	#{item.sbm,jdbcType=VARCHAR},
+	#{item.fileurl,jdbcType=VARCHAR},
+	#{item.sbbz,jdbcType=VARCHAR},
+	 #{item.sb,jdbcType=VARCHAR},
+	 #{item.oilfield,jdbcType=VARCHAR},
+	 #{item.create_user,jdbcType=VARCHAR}
+	from dual
+	</foreach> 
+		)
+</insert>
+<!-- 代码自动生成，请核对数据类型 -->
+
+<!-- 根据id删除 -->
+<delete id="deleteParam" parameterType="com.cyrj.jxzy.entity.Constractor.DwsbEntity">
+delete from PC_CBS_QUALIFICATION_EQU
+<where>  sjid = #{sjid} 
+</where>
+</delete>
+<!-- 插入数据 -->
+ <insert id="insert" parameterType="com.cyrj.jxzy.entity.Constractor.DwsbEntity">
+insert into
+PC_CBS_QUALIFICATION_EQU(
+zysbid,
+sjid,
+dwmc,
+termname,
+xhjcs,
+zzcj,
+cph,
+sbm,
+fileurl,
+sb,
+sbbz,
+dwzzbh
+)
+values(
+#{zysbid,jdbcType=VARCHAR},
+#{sjid,jdbcType=VARCHAR},
+#{dwmc,jdbcType=VARCHAR},
+#{termname,jdbcType=VARCHAR},
+#{xhjcs,jdbcType=VARCHAR},
+#{zzcj,jdbcType=VARCHAR},
+#{cph,jdbcType=VARCHAR},
+#{sbm,jdbcType=VARCHAR},
+#{fileurl,jdbcType=VARCHAR},
+#{sb,jdbcType=VARCHAR},
+#{sbbz,jdbcType=VARCHAR},
+#{dwzzbh,jdbcType=VARCHAR}
+)
+</insert></mapper>

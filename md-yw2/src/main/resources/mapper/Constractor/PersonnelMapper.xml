@@ -1,0 +1,715 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.PersonnelDao">
+    <!-- 代码自动生成,请核对数据类型 -->
+
+    <!-- 人员维护列表总人数！ -->
+    <select id="count" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity" resultType="int">
+        SELECT count(*) from PC_CBS_PERSON_LIBRARY
+        <where>
+            oilfield=#{oilfield} and STATE='1'
+            <if test="dwdm!=null   and dwdm.length() &gt;0">
+                and DWDM like #{dwdm}||'%'
+            </if>
+            <if test="gw!=null   and gw.length() &gt;0">
+                and gw=#{gw}
+            </if>
+            <if test="xm!=null   and xm.length() &gt;0">
+                and xm like '%'||#{xm}||'%'
+            </if>
+            <if test="sfzh!=null   and sfzh.length() &gt;0">
+                and sfzh like '%'||#{sfzh}||'%'
+            </if>
+
+        </where>
+    </select>
+    <!-- 人员维护页面列表！ -->
+    <select id="selectByParam" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+        SELECT * from(
+        SELECT A.* ,rownum row_num from (
+        SELECT
+        A.dwdm,
+        A.dwmc,
+        A.gw,
+        A.xm,
+        A.sfzh,
+        A.jkzbh,
+        A.fileuri,
+        A.fileoldname,
+        A.xb,
+        A.xl,
+        A.zc,
+        A.pxsj,
+        A.lrr,
+        A.ryid,
+        to_char(A.pxsj,'yyyy-mm-dd') spxsj,
+        to_char(A.kssj,'yyyy-mm-dd') kssjs,
+        to_char(A.jzsj,'yyyy-mm-dd') jzsjs,
+        A.lrsj,
+        A.oilfield,
+        A.PHONE,
+        A.PROVINCE,
+        A.CITY,
+        A.COUNTIES,
+        A.TOWN,
+        A.VILLAGE,
+        A.PROVINCE||A.CITY||A.COUNTIES||A.TOWN||A.VILLAGE address,
+        A.NUM ,
+        A.PRINTNUM
+        FROM
+        PC_CBS_PERSON_LIBRARY A
+        <where>
+            A.oilfield=#{oilfield} and STATE='1'
+            <if test="dwdm!=null   and dwdm.length() &gt;0">
+                and A.DWDM like #{dwdm}||'%'
+            </if>
+            <if test="gw!=null   and gw.length() &gt;0">
+                and A.gw=#{gw}
+            </if>
+            <if test="xm!=null   and xm.length() &gt;0">
+                and A.xm like '%'||#{xm}||'%'
+            </if>
+            <if test="sfzh!=null   and sfzh.length() &gt;0">
+                and A.sfzh like '%'||#{sfzh}||'%'
+            </if>
+        </where>
+        order by A.DWDM,A.gw
+        ) A )
+        where row_num &lt;=#{endRow} and row_num &gt;= #{startRow}
+    </select>
+
+    <!--  身份证号验证！ -->
+    <select id="ID_card" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+        SELECT PC_CBS_PERSON_LIBRARY.* ,
+        to_char(kssj,'yyyy-mm-dd') kssjs,
+        to_char(jzsj,'yyyy-mm-dd') jzsjs
+        FROM PC_CBS_PERSON_LIBRARY where sfzh = #{sfzh} AND oilfield = #{oilfield}
+        <if test="ryid!=null   and ryid.length() &gt;0">
+            and ryid!=#{ryid}
+        </if>
+    </select>
+
+    <!-- 人员录入保存根据身份证号批量查询! -->
+    <select id="personnel_save_select" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+        SELECT * FROM PC_CBS_PERSON_LIBRARY
+        where oilfield = #{oilfield}
+        and sfzh in
+        <foreach collection="person_entityList" index="index" item="item" open="(" separator="," close=")">
+            #{item.sfzh}
+        </foreach>
+    </select>
+    <!--  查询最大人员编号！ -->
+    <select id="maxNum" resultType="java.lang.String">
+        <!--             SELECT  max(num)   FROM  PC_CBS_PERSON_LIBRARY -->
+        SELECT CASE WHEN num &lt; 'DQ099000' THEN num
+        ELSE (SELECT max(num) FROM PC_CBS_PERSON_LIBRARY) END num
+        FROM( SELECT max(num) num FROM PC_CBS_PERSON_LIBRARY where num &lt; 'DQ099001')
+    </select>
+    <!-- 人员录入保存时,删除存在用户！ -->
+    <delete id="personnel_save_delete" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+        delete from PC_CBS_PERSON_LIBRARY
+        where oilfield = #{oilfield}
+        and sfzh in
+        <foreach collection="person_entityList" index="index" item="item" open="(" separator="," close=")">
+            #{item.sfzh}
+        </foreach>
+    </delete>
+    <!-- 插入数据! -->
+    <insert id="insert" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+        insert into PC_CBS_PERSON_LIBRARY(
+        dwdm,
+        dwmc,
+        gw,
+        xm,
+        sfzh,
+        jkzbh,
+        fileuri,
+        fileoldname,
+        xb,
+        xl,
+        zc,
+        pxsj,
+        lrr,
+        lrsj,
+        ryid,
+        kssj,
+        jzsj,
+        oilfield ,
+        phone,
+        province,
+        city,
+        counties,
+        town,
+        village,
+        num,
+        STATE
+        )
+        (
+        <foreach collection="person_entityList" index="" item="item" separator="union all">
+            select
+            #{dwdm,jdbcType=VARCHAR},
+            (SELECT DWMC FROM PC_CBS_COMPANY WHERE dwdm = #{dwdm} ),
+            #{item.gw,jdbcType=VARCHAR},
+            #{item.xm,jdbcType=VARCHAR},
+            #{item.sfzh,jdbcType=VARCHAR},
+            #{item.jkzbh,jdbcType=VARCHAR},
+            #{item.fileuri,jdbcType=VARCHAR},
+            #{item.fileoldname,jdbcType=VARCHAR},
+            #{item.xb,jdbcType=VARCHAR},
+            #{item.xl,jdbcType=VARCHAR},
+            #{item.zc,jdbcType=VARCHAR},
+            #{item.pxsj,jdbcType=DATE},
+            #{lrr,jdbcType=VARCHAR},
+            sysdate,
+            #{item.ryid,jdbcType=VARCHAR},
+            to_date('${item.kssjs}','yyyy-MM-dd'),
+            to_date('${item.jzsjs}','yyyy-MM-dd'),
+            #{oilfield,jdbcType=VARCHAR},
+            #{item.phone,jdbcType=VARCHAR},
+            #{item.province,jdbcType=VARCHAR},
+            #{item.city,jdbcType=VARCHAR},
+            #{item.counties,jdbcType=VARCHAR},
+            #{item.town,jdbcType=VARCHAR},
+            #{item.village,jdbcType=VARCHAR},
+            #{item.num,jdbcType=VARCHAR},
+            '1'
+            from dual
+        </foreach>
+        )
+    </insert>
+    <!-- 人员修改！ -->
+    <select id="selectone" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+      SELECT
+	dwdm,
+	dwmc,
+	gw,
+	xm,
+	sfzh,
+	jkzbh,
+	fileuri,
+	fileoldname,
+	xb,
+	xl,
+	zc,
+	pxsj,
+	lrr,
+	ryid,
+	to_char(pxsj,'YYYY-MM-DD') spxsj,
+	to_char(kssj,'YYYY-MM-DD') kssjs,
+	to_char(jzsj,'YYYY-MM-DD') jzsjs,
+	lrsj,
+	oilfield,
+	PHONE,
+	PROVINCE,
+	CITY,
+	COUNTIES,
+	TOWN,
+	VILLAGE,
+	PROVINCE||CITY||COUNTIES||TOWN||VILLAGE address,
+	NUM 
+  FROM  PC_CBS_PERSON_LIBRARY where   ryid =#{ryid} 
+</select>
+    <!-- 人员修改保存！ -->
+    <update id="update" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+        update PC_CBS_PERSON_LIBRARY
+        set gw=#{gw},
+        xm=#{xm},
+        xb=#{xb},
+        zc=#{zc,jdbcType=VARCHAR},
+        jkzbh=#{jkzbh,jdbcType=VARCHAR},
+        kssj=to_date(#{kssjs,jdbcType=VARCHAR},'yyyy-MM-dd') ,
+        jzsj=to_date(#{jzsjs,jdbcType=VARCHAR},'yyyy-MM-dd'),
+        phone=#{phone,jdbcType=VARCHAR},
+        province=#{province,jdbcType=VARCHAR},
+        city=#{city,jdbcType=VARCHAR},
+        counties=#{counties,jdbcType=VARCHAR},
+        town=#{town,jdbcType=VARCHAR},
+        village=#{village,jdbcType=VARCHAR},
+        <if test="fileuri!=null   and fileuri.length() &gt;0">
+            fileuri=#{fileuri},
+        </if>
+        xl=#{xl,jdbcType=VARCHAR},
+        sfzh=#{sfzh}
+        where ryid=#{ryid}
+    </update>
+    <!-- 人员删除！ -->
+    <update id="removeSave" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+        begin
+        delete from PC_CBS_PERSON where ryid=#{ryid};
+        update   PC_CBS_PERSON_LIBRARY
+        set  STATE='0'
+        where ryid=#{ryid};
+        end;
+</update>
+    <!-- 根据岗位查询队伍绑定人员！ -->
+    <select id="selectByParam1" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+      select 
+        A.ANNEX_NAME gw,
+        A.num xh ,
+        A.id rymb_id,
+		B.xm,
+		B.sfzh,
+		B.jkzbh,
+		B.fileuri,
+		B.xb,
+		B.xl,
+		B.zc,
+		B.pxsj,
+		B.ryid,
+		to_char(B.pxsj,'YYYY-MM-DD') spxsj,
+		to_char(B.kssj,'YYYY-MM-DD') kssjs,
+		to_char(B.jzsj,'YYYY-MM-DD') jzsjs,
+		B.PHONE,
+		B.PROVINCE,
+		B.CITY,
+		B.COUNTIES,
+		B.TOWN
+      from PC_CBS_ANNEX A 
+      LEFT JOIN (SELECT *  FROM PC_CBS_PERSON WHERE TERMID =#{termid}) B ON B.gw=A.ANNEX_NAME
+      where A.TAB='1' and A.PARENT_ID =#{rymb_id} and A.OILFIELD=#{oilfield}
+        order by A.num 
+</select>
+    <!-- 人员绑定查询人员下拉框！ -->
+    <select id="rybd_select" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+        select A.xm,A.sfzh,A.ryid from PC_CBS_PERSON_LIBRARY A
+        left join (select * from PC_CBS_PERSON
+        <where>
+            <if test="ryid!=null   and ryid.length() &gt;0">
+                ryid!=#{ryid}
+            </if>
+        </where>
+        ) B ON A.sfzh=B.sfzh
+        where A.dwdm =#{dwdm} and (A.gw is null or A.gw=(select ANNEX_NAME from PC_CBS_ANNEX where id =#{rymb_id} and OILFIELD=#{oilfield} ))
+        and B.sfzh is null
+        order by nlssort(A.xm,'NLS_SORT=SCHINESE_PINYIN_M')
+    </select>
+    <!-- 人员维护列表总人数！ -->
+    <select id="count4" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity" resultType="int">
+        SELECT count(*) from PC_CBS_PERSON_LIBRARY A
+        left join PC_CBS_PERSON B ON A.ryid=B.ryid
+        <where>
+            A.oilfield=#{oilfield} and STATE='1'
+            <if test="dwdm!=null   and dwdm.length() &gt;0">
+                and A.DWDM like #{dwdm}||'%'
+            </if>
+            <if test="termid!=null   and termid.length() &gt;0">
+                and B.termid=#{termid}
+            </if>
+            <if test="gw!=null   and gw.length() &gt;0">
+                and A.gw=#{gw}
+            </if>
+            <if test="xm!=null   and xm.length() &gt;0">
+                and A.xm like '%'||#{xm}||'%'
+            </if>
+            <if test="sfzh!=null   and sfzh.length() &gt;0">
+                and A.sfzh like '%'||#{sfzh}||'%'
+            </if>
+        </where>
+    </select>
+    <!-- 人员查询列表! -->
+    <select id="selectByParam4" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+        SELECT * from(
+        SELECT A.* ,rownum row_num from (
+        SELECT
+        A.dwdm,
+        A.dwmc,
+        nvl(A.gw,B.gw) gw,
+        A.xm,
+        A.sfzh,
+        A.jkzbh,
+        A.fileuri,
+        A.fileoldname,
+        A.xb,
+        A.xl,
+        A.zc,
+        A.pxsj,
+        A.lrr,
+        A.ryid,
+        to_char(A.pxsj,'yyyy-mm-dd') spxsj,
+        to_char(A.kssj,'yyyy-mm-dd') kssjs,
+        to_char(A.jzsj,'yyyy-mm-dd') jzsjs,
+        A.lrsj,
+        A.oilfield,
+        A.PHONE,
+        A.PROVINCE,
+        A.CITY,
+        A.COUNTIES,
+        A.TOWN,
+        A.VILLAGE,
+        A.PROVINCE||A.CITY||A.COUNTIES||A.TOWN||A.VILLAGE address,
+        A.NUM ,
+        A.PRINTNUM,
+        B.termid,
+        B.termname
+        FROM
+        PC_CBS_PERSON_LIBRARY A
+        left join PC_CBS_PERSON B ON A.ryid=B.ryid
+        <where>
+            A.oilfield=#{oilfield} and STATE='1'
+            <if test="dwdm!=null   and dwdm.length() &gt;0">
+                and A.DWDM like #{dwdm}||'%'
+            </if>
+            <if test="termid!=null   and termid.length() &gt;0">
+                and B.termid=#{termid}
+            </if>
+            <if test="gw!=null   and gw.length() &gt;0">
+                and A.gw=#{gw}
+            </if>
+            <if test="xm!=null   and xm.length() &gt;0">
+                and A.xm like '%'||#{xm}||'%'
+            </if>
+            <if test="sfzh!=null   and sfzh.length() &gt;0">
+                and A.sfzh like '%'||#{sfzh}||'%'
+            </if>
+        </where>
+        order by A.DWDM,B.termid,B.xh,A.gw
+        ) A )
+        where row_num &lt;=#{endRow} and row_num &gt;= #{startRow}
+    </select>
+    <!-- 根据ryid查询人员信息（人员信息卡）！ -->
+    <select id="ryselect" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+      SELECT
+	dwdm,
+	dwmc,
+	gw,
+	xm,
+	sfzh,
+	jkzbh,
+	fileuri,
+	fileoldname,
+	xb,
+	xl,
+	zc,
+	pxsj,
+	lrr,
+	ryid,
+	to_char(pxsj,'YYYYMMDD') spxsj,
+	to_char(kssj,'YYYYMMDD') kssjs,
+	to_char(jzsj,'YYYYMMDD') jzsjs,
+	lrsj,
+	oilfield,
+	PHONE,
+	PROVINCE,
+	CITY,
+	COUNTIES,
+	TOWN,
+	VILLAGE,
+	PROVINCE||CITY||COUNTIES||TOWN||VILLAGE address,
+	NUM 
+  FROM  PC_CBS_PERSON_LIBRARY where   ryid =#{ryid} 
+</select>
+    <!-- 打印次数保存 ！-->
+    <update id="printSave" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+begin 
+		update PC_CBS_PERSON_LIBRARY
+		set printnum=NVL(printnum,0)+1
+		where ryid =#{ryid} ;
+	   update PC_CBS_PERSON
+		set printnum=NVL(printnum,0)+1
+		where ryid =#{ryid} ;
+		end;
+</update>
+    <select id="select" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+select 
+	dwdm,
+	dwmc,
+	gw,
+	xm,
+	sfzh,
+	jkzbh,
+	fileuri,
+	fileoldname,
+	xb,
+	xl,
+	zc,
+	pxsj,
+	lrr,
+	ryid,
+	to_char(pxsj,'yyyy-mm-dd') spxsj,
+	to_char(kssj,'yyyy-mm-dd') kssjs,
+	to_char(jzsj,'yyyy-mm-dd') jzsjs,
+	lrsj ,oilfield
+	
+	from PC_CBS_PERSON_LIBRARY  where TERMID=#{termid} and oilfield=#{oilfield} ORDER BY LRSJ DESC
+</select>
+    <!-- 人员绑定保存 -->
+    <insert id="ry_bd_save" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+ begin 
+ delete from PC_CBS_PERSON where dwdm=#{dwdm} and TERMID=#{termid} and gw=#{gw} ;
+insert into
+	PC_CBS_PERSON(
+	dwdm,
+	dwmc,
+	TERMID,
+	TERMNAME,
+	gw,
+	xm,
+	sfzh,
+	jkzbh,
+	fileuri,
+	xb,
+	xl,
+	zc,
+	pxsj,
+	lrr,
+	lrsj,
+	ryid,
+	kssj,
+	jzsj,
+	oilfield,
+	phone,
+	province,
+	city,
+	counties,
+	town,
+	village,
+	num,
+	XH
+	)
+	(
+	select 
+	dwdm,
+	dwmc,
+	#{termid},
+	(SELECT	UNITNAME 	FROM	PC_SYS_UNIT_CODE 	WHERE	 ID = #{termid}),
+	#{gw},
+	xm,
+	sfzh,
+	jkzbh,
+	fileuri,
+	xb,
+	xl,
+	zc,
+	pxsj,
+	#{lrr},
+	sysdate,
+	ryid,
+	kssj,
+	jzsj,
+	oilfield,
+	phone,
+	province,
+	city,
+	counties,
+	town,
+	village,
+	num,
+	#{xh}
+	from  PC_CBS_PERSON_LIBRARY where ryid=#{ryid}
+	);
+	end ;
+</insert>
+    <select id="ry_bd_select" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+   select *  from PC_CBS_PERSON  where sfzh=(select sfzh   from  PC_CBS_PERSON_LIBRARY where ryid=#{ryid})
+</select>
+    <select id="unitname" parameterType="java.lang.String" resultType="java.lang.String">
+  SELECT unitname from PC_SYS_UNIT_CODE  WHERE id=#{unitid} and UNITEPROPERTY='生产'
+</select>
+    <update id="import_edit" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+        <foreach collection="el" item="item" index="index" open="begin" close=";end;" separator=";">
+            update PC_CBS_PERSON_LIBRARY
+            set
+            phone=#{item.phone,jdbcType=VARCHAR},
+            city=#{item.city,jdbcType=VARCHAR},
+            counties=#{item.counties,jdbcType=VARCHAR},
+            town=#{item.town,jdbcType=VARCHAR},
+            village=#{item.village,jdbcType=VARCHAR}
+            where sfzh = #{item.sfzh,jdbcType=INTEGER}
+        </foreach>
+    </update>
+
+
+    <select id="bg_select_count" parameterType="com.cyrj.jxzy.entity.Constractor.Person_changeEntity" resultType="int">
+
+        select count(*) from PC_CBS_PERSON_CHANGE
+        <where>
+            OILFIELD=#{oilfield}
+            <if test="audit_tab!=null   and audit_tab.length() &gt;0">
+                and audit_tab=#{audit_tab}
+            </if>
+            <if test="dwdm_new!=null   and dwdm_new.length() &gt;0">
+                and dwdm_new like #{dwdm_new}||'%'
+            </if>
+        </where>
+    </select>
+    <select id="bg_select_list" parameterType="com.cyrj.jxzy.entity.Constractor.Person_changeEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.Person_changeEntity">
+        SELECT * from(
+        SELECT B.* ,rownum row_num from (
+        SELECT
+        A.OILFIELD,
+        A.RYID,
+        A.XM,
+        A.SFZH,
+        A.DWDM_OLD,
+        (SELECT DWMC from PC_CBS_COMPANY WHERE DWDM=A.DWDM_OLD) dwmc_old,
+        A.DWDM_NEW,
+        (SELECT DWMC from PC_CBS_COMPANY WHERE DWDM=A.DWDM_NEW) dwmc_new,
+        A.APPLY_PERSON,
+        to_char(A.APPLY_TIME,'yyyy-mm-dd') APPLY_TIME,
+        A.AUDIT_PERSON,
+        to_char(A.AUDIT_TIME,'yyyy-mm-dd') AUDIT_TIME,
+        A.AUDIT_TAB,
+        A.audit_reason,
+        A.BG_ID,
+        A.FILETAB,
+        jkzbh,
+        xb,
+        xl,
+        zc,
+        to_char(kssj,'yyyy-mm-dd') kssjs,
+        to_char(jzsj,'yyyy-mm-dd') jzsjs,
+        phone,
+        province,
+        city,
+        counties,
+        town,
+        village ,
+        PROVINCE||CITY||COUNTIES||TOWN||VILLAGE address
+        FROM
+        PC_CBS_PERSON_CHANGE A
+        <where>
+            A.OILFIELD=#{oilfield}
+            <if test="audit_tab!=null   and audit_tab.length() &gt;0">
+                and A.audit_tab=#{audit_tab}
+            </if>
+            <if test="dwdm_new!=null   and dwdm_new.length() &gt;0">
+                and A.dwdm_new like #{dwdm_new}||'%'
+            </if>
+        </where>
+        order by A.APPLY_TIME DESC
+        ) B )
+        where row_num &lt;=#{endRow} and row_num &gt;= #{startRow}
+    </select>
+    <select id="bgsq_save_select" parameterType="com.cyrj.jxzy.entity.Constractor.Person_changeEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.Person_changeEntity">
+ select  A.* ,(SELECT DWMC  from PC_CBS_COMPANY WHERE DWDM=A.DWDM_NEW) dwmc_new from PC_CBS_PERSON_CHANGE A where A.SFZH =#{sfzh} and A.AUDIT_TAB='0'
+</select>
+    <insert id="bgsq_save1" parameterType="com.cyrj.jxzy.entity.Constractor.Person_changeEntity">
+        insert into PC_CBS_PERSON_IMAGE
+        (ID,
+        FILEURL,
+        DATETIME,
+        FILETYPE,
+        CREATE_USER_ID,
+        OILFIELD
+        )
+        (
+        <foreach collection="el" index="" item="item" separator="union all">
+            select
+            #{item.bg_id,jdbcType=VARCHAR},
+            #{item.fileurl,jdbcType=VARCHAR},
+            sysdate,
+            #{item.filetype,jdbcType=VARCHAR},
+            #{item.apply_person,jdbcType=VARCHAR},
+            #{item.oilfield,jdbcType=VARCHAR}
+            from dual
+        </foreach>
+        )
+    </insert>
+    <insert id="bgsq_save2" parameterType="com.cyrj.jxzy.entity.Constractor.Person_changeEntity">
+   insert into PC_CBS_PERSON_CHANGE 
+   (OILFIELD,
+	RYID,
+	XM,
+	SFZH,
+	DWDM_OLD,
+	DWDM_NEW,
+	APPLY_PERSON,
+	APPLY_TIME,
+	AUDIT_TAB,
+	BG_ID,
+	FILETAB,
+	jkzbh,
+	xb,
+	xl,
+	zc,
+	kssj,
+	jzsj,
+	phone,
+	province,
+	city,
+	counties,
+	town,
+	village	
+	)
+	select 
+	#{oilfield},
+	RYID,
+	 #{xm,jdbcType=VARCHAR},
+	SFZH,
+	DWDM,
+	#{dwdm_new},
+  	#{apply_person},
+   sysdate,
+   '0',
+   #{bg_id,jdbcType=VARCHAR},
+   #{filetab,jdbcType=VARCHAR},  
+   #{jkzbh,jdbcType=VARCHAR},
+   #{xb,jdbcType=VARCHAR},
+   #{xl,jdbcType=VARCHAR},
+   #{zc,jdbcType=VARCHAR},
+  to_date('${kssjs}','yyyy-MM-dd'),
+  to_date('${jzsjs}','yyyy-MM-dd'),
+   #{phone,jdbcType=VARCHAR},
+   #{province,jdbcType=VARCHAR},
+   #{city,jdbcType=VARCHAR},
+   #{counties,jdbcType=VARCHAR},
+   #{town,jdbcType=VARCHAR} ,
+   #{village,jdbcType=VARCHAR} 
+   from PC_CBS_PERSON_LIBRARY where SFZH =#{sfzh}
+</insert>
+    <delete id="bgsq_th_delete" parameterType="com.cyrj.jxzy.entity.Constractor.Person_changeEntity">
+ begin 
+  delete from PC_CBS_PERSON_CHANGE where bg_id=#{bg_id};
+  delete from PC_CBS_PERSON_IMAGE where ID=#{bg_id};
+  end;
+</delete>
+    <select id="imageView" parameterType="com.cyrj.jxzy.entity.Constractor.UploadFilesEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.UploadFilesEntity">
+   select FILEURL fileuri from PC_CBS_PERSON_IMAGE where id=#{id}
+</select>
+
+    <update id="bgshSave" parameterType="com.cyrj.jxzy.entity.Constractor.Person_changeEntity">
+        begin
+        update PC_CBS_PERSON_CHANGE
+        set AUDIT_TAB=#{audit_tab},
+        AUDIT_REASON=#{audit_reason,jdbcType=VARCHAR},
+        AUDIT_TIME=sysdate,
+        AUDIT_PERSON=#{audit_person,jdbcType=VARCHAR}
+        where BG_ID=#{bg_id};
+
+        <if test="audit_tab!=null   and audit_tab &gt;0 and audit_tab==1">
+            update PC_CBS_PERSON_LIBRARY
+            set DWDM=(select DWDM_NEW from PC_CBS_PERSON_CHANGE where BG_ID=#{bg_id}),
+            DWMC=(SELECT DWMC from PC_CBS_COMPANY WHERE DWDM=(select DWDM_NEW from PC_CBS_PERSON_CHANGE where
+            BG_ID=#{bg_id})),
+            STATE='1',
+            PRINTNUM=0
+            where RYID=(select RYID from PC_CBS_PERSON_CHANGE where BG_ID=#{bg_id});
+            delete from PC_CBS_PERSON where RYID= (select RYID from PC_CBS_PERSON_CHANGE where BG_ID=#{bg_id});
+        </if>
+        end;
+    </update>
+
+    <select id="edit_yq" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+   select *  from PC_CBS_PERSON  where ryid=#{ryid}
+</select>
+
+    <select id="select2" parameterType="com.cyrj.jxzy.entity.Constractor.PersonEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.PersonEntity">
+		SELECT A .* FROM PC_CBS_PERSON A WHERE A .xh &lt;= 9 and  termid = #{termid}
+		order by xh
+	</select>
+</mapper>

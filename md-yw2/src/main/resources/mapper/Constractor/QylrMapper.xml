@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.QylrDao">
+
+    <select id="count" parameterType="com.cyrj.jxzy.entity.Constractor.QylrEntity" resultType="int">
+        select count(*) from PC_CBS_COMPANY
+        <where>
+            oilfield =#{oilfield}
+            <if test="dwdm!=null and dwdm.length() &gt;0">
+                and dwdm like #{dwdm}||'%'
+            </if>
+        </where>
+    </select>
+
+    <select id="selectByParam1" parameterType="com.cyrj.jxzy.entity.Constractor.QylrEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.QylrEntity">
+        SELECT * from(
+        select k.*,ROWNUM row_num
+        from
+        (SELECT A.* ,CASE WHEN B.termNUM IS NULL THEN 0 ELSE B.termNUM end termNUM FROM PC_CBS_COMPANY A
+        LEFT JOIN (
+        select DWDM ,count(*) termNUM from PC_CBS_QUALIFICATION_INFO
+        WHERE AUDIT_TAB='2'
+        GROUP BY DWDM )B ON B.DWDM =A.DWDM
+        <where>
+            oilfield =#{oilfield}
+            <if test="dwmc!=null and dwmc.length() &gt;0">
+                and A.dwdm = (SELECT PC_SYS_UNIT_CODE.id dwdm FROM PC_SYS_UNIT_CODE WHERE PC_SYS_UNIT_CODE.UNITNAME =
+                #{dwmc})
+            </if>
+            <if test="dwdm!=null and dwdm.length() &gt;0">
+                and A.dwdm like #{dwdm}||'%'
+            </if>
+        </where>
+        ORDER BY NLSSORT (A.dwlb, 'NLS_SORT=SCHINESE_PINYIN_M' ) , NLSSORT (A.unitname, 'NLS_SORT=SCHINESE_PINYIN_M' ))k
+        )
+        where row_num &lt;=#{endRow} and row_num &gt;= #{startRow}
+    </select>
+
+    <select id="selectByParam11" parameterType="com.cyrj.jxzy.entity.Constractor.QylrEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.QylrEntity">
+        SELECT * from(
+        select k.*,ROWNUM row_num
+        from
+        (SELECT A.* ,CASE WHEN B.termNUM IS NULL THEN 0 ELSE B.termNUM end termNUM FROM PC_CBS_COMPANY A
+        LEFT JOIN (
+        select DWDM ,count(*) termNUM from PC_CBS_QUALIFICATION_INFO
+        WHERE AUDIT_TAB='2'
+        GROUP BY DWDM )B ON B.DWDM =A.DWDM
+        <where>
+            oilfield =#{oilfield}
+            <if test="dwmc!=null   and dwmc.length() &gt;0">
+                <bind name="dwmc" value="'%'+ dwmc + '_%'"/>
+                and dwmc like #{dwmc}
+            </if>
+            <if test="dwlbid!=null   and dwlbid.length() &gt;0">
+                and dwlbid=#{dwlbid}
+            </if>
+            <if test="unitname!=null   and unitname.length() &gt;0">
+                <bind name="unitname" value="'%' + unitname + '%'"/>
+                and unitname like #{unitname}
+            </if>
+        </where>
+        ORDER BY NLSSORT (A.dwlb, 'NLS_SORT=SCHINESE_PINYIN_M' ) , NLSSORT (A.unitname, 'NLS_SORT=SCHINESE_PINYIN_M' ))k
+        ) where row_num &lt;=#{endRow} and row_num &gt;= #{startRow}
+    </select>
+
+
+    <select id="selectByParam3" parameterType="com.cyrj.jxzy.entity.Constractor.QylrEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.QylrEntity">
+        SELECT DWMC,DWDM,unitname from PC_CBS_COMPANY where oilfield=#{oilfield}
+        <if test="dwlbid!=null and dwlbid.length() &gt;0">
+            and dwlbid=#{dwlbid}
+        </if>
+        <if test="unitname!=null and unitname.length() &gt;0">
+            and unitname=#{unitname}
+        </if>
+        <if test="dwdm!=null and dwdm.length() &gt;0">
+            and dwdm like #{dwdm}||'%'
+        </if>
+        ORDER BY NLSSORT (unitname, 'NLS_SORT=SCHINESE_PINYIN_M' )
+    </select>
+
+    <select id="selectByParam2" parameterType="com.cyrj.jxzy.entity.Constractor.QylrEntity" resultType="int">
+        SELECT count(*) from PC_CBS_COMPANY A
+        <where>
+            oilfield =#{oilfield}
+            <if test="dwmc!=null and dwmc.length() &gt;0">
+                and A.dwdm = (SELECT PC_SYS_UNIT_CODE.id dwdm FROM PC_SYS_UNIT_CODE WHERE PC_SYS_UNIT_CODE.UNITNAME =
+                #{dwmc})
+            </if>
+            <if test="dwdm!=null and dwdm.length() &gt;0">
+                and A.dwdm = #{dwdm}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectByParam22" parameterType="com.cyrj.jxzy.entity.Constractor.QylrEntity" resultType="int">
+        SELECT count(*) from PC_CBS_COMPANY A
+        <where>
+            oilfield =#{oilfield}
+            <if test="dwmc!=null   and dwmc.length() &gt;0">
+                <bind name="dwmc" value="'%'+ dwmc + '_%'"/>
+                and dwmc like #{dwmc}
+            </if>
+            <if test="dwlbid!=null   and dwlbid.length() &gt;0">
+                and dwlbid=#{dwlbid}
+            </if>
+            <if test="unitname!=null   and unitname.length() &gt;0">
+                <bind name="unitname" value="'%' + unitname + '%'"/>
+                and unitname like #{unitname}
+            </if>
+        </where>
+    </select>
+
+
+    <!-- <select id="selectByParam" parameterType="com.cyrj.jxzy.entity.Constractor.QylrEntity" resultType="com.cyrj.jxzy.entity.Constractor.QylrEntity">
+       ${whc}
+    </select> -->
+
+    <select id="selectZz1" parameterType="com.cyrj.jxzy.entity.Constractor.QylrEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.QylrEntity">
+        select * from PC_CBS_COMPANY
+        <where>
+            <if test="dwdm!=null and dwdm.length() &gt;0">
+                and dwdm=#{dwdm}
+            </if>
+        </where>
+    </select>
+    <select id="selectZz2" parameterType="com.cyrj.jxzy.entity.Constractor.QylrEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.QylrEntity">
+        select manager,TO_NUMBER(phone) iphone from PC_CBS_COMPANY
+        <where>
+            <if test="dwdm!=null and dwdm.length() &gt;0">
+                and dwdm=#{dwdm}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="selectByParam4" parameterType="com.cyrj.jxzy.entity.Constractor.QylrEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.QylrEntity">
+        SELECT * from PC_CBS_COMPANY where 1=1
+        <if test="dwlb!=null and dwlb.length() &gt;0">
+            and dwlb=#{dwlb}
+        </if>
+        <if test="unitname!=null and unitname.length() &gt;0">
+            and unitname=#{unitname}
+        </if>
+        ORDER BY DATATIME DESC
+    </select>
+    <!--修改操作先删后加start-->
+
+    <delete id="deleteParam" parameterType="com.cyrj.jxzy.entity.Constractor.QylrEntity">
+        delete from PC_CBS_COMPANY
+        <where>
+            dwdm = #{dwdm}
+        </where>
+    </delete>
+
+    <insert id="insert1" parameterType="com.cyrj.jxzy.entity.Constractor.QylrEntity">
+insert into
+PC_CBS_COMPANY(
+reserve1,
+reserve2,
+reserve3,
+oilfield,
+dwdm,
+unitname,
+dwmc,
+manager,
+phone,
+datatime,
+input_person,
+dwlb,
+dwlbid
+)
+values(
+#{reserve1,jdbcType=VARCHAR},
+#{reserve2,jdbcType=VARCHAR},
+#{reserve3,jdbcType=VARCHAR},
+#{oilfield,jdbcType=VARCHAR},
+#{dwdm,jdbcType=VARCHAR},
+(SELECT
+PC_SYS_UNIT_CODE.UNITNAME UNITNAME
+FROM
+PC_SYS_UNIT_CODE
+WHERE
+PC_SYS_UNIT_CODE.ID = #{dwdm} ),
+#{dwmc,jdbcType=VARCHAR},
+#{manager,jdbcType=VARCHAR},
+#{phone,jdbcType=VARCHAR},
+sysdate,
+#{input_person,jdbcType=VARCHAR},
+(SELECT  ANNEX_NAME dwlb FROM PC_CBS_ANNEX where id = #{dwlbid} and oilfield=#{oilfield} ),
+#{dwlbid,jdbcType=VARCHAR}
+)
+</insert>
+    <!--修改操作先删后加end-->
+
+
+    <!-- 代码自动生成，请核对数据类型 -->
+    <!-- 查询 -->
+    <select id="select" parameterType="com.cyrj.jxzy.entity.Constractor.QylrEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.QylrEntity">
+select
+reserve1,
+reserve2,
+reserve3,
+oilfield,
+dwdm,
+unitname,
+dwmc,
+manager,
+phone,
+datatime,
+input_person,
+access_cert_num,
+group_quali_term,
+oil_admittance_term,
+enterprise_address,
+enterprise_nature,
+manager_IDCard,
+agent_IDCard,
+agent,
+agent_phone,
+social_credit_code,
+registered_capital,
+business_scope,
+deposit_bank,
+bank_account_num,
+telephone,
+total_number,
+managers_number,
+main_equi_num,
+equi_assets_orig_val,
+equi_assets_now_val,
+business_place,
+asset_liability_ratio,
+construction_project,
+remarks
+from PC_CBS_COMPANY
+</select>
+
+    <!-- 插入数据 -->
+    <insert id="qylrInsert" parameterType="com.cyrj.jxzy.entity.Constractor.QylrEntity">
+insert into
+PC_CBS_COMPANY(
+reserve1,
+reserve2,
+reserve3,
+oilfield,
+dwdm,
+unitname,
+dwmc,
+manager,
+phone,
+datatime,
+input_person,
+dwlb,
+dwlbid,
+access_cert_num,
+group_quali_term,
+oil_admittance_term,
+enterprise_address,
+enterprise_nature,
+manager_IDCard,
+agent_IDCard,
+agent,
+agent_phone,
+social_credit_code,
+registered_capital,
+business_scope,
+deposit_bank,
+bank_account_num,
+telephone,
+total_number,
+managers_number,
+main_equi_num,
+equi_assets_orig_val,
+equi_assets_now_val,
+business_place,
+asset_liability_ratio,
+construction_project,
+remarks
+)
+values(
+#{reserve1,jdbcType=VARCHAR},
+#{reserve2,jdbcType=VARCHAR},
+#{reserve3,jdbcType=VARCHAR},
+#{oilfield,jdbcType=VARCHAR},
+#{dwdm,jdbcType=VARCHAR},
+(SELECT
+PC_SYS_UNIT_CODE.UNITNAME UNITNAME
+FROM
+PC_SYS_UNIT_CODE
+WHERE
+PC_SYS_UNIT_CODE.ID = #{dwdm} ),
+#{dwmc,jdbcType=VARCHAR},
+#{manager,jdbcType=VARCHAR},
+#{phone,jdbcType=VARCHAR},
+sysdate,
+#{input_person,jdbcType=VARCHAR},
+(SELECT  ANNEX_NAME dwlb FROM PC_CBS_ANNEX where id = #{dwlbid} and oilfield=#{oilfield}),
+#{dwlbid,jdbcType=VARCHAR},
+#{access_cert_num,jdbcType=VARCHAR},
+#{group_quali_term,jdbcType=VARCHAR},
+#{oil_admittance_term,jdbcType=VARCHAR},
+#{enterprise_address,jdbcType=VARCHAR},
+#{enterprise_nature,jdbcType=VARCHAR},
+#{manager_IDCard,jdbcType=VARCHAR},
+#{agent_IDCard,jdbcType=VARCHAR},
+#{agent,jdbcType=VARCHAR},
+#{agent_phone,jdbcType=VARCHAR},
+#{social_credit_code,jdbcType=VARCHAR},
+#{registered_capital,jdbcType=VARCHAR},
+#{business_scope,jdbcType=VARCHAR},
+#{deposit_bank,jdbcType=VARCHAR},
+#{bank_account_num,jdbcType=VARCHAR},
+#{telephone,jdbcType=VARCHAR},
+#{total_number,jdbcType=VARCHAR},
+#{managers_number,jdbcType=VARCHAR},
+#{main_equi_num,jdbcType=VARCHAR},
+#{equi_assets_orig_val,jdbcType=VARCHAR},
+#{equi_assets_now_val,jdbcType=VARCHAR},
+#{business_place,jdbcType=VARCHAR},
+#{asset_liability_ratio,jdbcType=VARCHAR},
+#{construction_project,jdbcType=VARCHAR},
+#{remarks,jdbcType=VARCHAR}
+)
+</insert>
+</mapper>

@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydx.aqsc.dao.Security.SgjdDao">
+
+
+    <select id="djsgjd_count" parameterType="com.sydx.aqsc.entity.Security.WellEntity" resultType="int">
+        select count(DISTINCT A.CONSTRUCTION_ID) from V_CBS_SGJDJC A
+        inner join PC_AQSC_MOVE B on A.OP_TEAM=B.UNITID
+        where A.start_time is not null
+        <if test="attribute !=null and attribute.length() &gt; 0 and attribute==1 ">
+            and A.op_team like #{search}||'%'
+        </if>
+        <if test="attribute !=null and attribute.length() &gt; 0 and attribute==2 ">
+            and A.cydid like #{search}||'%'
+        </if>
+        <if test="well_common_name !=null and well_common_name.length() &gt; 0 ">
+            and A.well_common_name like '%'||UPPER(#{well_common_name})||'%'
+        </if>
+        <if test="scdw !=null and scdw.length() &gt; 0 ">
+            and A.cydid like '%'||#{scdw}||'%'
+        </if>
+        <if test="zydw !=null and zydw.length() &gt; 0 ">
+            and A.op_team like '%'||#{zydw}||'%'
+        </if>
+    </select>
+
+    <select id="djsgjd_List" parameterType="com.sydx.aqsc.entity.Security.WellEntity"
+            resultType="com.sydx.aqsc.entity.Security.WellEntity">
+
+        SELECT W.* from(
+        SELECT Z.* ,rownum row_num from (
+        select DISTINCT A.DESIGN_NUM,A.CONSTRUCTION_ID,A.WELL_COMMON_NAME,A.START_TIME,A.COMPLETE_TIME,A.OP_TEAM,A.SCDW
+        ,A.cydid ,A.WELL_PURPOSE,A.sgdw zydw,A.zylx csfl from V_CBS_SGJDJC A
+        inner join PC_AQSC_MOVE B on A.OP_TEAM=B.UNITID
+        where A.start_time is not null
+        <if test="attribute !=null and attribute.length() &gt; 0 and attribute==1 ">
+            and A.op_team like #{search}||'%'
+        </if>
+        <if test="attribute !=null and attribute.length() &gt; 0 and attribute==2 ">
+            and A.cydid like #{search}||'%'
+        </if>
+        <if test="well_common_name !=null and well_common_name.length() &gt; 0 ">
+            and A.well_common_name like '%'||UPPER(#{well_common_name})||'%'
+        </if>
+        <if test="scdw !=null and scdw.length() &gt; 0 ">
+            and A.cydid like '%'||#{scdw}||'%'
+        </if>
+        <if test="zydw !=null and zydw.length() &gt; 0 ">
+            and A.op_team like '%'||#{zydw}||'%'
+        </if>
+        order by A.OP_TEAM,A.well_common_name
+        ) Z )W
+        where row_num &lt;=#{endRow} and row_num &gt;= #{startRow}
+    </select>
+
+    <select id="djsgjd_gx_Show" parameterType="com.sydx.aqsc.entity.Security.Djsgjd_GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.Djsgjd_GxEntity">
+<!--SELECT CONSTRUCTION_ID,spname,SPID,PDID,SORT,STATE,SIGN,OVERTIME_REASON csyy,czgc,czgcid,fxts,fxtsid,STARTTIME,ENDTIME, lj_time, zt_time,sj_time,jh_time,
+      DECODE(Sign(zj),-1, abs(zj),0) z_time,DECODE(Sign(zj),1,abs(zj),0) j_time  FROM(
+    SELECT CONSTRUCTION_ID,spname,SPID,PDID,SORT,STATE,SIGN,OVERTIME_REASON,czgc,czgcid,fxts,fxtsid,STARTTIME,ENDTIME,ROUND(NVL(leiji,0)/3600,2)  lj_time,ROUND(NVL(zanting,0)/3600,2)zt_time ,jihua jh_time,
+    CASE WHEN ROUND(NVL(leiji,0)/3600,2)=0  THEN 0 ELSE ROUND(NVL(leiji,0)/3600,2) -ROUND(NVL(zanting,0)/3600,2) END sj_time,
+    CASE WHEN ROUND(NVL(leiji,0)/3600,2)=0  or jihua is null or jihua =0 THEN 0 ELSE NVL(jihua,0)-(ROUND(NVL(leiji,0)/3600,2) -ROUND(NVL(zanting,0)/3600,2))  END zj
+       FROM (
+        SELECT DISTINCT  A.CONSTRUCTION_ID,C.spname,A.SPID,A.PDID,A.SORT, A.STATE,A.SIGN,A.OVERTIME_REASON, D.czgc,D.czgcid,D.fxts,D.fxtsid,
+        to_char(A.STARTTIME,'yyyy-mm-dd HH24:mi:ss')STARTTIME, to_char(A.ENDTIME,'yyyy-mm-dd HH24:mi:ss')ENDTIME,
+        CEIL ((A.ENDTIME - A.STARTTIME) * 24 * 60 * 60) AS leiji,B.zanting,A.USE_HOURS jihua
+          FROM PC_AQSC_MOVE_PROCESS  A
+        INNER JOIN PC_AQSC_STA_PROCESS C ON C.SPID=A.SPID
+        LEFT JOIN (
+                  SELECT pdid ,SUM(zt) zanting FROM (
+                  SELECT pdid ,CEIL ((ENDTIME - STARTTIME) * 24 * 60 * 60) AS zt FROM PC_AQSC_MOVE_PROCESS_SUSPEND
+                  WHERE CONSTRUCTION_ID =#{construction_id}
+                  )GROUP BY pdid
+                ) B ON B.PDID =A.PDID
+        LEFT JOIN (
+            SELECT DISTINCT Q.SPID ,
+              MAX(DECODE(R.FLAG, '0', R.name)) AS czgc,
+              MAX(DECODE(R.FLAG, '0', R.id)) AS czgcid,
+              MAX(DECODE(R.FLAG, '1', R.name)) AS fxts,
+              MAX(DECODE(R.FLAG, '1', R.id)) AS fxtsid
+             FROM  PC_AQSC_MOVE_PROCESS Q
+            INNER JOIN PC_AQSC_STA_PROCESS_HSE W ON  W.SPid=Q.SPID
+            INNER JOIN PC_AQSC_RISK_PREVENTION R ON R.ID =W.HSEID AND R.FLAG=W.FLAG
+            WHERE Q.CONSTRUCTION_ID =#{construction_id}
+            GROUP BY Q.SPID
+        )  D ON D.SPID=A.SPID
+        WHERE A.CONSTRUCTION_ID =#{construction_id}
+    )
+)ORDER BY SORT-->
+        SELECT CONSTRUCTION_ID,spname,SPID,PDID,SORT,STATE,SIGN,OVERTIME_REASON csyy,STARTTIME,ENDTIME, lj_time, zt_time,sj_time,jh_time,
+        DECODE(Sign(zj),-1, abs(zj),0) z_time,DECODE(Sign(zj),1,abs(zj),0) j_time  FROM(
+        SELECT CONSTRUCTION_ID,spname,SPID,PDID,SORT,STATE,SIGN,OVERTIME_REASON,STARTTIME,ENDTIME,ROUND(NVL(leiji,0)/3600,2)  lj_time,ROUND(NVL(zanting,0)/3600,2)zt_time ,jihua jh_time,
+        CASE WHEN ROUND(NVL(leiji,0)/3600,2)=0  THEN 0 ELSE ROUND(NVL(leiji,0)/3600,2) -ROUND(NVL(zanting,0)/3600,2) END sj_time,
+        CASE WHEN ROUND(NVL(leiji,0)/3600,2)=0  or jihua is null or jihua =0 THEN 0 ELSE NVL(jihua,0)-(ROUND(NVL(leiji,0)/3600,2) -ROUND(NVL(zanting,0)/3600,2))  END zj
+        FROM (
+        SELECT DISTINCT  A.CONSTRUCTION_ID,C.spname,A.SPID,A.PDID,A.SORT, A.STATE,A.SIGN,A.OVERTIME_REASON,
+        to_char(A.STARTTIME,'yyyy-mm-dd HH24:mi:ss')STARTTIME, to_char(A.ENDTIME,'yyyy-mm-dd HH24:mi:ss')ENDTIME,
+        CEIL ((A.ENDTIME - A.STARTTIME) * 24 * 60 * 60) AS leiji,B.zanting,A.USE_HOURS jihua
+        FROM PC_AQSC_MOVE_PROCESS  A
+        INNER JOIN PC_AQSC_STA_PROCESS C ON C.SPID=A.SPID
+        LEFT JOIN (
+        SELECT pdid ,SUM(zt) zanting FROM (
+        SELECT pdid ,CEIL ((ENDTIME - STARTTIME) * 24 * 60 * 60) AS zt FROM PC_AQSC_MOVE_PROCESS_SUSPEND
+        WHERE CONSTRUCTION_ID =#{construction_id}
+        )GROUP BY pdid
+        ) B ON B.PDID =A.PDID
+        WHERE A.CONSTRUCTION_ID =#{construction_id}
+        )
+        )ORDER BY SORT
+  </select>
+
+
+    <select id="djsgjd_zt_Show" parameterType="com.sydx.aqsc.entity.Security.Djsgjd_GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.Djsgjd_GxEntity">
+   SELECT  to_char(STARTTIME,'yyyy-mm-dd HH24:mi:ss')STARTTIME,
+     to_char(ENDTIME,'yyyy-mm-dd HH24:mi:ss')ENDTIME  ,
+     SUSPEND_REASON ztyy
+   from  PC_AQSC_MOVE_PROCESS_SUSPEND
+    where   CONSTRUCTION_ID =#{construction_id} and  pdid=#{pdid}
+    order by  STARTTIME
+    </select>
+
+    <select id="zyjd_dw" parameterType="com.sydx.aqsc.entity.Security.ZyjdEntity"
+            resultType="com.sydx.aqsc.entity.Security.ZyjdEntity">
+        SELECT A.id termid,A .UNITNAME termname,B.CONSTRUCTION_ID did,B.WELL_COMMON_NAME,B.ITEM_NAME
+        oper_project FROM PC_SYS_UNIT_CODE A
+        LEFT JOIN (
+        SELECT id,CONSTRUCTION_ID,WELL_COMMON_NAME,ITEM_NAME FROM (
+        SELECT A.id,B.CONSTRUCTION_ID,B.WELL_COMMON_NAME,B.ITEM_NAME ,B.START_TIME,  row_number() over(partition by B.OP_TEAM order by B.START_TIME DESC) row_number FROM PC_SYS_UNIT_CODE A
+        INNER JOIN V_CBS_SGJDJC B ON A.id=B.OP_TEAM
+          inner join PC_AQSC_MOVE C on  B.OP_TEAM=C.UNITID
+        WHERE PARENTID=#{parentid} AND UNITEPROPERTY2 LIKE '%作业队%' AND B.START_TIME IS NOT NULL
+        ) WHERE row_number=1
+        )B ON A.id=B.ID
+        WHERE A.PARENTID=#{parentid} AND A.UNITEPROPERTY2 LIKE '%作业队%'
+        ORDER BY A.ID
+    </select>
+
+    <select id="zyjd_gx" parameterType="com.sydx.aqsc.entity.Security.Djsgjd_GxEntity"
+            resultType="com.sydx.aqsc.entity.Security.Djsgjd_GxEntity">
+        SELECT CONSTRUCTION_ID,spname,SPID,PDID,SORT,STATE,SIGN, jh_time,lj_time, zt_time,sj_time, DECODE(jh_time,0,0,ROUND(zj/jh_time,2))zj_time FROM(
+        SELECT CONSTRUCTION_ID,spname,SPID,PDID,SORT,STATE,SIGN,ROUND(NVL(leiji,0)/3600,2) lj_time,ROUND(NVL(zanting,0)/3600,2)zt_time ,jihua jh_time,
+        CASE WHEN ROUND(NVL(leiji,0)/3600,2)=0 THEN 0 ELSE ROUND(NVL(leiji,0)/3600,2) -ROUND(NVL(zanting,0)/3600,2) END sj_time,
+        CASE WHEN ROUND(NVL(leiji,0)/3600,2)=0 or jihua is null or jihua =0 THEN 0 ELSE  NVL(jihua,0)-(ROUND(NVL(leiji,0)/3600,2) -ROUND(NVL(zanting,0)/3600,2)) END zj
+        FROM (
+        SELECT DISTINCT A.CONSTRUCTION_ID,C.spname,A.SPID,A.PDID,A.SORT, A.STATE,A.SIGN,CEIL((A.ENDTIME - A.STARTTIME) * 24 * 60 * 60) AS leiji,B.zanting,A.USE_HOURS jihua  FROM PC_AQSC_MOVE_PROCESS A
+        INNER JOIN PC_AQSC_STA_PROCESS C ON C.SPID=A.SPID
+        LEFT JOIN (
+        SELECT pdid ,SUM(zt) zanting FROM (
+        SELECT pdid ,CEIL ((ENDTIME - STARTTIME) * 24 * 60 * 60) AS zt FROM PC_AQSC_MOVE_PROCESS_SUSPEND
+        WHERE CONSTRUCTION_ID =#{construction_id}
+        )GROUP BY pdid
+        ) B ON B.PDID =A.PDID
+        WHERE A.CONSTRUCTION_ID =#{construction_id} and (A.tab is null or A.tab='0')
+        ORDER BY SORT
+        )
+        )
+    </select>
+
+    <select id="sgjd_config" parameterType="com.sydx.aqsc.entity.Security.Sgjd_configEntity"
+            resultType="com.sydx.aqsc.entity.Security.Sgjd_configEntity">
+     select  *  from  PC_AQSC_CON_PRO_CONF where  unitid=#{unitid}
+    </select>
+
+    <delete id="config_delete" parameterType="com.sydx.aqsc.entity.Security.Sgjd_configEntity">
+
+    delete  from   PC_AQSC_CON_PRO_CONF where  unitid=#{unitid}
+
+    </delete>
+    <insert id="config_save" parameterType="com.sydx.aqsc.entity.Security.Sgjd_configEntity">
+
+      insert  into  PC_AQSC_CON_PRO_CONF
+      (
+       OILFIELD,
+        UNITID,
+        REQUEST_DURATION,
+        SP_FONT_FAMILY,
+        SP_FONT_SIZE,
+        TEAM_FONT_FAMILY,
+        TEAM_FONT_SIZE,
+        OP_FONT_FAMILY,
+        OP_FONT_SIZE,
+        WELL_FONT_FAMILY,
+        WELL_FONT_SIZE,
+        W_SP_FONT,
+        ZT_SP_BACKGROUND,
+        ZT_SP_FONT,
+        ZZ_SP_BACKGROUND,
+        ZZ_SP_FONT,
+        WC_SP_BACKGROUND,
+        WC_SP_FONT,
+        CS_SP_BACKGROUND,
+        JS_SP_BACKGROUND,
+        BK_SP_BACKGROUND,
+        FJ_SP_BACKGROUND,
+        CREATE_USER,
+        CREATE_TIME
+      )values
+      (
+      #{oilfield,jdbcType=VARCHAR},
+      #{unitid,jdbcType=VARCHAR},
+      #{request_duration,jdbcType=INTEGER},
+      #{sp_font_family,jdbcType=VARCHAR},
+      #{sp_font_size,jdbcType=INTEGER},
+      #{team_font_family,jdbcType=VARCHAR},
+      #{team_font_size,jdbcType=INTEGER},
+      #{op_font_family,jdbcType=VARCHAR},
+      #{op_font_size,jdbcType=INTEGER},
+      #{well_font_family,jdbcType=VARCHAR},
+      #{well_font_size,jdbcType=INTEGER},
+      #{w_sp_font,jdbcType=VARCHAR},
+      #{zt_sp_background,jdbcType=VARCHAR},
+      #{zt_sp_font,jdbcType=VARCHAR},
+      #{zz_sp_background,jdbcType=VARCHAR},
+      #{zz_sp_font,jdbcType=VARCHAR},
+      #{wc_sp_background,jdbcType=VARCHAR},
+      #{wc_sp_font,jdbcType=VARCHAR},
+      #{cs_sp_background,jdbcType=VARCHAR},
+      #{js_sp_background,jdbcType=VARCHAR},
+      #{bk_sp_background,jdbcType=VARCHAR},
+      #{fj_sp_background,jdbcType=VARCHAR},
+      #{create_user,jdbcType=VARCHAR},
+      sysdate
+      )
+
+    </insert>
+
+    <!-- 根据did查询 -->
+    <select id="findAll" parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity"
+            resultType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity">
+
+        select G.* ,rownum row_num FROM(
+        select UNITNAME construct_team, F.DID, F.WELL_COMMON_NAME, F.WORK_BRIEF, F.ORDER_CLASSES,
+        to_char(F.report_time,'yyyy-MM-dd') REPORT_TIME, to_char(F.WORK_DATE,'yyyy-MM-dd') WORK_DATE,
+        F.NEXT_CIRCUIT, F.IS_COMPLETE, F.CIRCUIT_NAME, F.COMPLETE_JUDGEMENT FROM PC_SYS_UNIT_CODE
+        inner JOIN (
+        SELECT W.* FROM ( SELECT A.DID, A.TEAM_ID , A.ZYQID, B.TEAM_NAME, B.INTELLIGENCE_CODE, B.WELL_COMMON_NAME,
+        B.WORK_BRIEF, B.ORDER_CLASSES, B.BEGIN_TIME_HOUR, B.REPORT_TIME, B.WORK_DATE,
+        B.NEXT_CIRCUIT, B.CIRCUIT_NAME, B.IS_COMPLETE , CASE WHEN B.COMPLETE_JUDGEMENT='yes' THEN '是' ELSE '否' end
+        COMPLETE_JUDGEMENT ,
+        ROW_NUMBER () OVER (PARTITION BY B.TEAM_NAME,B.WELL_COMMON_NAME ORDER BY B.REPORT_TIME DESC, B.BEGIN_TIME_HOUR
+        DESC)num
+        FROM PC_AQSC_START_WELL A
+        INNER JOIN PC_AQSC_TOUR_REPORT_WORKOVE B ON B.DID = A.DID
+        WHERE A.OILFIELD=#{oilfield} AND ( A.END_TIME IS NULL or TRUNC(A.END_TIME,'DD') = TRUNC(SYSDATE,'DD'))
+        )W WHERE w.num=1
+        )F ON F.TEAM_ID= PC_SYS_UNIT_CODE.id
+        WHERE OILFIELD=#{oilfield} AND UNITEPROPERTY2 like '%作业队%'
+        <if test="well_common_name!=null and well_common_name.length() &gt;0">
+            and F.well_common_name like '%'||upper(#{well_common_name})||'%'
+        </if>
+        <if test="construct_team!=null and construct_team.length() &gt;0">
+            and PC_SYS_UNIT_CODE.UNITNAME like '%'||upper(#{construct_team})||'%'
+        </if>
+        <if test="intelligence_code!=null and intelligence_code.length() &gt;0">
+            and F.intelligence_code like '%'||upper(#{intelligence_code})||'%'
+        </if>
+        <if test="report_time!=null and report_time.length() &gt;0">
+            and to_char(F.report_time,'yyyy-MM-dd') =#{report_time}
+        </if>
+        <if test="attribute !=null and attribute.length() &gt; 0 and attribute==1 ">
+            and F.TEAM_ID like #{search}||'%'
+        </if>
+        <if test="attribute !=null and attribute.length() &gt; 0 and attribute==2 ">
+            and F.ZYQID like #{search}||'%'
+        </if>
+        ORDER BY ID
+        )G
+    </select>
+
+    <select id="spnameList" parameterType="com.sydx.aqsc.entity.Security.DjzyjdtEntity"
+            resultType="com.sydx.aqsc.entity.Security.DjzyjdtEntity">
+	     SELECT
+	        Q.DID,
+			Q.PDID,
+			Q.SPID,
+			E.SPNAME,
+			W.IS_COMPLETE
+			FROM  PC_AQSC_CON_STEP_PROCESS Q
+			INNER   JOIN PC_AQSC_STA_PROCESS E ON E.SPID=Q.SPID
+			LEFT  JOIN  (
+						SELECT Q.DID,Q.PDID , CASE WHEN COUNT(*) > 1 THEN '1' ELSE '2' END  is_complete  FROM (
+						SELECT DID, PDID FROM PC_AQSC_CON_STEP_SGDY
+						WHERE DID=#{did} and QRSJ is not NULL
+						GROUP BY DID,PDID
+						) Q 
+						INNER JOIN (
+						SELECT A.DID,A.PDID,A.tab  FROM(
+						SELECT DID, PDID,CASE WHEN QRSJ is NULL THEN '0' else '1' END tab FROM PC_AQSC_CON_STEP_SGDY
+						WHERE DID=#{did}
+						)A 
+						GROUP BY A.DID,A.PDID,A.tab
+						ORDER BY A.PDID)W ON W.DID=Q.DID AND W.PDID =Q.PDID 
+						GROUP BY Q.DID,Q.PDID
+					
+					)W ON Q.SPID = Q.SPID AND W.PDID = Q.PDID AND W.DID = Q.DID
+			WHERE Q.DID=#{did}
+			ORDER BY Q.XH ASC
+	</select>
+
+    <!-- 根据did查询 -->
+    <select id="sgdyList" parameterType="com.sydx.aqsc.entity.Security.DjzyjdtEntity"
+            resultType="com.sydx.aqsc.entity.Security.AqhbwhEntity">
+		SELECT	  xh,SGDYID,	sgdymc ,SGDYLB,to_char(QRSJ,'yyyy-MM-dd HH:mm:ss') qrsj
+		FROM 	PC_AQSC_CON_STEP_SGDY
+		where PDID=#{pdid} and did=#{did}
+		order by  xh asc
+	</select>
+
+
+    <select id="ejList" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT A.id value,A.unitname key FROM A5JXUPC.PC_SYS_UNIT_CODE A
+        INNER JOIN (
+        SELECT DISTINCT SUBSTR(id,0,8) id FROM A5JXUPC.PC_SYS_UNIT_CODE WHERE OILFIELD=#{oilfield} AND UNITEPROPERTY2
+        LIKE'%作业队%'
+        <if test="search!=null and search.length() &gt; 0 ">
+            and id like '%'|| #{search}||'%'
+        </if>
+        )B ON A.id=B.id
+        ORDER BY a.id
+    </select>
+    <select id="sjList" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT id value , unitname key FROM A5JXUPC.PC_SYS_UNIT_CODE A WHERE PARENTID=#{parentid} AND UNITEPROPERTY2
+        LIKE'%作业%'
+        <if test="search!=null and search.length() &gt; 0 ">
+            and id like '%'|| #{search}||'%'
+        </if>
+        ORDER BY a.id
+    </select>
+    <select id="sijList" parameterType="java.lang.String" resultType="java.util.Map">
+			SELECT id value , unitname key  FROM  A5JXUPC.PC_SYS_UNIT_CODE A WHERE PARENTID=#{parentid} AND UNITEPROPERTY2 LIKE'%作业队%'
+             ORDER BY a.id
+	</select>
+</mapper>

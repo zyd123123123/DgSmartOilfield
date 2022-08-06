@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.HtxxlrDao">
+    <!-- 代码自动生成，请核对数据类型 -->
+
+
+    <select id="count" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxlrEntity" resultType="int">
+        select count(*) from PC_CBS_CONTRACT where CONTRACT_NUMBER=#{contract_number}
+        <if test="contract_id !=null   and contract_id.length() &gt;0">
+            and contract_id != #{contract_id}
+        </if>
+    </select>
+    <select id="cbs_select" parameterType="com.cyrj.jxzy.entity.Constractor.QylrEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.QylrEntity">
+
+
+        SELECT DWMC,DWDM,unitname from PC_CBS_COMPANY
+        <where>
+            OILFIELD =#{oilfield}
+            <if test="dwdm!=null and dwdm.length() &gt;0">
+                and dwdm=#{dwdm}
+            </if>
+        </where>
+        ORDER BY NLSSORT(DWMC,'NLS_SORT = SCHINESE_PINYIN_M')
+
+    </select>
+
+    <select id="qualification_select" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxlrEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.QualificationEntity">
+
+  SELECT PC_SYS_UNIT_CODE.ID termid,PC_SYS_UNIT_CODE.UNITNAME dwmc ,B.dwzzbh   FROM PC_SYS_UNIT_CODE
+   left join (select TERMID, dwzzbh  from PC_CBS_QUALIFICATION_INFO where  DWDM=#{contractor_id} and AUDIT_TAB='2' ) B on B.termid=PC_SYS_UNIT_CODE.id
+	WHERE PC_SYS_UNIT_CODE.PARENTID=#{contractor_id} AND PC_SYS_UNIT_CODE.UNITEPROPERTY2 like '%作业队%' 
+	ORDER BY PC_SYS_UNIT_CODE.ID ASC
+</select>
+
+    <select id="contractTeamSelect" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxlrEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity">
+
+        SELECT DISTINCT PC_CBS_CONTRACT_TEAM.TEAM_NAME, PC_CBS_CONTRACT_TEAM.TERMID
+        FROM PC_CBS_CONTRACT
+        INNER JOIN PC_CBS_CONTRACT_TEAM ON PC_CBS_CONTRACT_TEAM.CONTRACT_ID = PC_CBS_CONTRACT.CONTRACT_ID
+        WHERE to_char(PC_CBS_CONTRACT.OPERATION_START_DATE,'yyyy')= substr('${operation_start_date}', 0, 4)
+        and CONTRACTOR_ID=#{contractor_id} and WHETHER_TO_PERFORM='否' and OPERATION_START_DATE &lt; sysdate
+        <if test="contract_id !=null   and contract_id.length() &gt;0">
+            and PC_CBS_CONTRACT.contract_id != #{contract_id}
+        </if>
+        and PC_CBS_CONTRACT_TEAM.TERMID in
+        <foreach collection="el" item="item" index="index" open="("
+                 close=")" separator=",">
+            #{item.termid}
+        </foreach>
+
+    </select>
+
+    <insert id="contractTeamInsert" parameterType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity">
+        insert into
+        PC_CBS_CONTRACT_TEAM(
+        OILFIELD,
+        contractor_name,
+        contract_id,
+        team_name,
+        team_qualification,
+        DATETIME,
+        termid,
+        CREATE_USER_ID,
+        UNIT
+        )
+        (
+        <foreach collection="el" index="" item="item" separator="union all">
+            select
+            #{item.oilfield,jdbcType=VARCHAR},
+            (select DWMC from PC_CBS_COMPANY where DWDM=#{item.contractor_id}),
+            #{item.contract_id,jdbcType=VARCHAR},
+            #{item.team_name,jdbcType=VARCHAR},
+            #{item.team_qualification,jdbcType=VARCHAR},
+            sysdate,
+            #{item.termid,jdbcType=VARCHAR} ,
+            #{item.apply_person,jdbcType=VARCHAR} ,
+            #{item.unit_id,jdbcType=VARCHAR}
+            from dual
+        </foreach>
+        )
+    </insert>
+
+    <!-- 插入数据 -->
+    <insert id="htxxlrInsert" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxlrEntity">
+        insert into
+        PC_CBS_CONTRACT(
+        OILFIELD,
+        contract_id,
+        contractor_name,
+        contractor_id,
+        construction_project,
+        contract_name,
+        contract_number,
+        contract_source,
+        operation_start_date,
+        completion_date,
+        workload,
+        money,
+        whether_to_perform,
+        entry_time,
+        input_person,
+        effective_date,
+        unit_name,
+        unit_id,
+        IF_BG,
+        EJDWMC,
+        AUDITTAB ,
+        TAX_RATE
+        )
+        values(
+        #{oilfield,jdbcType=VARCHAR},
+        #{contract_id,jdbcType=VARCHAR},
+        (select DWMC contractor_name from PC_CBS_COMPANY where DWDM=#{contractor_id}),
+        #{contractor_id,jdbcType=VARCHAR},
+        #{construction_project,jdbcType=VARCHAR},
+        #{contract_name,jdbcType=VARCHAR},
+        #{contract_number,jdbcType=VARCHAR},
+        #{contract_source,jdbcType=VARCHAR},
+        <!-- 	#{operation_start_date,jdbcType=DATE}, -->
+        <!-- 	#{completion_date,jdbcType=DATE}, -->
+        to_date('${operation_start_date}','yyyy-MM-dd'),
+        to_date('${completion_date}','yyyy-MM-dd'),
+        #{workload,jdbcType=INTEGER},
+        #{money,jdbcType=VARCHAR},
+        '否',
+        sysdate,
+        #{input_person,jdbcType=VARCHAR},
+        <!-- 	#{effective_date,jdbcType=DATE}, -->
+        to_date('${effective_date}','yyyy-MM-dd'),
+        (select UNITNAME unit_name from PC_SYS_UNIT_CODE where id=#{unit_id}),
+        #{unit_id,jdbcType=VARCHAR},
+        '否',
+        (select UNITNAME EJDWMC from PC_CBS_COMPANY where DWDM=#{contractor_id}),
+        '1',
+        #{tax_rate,jdbcType=VARCHAR}
+        )
+    </insert>
+
+    <update id="htxxlrUpdate" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxlrEntity">
+
+  update PC_CBS_CONTRACT
+  
+  set contractor_name=(select DWMC contractor_name from PC_CBS_COMPANY where DWDM=#{contractor_id}),
+      contractor_id=#{contractor_id},
+	construction_project =#{construction_project},
+	contract_name =#{contract_name},
+	contract_number =#{contract_number},
+	contract_source =#{contract_source},
+	operation_start_date=to_date('${operation_start_date}','yyyy-MM-dd'),
+	completion_date=to_date('${completion_date}','yyyy-MM-dd'),
+	workload=#{workload},
+	money=#{money},
+	entry_time= sysdate,
+	input_person=#{input_person},
+	effective_date =to_date('${effective_date}','yyyy-MM-dd'),
+	unit_name=(select UNITNAME unit_name from PC_SYS_UNIT_CODE where id=#{unit_id}),
+	unit_id=#{unit_id},
+	tax_rate=#{tax_rate},
+	EJDWMC=(select UNITNAME EJDWMC from PC_CBS_COMPANY where DWDM=#{contractor_id}),
+	AUDITTAB ='1'
+  where contract_id =#{contract_id}
+
+
+</update>
+    <!-- 插入批量数据——上传合同照片 -->
+    <insert id="insertUploadFiles" parameterType="com.cyrj.jxzy.entity.Constractor.UploadFilesEntity">
+        begin
+        delete from PC_CBS_UPLOAD_FILES where id=#{id} and filetype=#{filetype};
+        insert into
+        PC_CBS_UPLOAD_FILES(
+        id,
+        OILFIELD,
+        contract_id,
+        contractor_name,
+        team_id,
+        team_qualification,
+        filetype,
+        fileuri,
+        fileoldname,
+        upload_person,
+        datetime
+        )
+        (
+        <foreach collection="el" index="" item="item" separator="union all">
+            select
+            #{item.id,jdbcType=VARCHAR},
+            #{item.oilfield,jdbcType=VARCHAR},
+            #{item.contract_id,jdbcType=VARCHAR},
+            (select DWMC contractor_name from PC_CBS_COMPANY where DWDM=#{item.contractor_id}),
+            #{item.team_id,jdbcType=VARCHAR},
+            #{item.team_qualification,jdbcType=VARCHAR},
+            #{item.filetype,jdbcType=VARCHAR},
+            #{item.fileuri,jdbcType=VARCHAR},
+            #{item.fileoldname,jdbcType=VARCHAR},
+            #{item.upload_person,jdbcType=VARCHAR},
+            sysdate
+            from dual
+        </foreach>
+        );
+        end  ;
+    </insert>
+
+    <!-- 删除合同绑定队伍 -->
+    <delete id="deletecontractTeam" parameterType="java.lang.String">
+
+  delete from PC_CBS_CONTRACT_TEAM   where contract_id=#{0}
+
+</delete>
+    <!-- 合同退回页面，删除功能 (根据合同id删除合同、合同绑定队伍、合同图片) -->
+    <delete id="removeContract" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxlrEntity">
+begin 
+  delete from PC_CBS_CONTRACT where contract_id = #{contract_id};
+  delete from PC_CBS_UPLOAD_FILES where  ID = #{contract_id} and  filetype='合同附件';
+  delete from PC_CBS_CONTRACT_TEAM where contract_id = #{contract_id};
+ end;
+
+
+</delete>
+    <select id="removeSelect" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxlrEntity" resultType="int">
+
+   select count(*) from  PC_CBS_UPLOAD_FILES where  ID = #{contract_id} and  filetype='HSE承诺书'
+
+</select>
+
+    <update id="htshth" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxlrEntity">
+  update PC_CBS_CONTRACT
+  set AUDITTAB ='1',
+		AUDITREMARK =null,
+       AUDITPERSON =null,
+       AUDITTIME =null
+  where PC_CBS_CONTRACT.CONTRACT_ID=#{contract_id}
+
+</update>
+
+    <update id="htwgth" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxlrEntity">
+   update PC_CBS_CONTRACT  
+   set    WGQRR =null,
+            wgqr_time = null,
+          WHETHER_TO_PERFORM='否'     
+     where contract_id=#{contract_id}
+
+</update>
+</mapper>

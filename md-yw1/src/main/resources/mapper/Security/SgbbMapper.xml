@@ -1,0 +1,1681 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydx.aqsc.dao.Security.SgbbDao">
+
+	<select id="countSgbb" parameterType="com.sydx.aqsc.entity.Security.SgbbEntity" resultType="int">
+		SELECT  count(*)	FROM   V_CBS_SGJDJC A
+		<where>   oilfield=#{oilfield}  and START_TIME IS NOT NULL  AND (COMPLETE_TIME IS NULL OR ( COMPLETE_TIME IS NOT NULL  AND TRUNC(COMPLETE_TIME,'DD') = TRUNC(SYSDATE,'DD')))
+            <if test="attribute !=null and attribute.length() &gt; 0 and attribute==1 ">
+                and A.op_team like  #{search}||'%'
+            </if>
+            <if test="attribute !=null and attribute.length() &gt; 0 and attribute==2 ">
+                  and A.cydid like  #{search}||'%'
+            </if>
+            <if test="well_common_name!=null and well_common_name.length() &gt; 0">
+                and well_common_name LIKE #{well_common_name}||'%'
+            </if>
+            <if test="scdw!=null and scdw.length() &gt; 0">
+                and  A.cydid LIKE #{scdw}||'%'
+            </if>
+            <if test="sgdw!=null and sgdw.length() &gt; 0">
+                and A.op_team LIKE #{sgdw}||'%'
+            </if>
+		</where>
+	</select>
+	<select id="listSgbb"		parameterType="com.sydx.aqsc.entity.Security.SgbbEntity"	resultType="com.sydx.aqsc.entity.Security.SgbbEntity">
+            SELECT W.*      from(
+                SELECT  P .*, ROWNUM row_num FROM(
+                SELECT qualification_id zizj,
+                construction_department,op_team, cydid,well_common_name,TO_CHAR (start_time, 'yyyy-MM-dd') START_TIME_STRING,TO_CHAR (complete_time, 'yyyy-MM-dd') COMPLETE_TIME_STRING,
+                design_num, construction_id,scdw,sgdw,zylx
+                   FROM      V_CBS_SGJDJC  A
+                 <where>
+                     oilfield=#{oilfield}  and  START_TIME IS NOT NULL  AND (COMPLETE_TIME IS NULL OR ( COMPLETE_TIME IS NOT NULL  AND TRUNC(COMPLETE_TIME,'DD') = TRUNC(SYSDATE,'DD')))
+                     <if test="attribute !=null and attribute.length() &gt; 0 and attribute==1 ">
+                         and A.op_team like  #{search}||'%'
+                     </if>
+                    <if test="attribute !=null and attribute.length() &gt; 0 and attribute==2 ">
+                           and A.cydid like  #{search}||'%'
+                     </if>
+                    <if test="well_common_name!=null and well_common_name.length() &gt; 0">
+                        and well_common_name LIKE #{well_common_name}||'%'
+                    </if>
+                     <if test="scdw!=null and scdw.length() &gt; 0">
+                         and  A.cydid LIKE #{scdw}||'%'
+                     </if>
+                     <if test="sgdw!=null and sgdw.length() &gt; 0">
+                         and A.op_team LIKE #{sgdw}||'%'
+                     </if>
+                </where>
+                ORDER BY  OP_TEAM,  well_common_name
+                )P
+            )W   where 	row_num &lt;=#{endRow} and row_num	&gt;= #{startRow}
+    </select>
+
+
+    <select id="showCount" parameterType="com.sydx.aqsc.entity.Security.SgbbEntity" resultType="int">
+        SELECT  count( distinct  A.CONSTRUCTION_ID)	FROM   V_CBS_SGJDJC A
+        inner  join  PC_AQSC_TOUR_REPORT_WORKOVE B on  A.CONSTRUCTION_ID=B.DID
+        <where>   A.oilfield=#{oilfield}
+            <if test="attribute !=null and attribute.length() &gt; 0 and attribute==1 ">
+                and A.op_team like  #{search}||'%'
+            </if>
+            <if test="attribute !=null and attribute.length() &gt; 0 and attribute==2 ">
+                and A.cydid like  #{search}||'%'
+            </if>
+            <if test="well_common_name!=null and well_common_name.length() &gt; 0">
+                and  A.well_common_name LIKE #{well_common_name}||'%'
+            </if>
+            <if test="scdw!=null and scdw.length() &gt; 0">
+                and  A.cydid LIKE #{scdw}||'%'
+            </if>
+            <if test="sgdw!=null and sgdw.length() &gt; 0">
+                and A.op_team LIKE #{sgdw}||'%'
+            </if>
+        </where>
+    </select>
+    <select id="showList"		parameterType="com.sydx.aqsc.entity.Security.SgbbEntity"	resultType="com.sydx.aqsc.entity.Security.SgbbEntity">
+        SELECT W.*      from(
+        SELECT  P .*, ROWNUM row_num FROM(
+        SELECT distinct  A.construction_id,  A.construction_department, A.op_team,  A.cydid, A.well_common_name,
+        TO_CHAR ( A.start_time, 'yyyy-MM-dd') START_TIME_STRING,TO_CHAR ( A.complete_time, 'yyyy-MM-dd') COMPLETE_TIME_STRING,
+        A.design_num,  A.scdw, A.sgdw, A.zylx,A.qualification_id zizj
+        FROM      V_CBS_SGJDJC  A
+        inner  join  PC_AQSC_TOUR_REPORT_WORKOVE B on  A.CONSTRUCTION_ID=B.DID
+        <where>
+            A.oilfield=#{oilfield}
+            <if test="attribute !=null and attribute.length() &gt; 0 and attribute==1 ">
+                and A.op_team like  #{search}||'%'
+            </if>
+            <if test="attribute !=null and attribute.length() &gt; 0 and attribute==2 ">
+                and A.cydid like  #{search}||'%'
+            </if>
+            <if test="well_common_name!=null and well_common_name.length() &gt; 0">
+                and A.well_common_name LIKE #{well_common_name}||'%'
+            </if>
+            <if test="scdw!=null and scdw.length() &gt; 0">
+                and  A.cydid LIKE #{scdw}||'%'
+            </if>
+            <if test="sgdw!=null and sgdw.length() &gt; 0">
+                and A.op_team LIKE #{sgdw}||'%'
+            </if>
+        </where>
+        ORDER BY   A.OP_TEAM,   A.well_common_name
+        )P
+        )W   where 	row_num &lt;=#{endRow} and row_num	&gt;= #{startRow}
+    </select>
+
+
+    <select id="reportWorkoveSelect"		parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity">
+
+	select a.* , a.SPID || '.' || a.PDID spid_pdid   from PC_AQSC_TOUR_REPORT_WORKOVE a
+	where a.did=#{did} and to_char(a.REPORT_TIME,'yyyy-MM-dd')  =#{report_time} and a.ORDER_CLASSES=#{order_classes}
+
+	</select>
+    <select id="rbAddVeiwSelect2"		parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity">
+        select * from PC_AQSC_TOUR_REPORT_WORKOVE
+        where ID=(SELECT MAX(ID) FROM PC_AQSC_TOUR_REPORT_WORKOVE WHERE did=#{did})
+    </select>
+    <select id="sgbzgxList"		parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="com.sydx.aqsc.entity.Security.RbEntity">
+	     SELECT
+            a.CONSTRUCTION_ID DID,
+            a.PDID,
+            a.SORT,
+            b.SPID,
+            b.SPNAME
+         FROM PC_AQSC_MOVE_PROCESS A
+        INNER JOIN PC_AQSC_STA_PROCESS B  ON A .spid = B.spid
+        WHERE  A .CONSTRUCTION_ID = #{did}  and (A.tab is null or A.tab='0')
+        ORDER BY a.SORT
+
+	</select>
+    <select id="allgxList"		parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="com.sydx.aqsc.entity.Security.GxEntity">
+	   SELECT
+            SPID,
+            SPNAME
+        FROM
+	      PC_AQSC_STA_PROCESS a
+        WHERE
+	      (OILFIELD=#{oilfield} or OILFIELD='pc')  AND IS_USE='1'
+        ORDER BY nlssort(SPNAME,'NLS_SORT=SCHINESE_PINYIN_M')
+     </select>
+
+    <select id="sgbzgxListJd"		parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="com.sydx.aqsc.entity.Security.RbEntity">
+		SELECT
+			A.DID,
+			A.PDID,
+			A.SPID,
+			A.SPNAME,
+			A.CUSTOMID,
+			B .circuit_id,
+			C.CIRCUIT_TABLE
+			FROM	PC_AQSC_CON_STEP_PROCESS A
+			INNER JOIN PC_AQSC_STA_PROCESS B ON A.SPID=B.SPID
+			LEFT JOIN PC_AQSC_PRO_CIRCUIT_CODE C ON B.CIRCUIT_ID = C.CIRCUIT_ID
+			WHERE A .DID = #{did}
+		   ORDER BY	A .XH ASC
+	</select>
+    <select id="allgxListJd"		parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="com.sydx.aqsc.entity.Security.GxEntity">
+	   SELECT  A.SPID,A.SPNAME ,A.CIRCUIT_ID,B.CIRCUIT_TABLE FROM PC_AQSC_STA_PROCESS A
+	   LEFT JOIN PC_AQSC_PRO_CIRCUIT_CODE B ON B.CIRCUIT_ID = A.CIRCUIT_ID
+      WHERE OILFIELD=#{oilfield}  AND IS_USE='1'
+     </select>
+    <select id="processParamSelect4"		parameterType="com.sydx.aqsc.entity.Security.RbEntity" resultType="java.lang.String">
+
+<!--        <if test='pdid !=0'>-->
+<!--            select customid from  PC_AQSC_CON_STEP_PROCESS  where DID=#{did}  and  PDID=#{pdid}  and SPID=#{spid}-->
+<!--        </if>-->
+<!--        <if test='pdid ==0'>-->
+<!--            select customid from  PC_AQSC_STA_PROCESS_CONTENT  where  SPID=#{spid} and TAB='1' and STATE='1'-->
+<!--        </if>-->
+        select customid from PC_AQSC_TOUR_REPORT_WORKOVE where  DID=#{did} and to_char(REPORT_TIME,'yyyy-MM-dd')  =#{report_time}  and ORDER_CLASSES=#{order_classes} and spid=#{spid} and  pdid=#{pdid}
+    </select>
+    <!--//and CUSTOMTYPE=#{unit_id}-->
+    <select id="processParamSelect1"		parameterType="com.sydx.aqsc.entity.Security.RbEntity" resultType="com.sydx.aqsc.entity.Security.GxEntity">
+
+            select * from PC_AQSC_STA_PROCESS_CONTENT  where spid=#{spid} AND STATE = '1' and tab='1' AND CUSTOMTYPE =#{oilfield}
+           order by create_time desc
+ </select>
+
+<select id="processParamSelect2"		parameterType="com.sydx.aqsc.entity.Security.RbEntity" resultType="com.sydx.aqsc.entity.Security.GxEntity">
+    SELECT
+        a.table_head_chs PARAM,
+        a.field_sq ID,
+        a.unit units,
+        a.FIELD_TYPE,
+        a.IS_NULL,
+        a.CELL_TYPE datatype,
+        a.STIPULATE tempdata,
+        a.CODE_ASSOCIATE_TABLE,
+        a.CODE_ASSOCIATE_FIELD,
+        a.circuit_id,
+        a.TABLE_HEAD,
+        b.IS_SHOW_OIL,
+        b.IS_NULL_OIL,
+        b.UNIT_ID
+    FROM   PC_AQSC_PRO_TABLE_HEAD a
+    inner JOIN (select distinct * from PC_AQSC_PRO_TABLE_HEAD_FACTORY where  UNIT_ID in ('${oilfield}',(SELECT SUBSTR(CYDID,0,8)   FROM   PC_CON_MANAGEMENT_INFO WHERE CONSTRUCTION_ID =#{did})) and spid= #{spid} and IS_SHOW_OIL='1' ) b on a.circuit_id=b.circuit_id and a.TABLE_HEAD=b.TABLE_HEAD
+    WHERE  a.circuit_id = #{circuit_id}    AND a.table_head != 'TIME'
+    ORDER BY   a.field_sq
+ </select>
+<select id="processParamSelect21"		parameterType="com.sydx.aqsc.entity.Security.GxEntity" resultType="com.sydx.aqsc.entity.Security.GxEntity">
+    SELECT
+        a.table_head_chs PARAM,
+        a.field_sq ID,
+        a.unit units,
+        a.FIELD_TYPE,
+        a.IS_NULL,
+        a.CELL_TYPE datatype,
+        a.STIPULATE tempdata,
+        a.CODE_ASSOCIATE_TABLE,
+        a.CODE_ASSOCIATE_FIELD,
+        a.circuit_id,
+        a.TABLE_HEAD,
+        b.IS_SHOW,
+        b.UNIT_ID
+    FROM
+        PC_AQSC_PRO_TABLE_HEAD a
+    LEFT JOIN PC_AQSC_PRO_TABLE_HEAD_FACTORY b on a.circuit_id=b.circuit_id and a.TABLE_HEAD=b.TABLE_HEAD
+    WHERE
+        a.circuit_id = #{circuit_id} and b.UNIT_ID= #{unit_id} and IS_SHOW is not null
+    AND a.table_head != 'TIME'
+    ORDER BY
+        a.field_sq
+ </select>
+<!--查询全部的-->
+    <select id="processParamSelect22"		parameterType="com.sydx.aqsc.entity.Security.GxEntity" resultType="com.sydx.aqsc.entity.Security.GxEntity">
+        SELECT
+            A .table_head_chs PARAM,
+            A .field_sq ID,
+            A .unit units,
+            A .FIELD_TYPE,
+            A .IS_NULL,
+            A .CELL_TYPE datatype,
+            A .STIPULATE tempdata,
+            A .CODE_ASSOCIATE_TABLE,
+            A .CODE_ASSOCIATE_FIELD,
+            A .circuit_id,
+            A .TABLE_HEAD
+        FROM
+            PC_AQSC_PRO_TABLE_HEAD A
+        WHERE
+            a.circuit_id = #{circuit_id}
+        AND A .table_head != 'TIME'
+        ORDER BY
+            A .field_sq
+     </select>
+
+    <select id="selectPPData" parameterType="com.sydx.aqsc.entity.Security.RbEntity" resultType="java.util.Map">
+       select * from ${circuit_table}
+       where parame_val_num=#{parame_val_num}
+    <!--   OILFIELD=#{oilfield} and DID=#{did}  and REPORT_TIME=#{report_time}
+             and ORDER_CLASSES=#{order_classes}  and SPID=#{spid} and -->
+     </select>
+    <select id="selectXh" parameterType="com.sydx.aqsc.entity.Security.RbEntity" resultType="com.sydx.aqsc.entity.Security.RbEntity">
+       select max(xh) xh from ${circuit_table}
+       where OILFIELD=#{oilfield} and DID=#{did}
+             and ORDER_CLASSES=#{order_classes}  and SPID=#{spid}
+     </select>
+    <select id="monitorSelect"		parameterType="com.sydx.aqsc.entity.Security.TeamEntity" resultType="com.sydx.aqsc.entity.Security.TeamEntity">
+      SELECT xm FROM PC_V_AQSC_PERSON
+      WHERE OILFIELD=#{oilfield}  AND TERMID=#{termid} AND GW='班长'
+     </select>
+    <select id="cadreSelect"		parameterType="com.sydx.aqsc.entity.Security.TeamEntity" resultType="com.sydx.aqsc.entity.Security.TeamEntity">
+	    SELECT xm FROM PC_V_AQSC_PERSON
+      WHERE OILFIELD=#{oilfield}  AND TERMID=#{termid} AND  GW in ('队长','书记','副队长','技术员')
+     </select>
+    <select id="tbrSelect"		parameterType="com.sydx.aqsc.entity.Security.TeamEntity" resultType="com.sydx.aqsc.entity.Security.TeamEntity">
+	    SELECT xm FROM PC_V_AQSC_PERSON
+      WHERE OILFIELD=#{oilfield}  AND TERMID=#{termid} AND  GW in ('井口工1','井口工2','场地工','材料员')
+     </select>
+    <delete id="removePPData" parameterType="com.sydx.aqsc.entity.Security.RbEntity">
+       delete from ${circuit_table}
+       where OILFIELD=#{oilfield} and DID=#{did}  and report_time=#{report_time}
+             and ORDER_CLASSES=#{order_classes}  and SPID=#{spid} and parame_val_num=#{parame_val_num}
+     </delete>
+    <insert id="savePPData"		parameterType="com.sydx.aqsc.entity.Security.RbEntity">
+	 		${whc}
+	</insert>
+
+    <select id="sgbbSaveselect1"		parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="int">
+        select count(*) from  JDJXZY.PC_SURVEY_DESIGN_INF where MOVING_PLAN_ID=#{did}
+       </select>
+    <select id="sgbbSaveselect2"		parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="java.lang.String">
+           select  to_char(END_TIME,'yy-MM-dd')   from PC_AQSC_START_WELL where DID=#{did}
+       </select>
+    <select id="sgbbSaveselect3" parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="int">
+            SELECT NVL(MAX(ID),0)  FROM PC_AQSC_TOUR_REPORT_WORKOVE  where  to_char(REPORT_TIME,'yyyy-MM-dd') =#{report_time} and TEAM_ID=#{team_id}
+       </select>
+    <update id="sgbbSaveupdate1" parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" >
+        begin
+        update PC_AQSC_START_WELL
+        set START_TIME=to_date(#{work_date},'yyyy-MM-dd'),
+        <if test='end_date !=null and end_date.length() &gt;0'>
+            END_TIME=to_date(#{end_date},'yyyy-MM-dd')
+        </if>
+        <if test='end_date ==null or end_date.length() ==0'>
+            END_TIME=null
+        </if>
+        where DID=#{did};
+        end;
+    </update>
+    <delete id="sgbbSavedelete1"  parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" >
+       begin
+        DELETE FROM PC_AQSC_TOUR_REPORT_WORKOVE where  DID=#{did} and to_char(REPORT_TIME,'yyyy-MM-dd') =#{report_time}  and ORDER_CLASSES=#{order_classes};
+<!--     DELETE FROM PC_AQSC_TRW_SGDY where  DID=#{did} and REPORT_TIME =#{report_time}  and ORDER_CLASSES=#{order_classes};
+         DELETE FROM PC_AQSC_TRW_PROCESS_PARAM_DATA where  DID=#{did} and REPORT_TIME =#{report_time}  and ORDER_CLASSES=#{order_classes};-->
+        end;
+    </delete>
+    <insert id="sgbbSaveinsert1" parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" >
+
+        begin
+        INSERT INTO PC_AQSC_TOUR_REPORT_WORKOVE
+        (WELL_COMMON_NAME,INTELLIGENCE_CODE,TEAM_NAME,WORK_BRIEF,
+        ORDER_CLASSES,REPORT_TIME,WORK_DATE,NEXT_CIRCUIT,CONSTRUCT_INTERVAL,
+        DENSITY_STRATURM,STRATIGRAPHIC_POSITION,LEVEL_NUMBER,CIRCUIT_NAME,
+        BEGIN_TIME_HOUR,END_TIME_HOUR,WORK_CONTENT,RECORD_NAME,
+        CLASS_MONITOR,WATCH_CADRE,REDACTION_NAME,BANBAO_TYPE,COMPLETE_JUDGEMENT,
+        FANGS,COMPLETE_CW,ID,SUPERVISOR,BEGIN_TIME_MINUTE,END_TIME_MINUTE,BB_ID,DID,
+        spid,pdid,gx_type,is_complete,create_user,create_time,oilfield,TEAM_ID,pro_status,customid,remarks,parame_val_num,UP_PIPE,DOWN_PIPE,UP_ROD,DOWN_ROD
+        )
+        (
+        <foreach collection="entity_list" index="" item="item" separator="union all">
+            select
+            #{well_common_name,jdbcType=VARCHAR},
+            #{intelligence_code,jdbcType=VARCHAR},
+            (SELECT unitname FROM PC_SYS_UNIT_CODE WHERE ID = #{team_id,jdbcType=VARCHAR}),
+            #{work_brief,jdbcType=VARCHAR},
+            #{order_classes,jdbcType=VARCHAR},
+            to_date('${report_time}','yyyy-MM-dd'),
+            to_date('${work_date}','yyyy-MM-dd'),
+            #{next_circuit,jdbcType=VARCHAR},
+            #{construct_interval,jdbcType=VARCHAR},
+            #{density_straturm,jdbcType=VARCHAR},
+            #{stratigraphic_position,jdbcType=VARCHAR},
+            #{level_number,jdbcType=VARCHAR},
+            (select spname from PC_AQSC_STA_PROCESS where SPID =#{item.spid}),
+            #{item.begin_time_hour,jdbcType=INTEGER},
+            #{item.end_time_hour,jdbcType=INTEGER},
+            #{item.work_content,jdbcType=VARCHAR},
+            #{record_name,jdbcType=VARCHAR},
+            #{class_monitor,jdbcType=VARCHAR},
+            #{watch_cadre,jdbcType=VARCHAR},
+            #{redaction_name,jdbcType=VARCHAR},
+            #{bblx,jdbcType=VARCHAR},
+            #{complete_judgement,jdbcType=VARCHAR},
+            #{fangs,jdbcType=VARCHAR},
+            #{complete_cw,jdbcType=VARCHAR},
+            #{item.id,jdbcType=INTEGER},
+            #{supervisor,jdbcType=VARCHAR},
+            #{item.begin_time_minute,jdbcType=INTEGER},
+            #{item.end_time_minute,jdbcType=INTEGER},
+            #{bb_id,jdbcType=VARCHAR},
+            #{did,jdbcType=VARCHAR},
+            #{item.spid,jdbcType=INTEGER},
+            #{item.pdid,jdbcType=INTEGER},
+            #{item.gx_type,jdbcType=VARCHAR},
+            #{item.is_complete,jdbcType=VARCHAR},
+            #{create_user,jdbcType=VARCHAR},
+            sysdate,
+            #{oilfield,jdbcType=VARCHAR} ,
+            #{team_id,jdbcType=VARCHAR},
+            #{item.pro_status,jdbcType=VARCHAR},
+            #{item.customid,jdbcType=VARCHAR},
+            #{item.remarks,jdbcType=VARCHAR},
+            #{item.parame_val_num,jdbcType=VARCHAR},
+            #{item.up_pipe,jdbcType=INTEGER},
+            #{item.down_pipe,jdbcType=INTEGER},
+            #{item.up_rod,jdbcType=INTEGER},
+            #{item.down_rod,jdbcType=INTEGER}
+            from dual
+        </foreach>
+        );
+        end;
+    </insert>
+    <select id="bbckCount"		parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="int">
+      select count(DISTINCT bb_id) from  PC_AQSC_TOUR_REPORT_WORKOVE where did = #{did}
+       </select>
+    <select id="bbckList"		parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity">
+          SELECT  P .*, ROWNUM row_num  FROM
+                (SELECT DISTINCT
+                    bb_id,
+                    did,
+                    well_common_name,
+                    team_name,
+                    team_id,
+                    order_classes,
+                    report_time,
+                    TO_CHAR (report_time, 'yyyy-mm-dd') report_time_String,
+                    complete_judgement
+                FROM   PC_AQSC_TOUR_REPORT_WORKOVE
+                <where>  did = #{did}
+                    <if test='report_time !=null and report_time.length() &gt;0'>
+                        and   to_char(REPORT_TIME,'yyyy-MM-dd')  = #{report_time}
+                    </if>
+                </where>
+           ORDER BY report_time desc
+           ) P
+    </select>
+
+    <select id="lsbbCount"		parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="int">
+      select count(DISTINCT bb_id) from  PC_AQSC_TOUR_REPORT_WORKOVE where well_common_name = #{well_common_name}
+       </select>
+    <select id="lsbb"		parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity">
+       SELECT   P .*, ROWNUM row_num FROM
+        (SELECT
+        bb_id,
+        did,
+        well_common_name,
+        team_name,
+        team_id,
+        order_classes,
+        report_time,
+        TO_CHAR (report_time, 'yyyy-mm-dd') report_time_String,
+        complete_judgement,CIRCUIT_NAME,WORK_CONTENT,CLASS_MONITOR,
+        WATCH_CADRE,REDACTION_NAME,PRO_STATUS,UP_PIPE,DOWN_PIPE,UP_ROD,DOWN_ROD
+        FROM
+        PC_AQSC_TOUR_REPORT_WORKOVE
+        <where>
+            <if test="did!=null and did.length() &gt; 0">
+                and  did = #{did}
+            </if>
+            <if test="well_common_name!=null and well_common_name.length() &gt; 0">
+                and  well_common_name = #{well_common_name}
+            </if>
+            <if test='report_time !=null and report_time.length() &gt;0'>
+                and   to_char(REPORT_TIME,'yyyy-MM-dd')  = #{report_time}
+            </if>
+        </where>
+        ORDER BY report_time desc,order_classes DESC
+        ) P
+
+    </select>
+
+    <select id="rbjl"		parameterType="com.sydx.aqsc.entity.Security.SgrbEntity" resultType="com.sydx.aqsc.entity.Security.SgrbEntity">
+       <!-- SELECT   P .*, ROWNUM row_num FROM  (
+        SELECT
+        did,
+        well_common_name,
+        team_name,
+        team_id,
+        TO_CHAR (report_time, 'yyyy-mm-dd') report_time,
+        WM_CONCAT(A.WORK_CONTENT) over(partition by A.did,TO_CHAR (report_time, 'yyyy-mm-dd'),A.ORDER_CLASSES order by A.BEGIN_TIME_HOUR,A.BEGIN_TIME_MINUTE) content
+        FROM
+        PC_AQSC_TOUR_REPORT_WORKOVE A
+        <where>
+            <if test="did!=null and did.length() &gt; 0">
+                and  did = #{did}
+            </if>
+            <if test="well_common_name!=null and well_common_name.length() &gt; 0">
+                and  well_common_name = #{well_common_name}
+            </if>
+            <if test='report_time !=null and report_time.length() &gt;0'>
+                and   to_char(REPORT_TIME,'yyyy-MM-dd')  = #{report_time}
+            </if>
+        </where>
+        ORDER BY report_time desc
+        ) P-->
+        SELECT   ROWNUM row_num,P .*,Q.CONTENT  FROM  (
+        SELECT
+        did,
+        well_common_name,
+        team_name,
+        team_id,
+        TO_CHAR (report_time, 'yyyy-mm-dd') report_time,
+        SUM(up_pipe) up_pipe,
+        SUM(down_pipe) down_pipe,
+        SUM(up_rod) up_rod,
+        SUM(down_rod) down_rod
+        FROM PC_AQSC_TOUR_REPORT_WORKOVE A
+        <where>
+            <if test="did!=null and did.length() &gt; 0">
+                and  did = #{did}
+            </if>
+            <if test="well_common_name!=null and well_common_name.length() &gt; 0">
+                and  well_common_name = #{well_common_name}
+            </if>
+            <if test='report_time !=null and report_time.length() &gt;0'>
+                and   to_char(REPORT_TIME,'yyyy-MM-dd')  = #{report_time}
+            </if>
+        </where>
+        GROUP BY  did,well_common_name,report_time,team_name,team_id
+        ORDER BY report_time desc
+        ) P
+        INNER JOIN (
+        SELECT did,report_time,MAX(content)content FROM(
+        SELECT
+        did,
+        TO_CHAR (report_time, 'yyyy-mm-dd') report_time,
+        WM_CONCAT(A.WORK_CONTENT) over(partition by A.did,TO_CHAR (report_time, 'yyyy-mm-dd') order by A.BEGIN_TIME_HOUR,A.BEGIN_TIME_MINUTE) content
+        FROM  PC_AQSC_TOUR_REPORT_WORKOVE A
+        <where>
+            <if test="did!=null and did.length() &gt; 0">
+                and  did = #{did}
+            </if>
+            <if test="well_common_name!=null and well_common_name.length() &gt; 0">
+                and  well_common_name = #{well_common_name}
+            </if>
+            <if test='report_time !=null and report_time.length() &gt;0'>
+                and   to_char(REPORT_TIME,'yyyy-MM-dd')  = #{report_time}
+            </if>
+        </where>
+        )A GROUP BY did,report_time
+        ) Q ON P.did=Q.did AND p.report_time=Q.report_time
+        ORDER BY p.report_time desc
+    </select>
+    <select id="sgbbChaKan"		parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity">
+           SELECT
+			BB_ID,
+			WELL_COMMON_NAME,
+            A.DID,
+			INTELLIGENCE_CODE,
+			TEAM_NAME construct_team,
+			WORK_BRIEF,
+			ORDER_CLASSES,
+			to_char(REPORT_TIME,'yyyy-MM-dd')  REPORT_TIME,
+			to_char(WORK_DATE,'yyyy-MM-dd')  WORK_DATE,
+			NEXT_CIRCUIT,
+			CONSTRUCT_INTERVAL,
+			DENSITY_STRATURM,
+			STRATIGRAPHIC_POSITION,
+			LEVEL_NUMBER,
+            A.SPID,
+            A.PDID,
+            A.SPID ||'.'||A.PDID spid_pdid,
+			GX_TYPE,
+			CIRCUIT_NAME,
+			BEGIN_TIME_HOUR,
+			BEGIN_TIME_MINUTE,
+			END_TIME_MINUTE,
+			END_TIME_HOUR,
+			WORK_CONTENT,
+			IS_COMPLETE,
+			RECORD_NAME,
+			CLASS_MONITOR,
+			WATCH_CADRE,
+			REDACTION_NAME,
+			BANBAO_TYPE bblx,
+			COMPLETE_JUDGEMENT,
+			FANGS,
+			COMPLETE_CW,
+			PRO_STATUS,
+			SUPERVISOR,
+             C.BIGTEXT,
+            UP_PIPE,
+            DOWN_PIPE,
+            UP_ROD,
+            DOWN_ROD
+			FROM
+			PC_AQSC_TOUR_REPORT_WORKOVE A
+            left JOIN (select  *  from PC_AQSC_PUM_PRO_TEXT where  did=#{did} and  tab='1')C on C.did=A.did and  C.SPID=A.spid
+			where    A.did=#{did}
+            <if test='bb_id !=null and bb_id.length() &gt;0'>
+                and    BB_ID=#{bb_id}
+            </if>
+             order by  REPORT_TIME,END_TIME_HOUR,END_TIME_MINUTE
+       </select>
+    <select id="bbxg"		parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity">
+           SELECT
+			BB_ID,
+			WELL_COMMON_NAME,
+			DID,
+			INTELLIGENCE_CODE,
+			TEAM_NAME construct_team,
+			team_id op_team,
+			WORK_BRIEF,
+			ORDER_CLASSES,
+			to_char(REPORT_TIME,'yyyy-MM-dd')  REPORT_TIME,
+			to_char(WORK_DATE,'yyyy-MM-dd')  WORK_DATE,
+			NEXT_CIRCUIT,
+			CONSTRUCT_INTERVAL,
+			DENSITY_STRATURM,
+			STRATIGRAPHIC_POSITION,
+			LEVEL_NUMBER,
+			a.SPID,
+            a.PDID,
+            a.SPID || '.' || a.PDID||'.'||(SELECT  circuit_id   FROM   PC_AQSC_STA_PROCESS WHERE spid = a.SPID )
+            ||'.'||(SELECT  D .CIRCUIT_TABLE    FROM    PC_AQSC_STA_PROCESS c LEFT JOIN PC_AQSC_PRO_CIRCUIT_CODE D ON c.CIRCUIT_ID = D .CIRCUIT_ID     WHERE  spid = a.spid ) spid_pdid,
+			GX_TYPE,
+			CIRCUIT_NAME,
+			BEGIN_TIME_HOUR,
+			BEGIN_TIME_MINUTE,
+			END_TIME_MINUTE,
+			END_TIME_HOUR,
+			WORK_CONTENT,
+			IS_COMPLETE,
+			RECORD_NAME,
+			CLASS_MONITOR,
+			WATCH_CADRE,
+			REDACTION_NAME,
+			BANBAO_TYPE bblx,
+			COMPLETE_JUDGEMENT,
+			FANGS,
+			COMPLETE_CW,
+			PRO_STATUS,
+			SUPERVISOR
+			FROM
+			PC_AQSC_TOUR_REPORT_WORKOVE a
+			where BB_ID=#{bb_id}
+       </select>
+
+    <select id="rbgx_cx"		parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity">
+            SELECT DISTINCT
+                circuit_name,id
+            FROM
+                PC_AQSC_TOUR_REPORT_WORKOVE
+            WHERE
+                did = #{did}
+            AND work_date = TO_DATE (#{work_date}, 'yyyy-MM-dd') order by id
+    </select>
+
+    <delete id="removeRb"  parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" >
+        DELETE FROM   PC_ZYRB WHERE CONSTRUCTION_ID=#{did} and rq=TO_DATE(#{work_date}, 'yyyy-MM-dd')
+    </delete>
+    <update id="insertRb"
+            parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity">
+		INSERT INTO   PC_ZYRB
+(
+		jh,
+		rq,
+		TEXT,
+		OP_TEAM,
+		CONSTRUCTION_ID,
+		SJCH,
+		LOGIN_IP,
+		LOGIN_PEOPLE,
+		LOGIN_TIME,
+		LOGIN_UNIT
+		)
+		values(
+		#{jh,jdbcType=VARCHAR},
+		to_date(#{rq},'yyyy-MM-dd'),
+		#{text,jdbcType=VARCHAR},
+		#{op_team,jdbcType=VARCHAR},
+		#{did,jdbcType=VARCHAR},
+		(select DESIGN_NUM from   PC_CON_MANAGEMENT_INFO where CONSTRUCTION_ID=#{did,jdbcType=VARCHAR}),
+		#{login_ip,jdbcType=VARCHAR},
+		#{login_people,jdbcType=VARCHAR},
+		sysdate,
+		#{login_unit,jdbcType=VARCHAR}
+		)
+	</update>
+    <select id="bcList"		parameterType="com.sydx.aqsc.entity.Security.BcwhEntity" resultType="com.sydx.aqsc.entity.Security.BcwhEntity">
+
+         select NAME,STARTTIME,ENDTIME  from  PC_AQSC_SHIFTS where UNITID=#{unitid}
+
+    </select>
+
+    <select id="bbqx"		parameterType="java.lang.String" resultType="java.lang.String">
+
+        SELECT REPORT_CTL FROM   PC_PRIVILEGE_MANAGE WHERE DQ_ID =(select SUBSTR(CYDID,0,8)   FROM   PC_CON_MANAGEMENT_INFO WHERE CONSTRUCTION_ID=#{0})
+
+    </select>
+
+<!--    点击完工时判断是否结算-->
+    <select id="ysjs"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="int">
+            select  count(*) from    PC_FD_COMPLET_STATISTICS WHERE CONSTRUCTION_ID=#{construction_id} and AUDIT_CODE='2'
+    </select>
+<!--点击完工时，判断井下作业公司是否有施工设计-->
+    <select id="jxsgsj1"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+           select CONSTRUCTION_ID,HAS_SGSJ  from   PC_CON_MANAGEMENT_INFO WHERE CONSTRUCTION_ID=  #{construction_id}   and COMPLETE_TIME is null and CONSTRUCTION_DEPARTMENT like 'pc0dq019%'
+    </select>
+    <!--点击完工时，判断井下作业公司是否有施工设计-->
+    <select id="jxsgsj2"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+           select to_char(sprq,'yyyy-mm-dd')sprq  from   GYSJ_ADD WHERE CONSTRUCTION_ID=#{construction_id} and shdm='2' and sprq is not null order by sprq desc
+    </select>
+
+    <!--点击完工时，判断井下作业公司是否有施工设计-->
+    <select id="jxsgsj3"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+           select SJID  from   SGSJ_ADD WHERE CONSTRUCTION_ID=#{construction_id}
+    </select>
+<!--完工确认查询施工总结表数据-->
+    <select id="reportData1"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+           select  well_common_name,jbdm,ccfs,to_char(COMPLETE_TIME,'yyyy-mm-dd')COMPLETE_TIME ,to_char(START_TIME,'yyyy-mm-dd')START_TIME ,OP_TEAM from   PC_CON_MANAGEMENT_INFO where CONSTRUCTION_ID=#{construction_id}
+    </select>
+    <!--完工确认，查询gysj_add，大修、压裂、酸化等判断-->
+    <select id="reportData2"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+          select   csdl,csxl,cslb,jbdm,sfdy from   GYSJ_ADD where CONSTRUCTION_ID=#{construction_id}
+    </select>
+
+    <!--完工确认，查询报表数据-->
+    <select id="reportData3"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+          select to_char(COMPLETE_TIME,'yyyy-mm-dd')COMPLETE_TIME,nvl(MEASURE_FOURTH_ID,STIM_KEY_ID) STIM_KEY_ID,PUMP_DIAMETER,PUMP_SPECIFICATION,STIM_I_APPRAISE_CODE,STIM_II_APPRAISE_CODE,
+            STIM_III_APPRAISE_CODE,STIM_IIII_APPRAISE_CODE,CONSTRUCTION_FRACTURING,BEFOREMEASURE_PRE,AFTERMEASURE_PRE,LIQUID_MEASURE,MAX_DISPLACEMENT,
+             MIN_DISPLACEMENT,LAYERCOUNT,TOTAL_SAND,SANDTHINCK,VALIDTHINCK,
+              FRACTUR_AVE_SAND_RATIO,YLZCLX,YLYTX,TEAM_ID_YL,COILED_TUB,SFDGZ,LXYG_GYLX,TEAM_ID_LXYG,CLEANING_OPERATION,QJZY_FL,JSGFL_WT,JSGFL_FSB,JSFY,lxyg_maxpressure,lxyg_depth
+              from   PC_CON_REPORT_FORMS where CONSIRUCTION_ID=#{construction_id}
+    </select>
+
+<!--    查询酸化数据-->
+    <select id="reportData4"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+          select ACIDIFICATION_HORIZON,ACID_CONTENT,ACID_DISPLACEMENT,ACID_SINK,ACID_INTAKE,SYLX,SYTX,TEAM_ID_SH from    PC_ACIDIFICATION_HORIZON  where  CONSTRUCTION_SUMMARY_ID=#{construction_id} order by xh
+    </select>
+<!--    查询工程作业类型-->
+    <select id="reportData5"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+         select ENGIN_DESIGN_ID SJID,STIM_KEY_ID_CHECK CSID,MEASURE_FOURTH_ID CSSILID,NO_CONSTRUCTION,MAIN_MEASURE from   PC_R_CON_MANAGEMENT_INFO_SUM  where  DESIGN_ID=#{construction_id}
+    </select>
+    <!--    查询工程作业类型-->
+    <select id="reportData6"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+          select A.SJID,NVL(C.CSID,A.CSID)CSID,NVL(C.CSSILID,A.CSSILID) CSSILID,jh NO_CONSTRUCTION,JB MAIN_MEASURE from   GYSJ_ADD  A
+            LEFT JOIN (
+            select   B.ENGIN_DESIGN_ID SJID,B.STIM_KEY_ID CSID,B.CSSILID from   GYSJ_ADD  A
+            INNER JOIN   PC_ENGIN_DE_CHANGE B ON A.SJID=B.ENGIN_DESIGN_ID
+            WHERE CONSTRUCTION_ID =#{construction_id} and  B.CSDL is not null
+            ) C ON C.SJID=A.SJID
+            where  A.CONSTRUCTION_ID=#{construction_id}
+
+    </select>
+
+    <!-- 作业原因描述-->
+    <select id="zyyy"		parameterType="java.lang.String" resultType="java.util.Map">
+     SELECT DOMAIN_CODE code,DOMAIN_DESCRIPTION name FROM   SYS_DOMAIN_LOCAL WHERE DOMAIN_ALIASNAME = '检泵结果代码'  ${sql}
+    <!--  SELECT DOMAIN_CODE code,DOMAIN_DESCRIPTION name FROM A5ADMIN.SYS_DOMAIN@link_jxquery WHERE DOMAIN_ALIASNAME = '检泵结果代码'  ${sql}-->
+    </select>
+
+
+
+<!--     查询作业类型下拉框-->
+    <select id="cslx"		parameterType="com.sydx.aqsc.entity.Security.MeasureEntity" resultType="com.sydx.aqsc.entity.Security.MeasureEntity">
+      select id ,name from PK_MEASURE_CODE   where  OILFIELD=#{oilfield}  and  parentid=#{parentid}
+    </select>
+    <!-- 查询总页数 -->
+    <select id="selectCount" parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="int">
+        select count(*) from (SELECT		DISTINCT 	A.WELL_COMMON_NAME,	A.BB_ID,	A.DID,	A.INTELLIGENCE_CODE,	A.TEAM_NAME,A.WORK_BRIEF,
+        A.ORDER_CLASSES,A.REPORT_TIME,	A.WORK_DATE,A.NEXT_CIRCUIT,	A.COMPLETE_JUDGEMENT,	A.BANBAO_TYPE
+        FROM	PC_AQSC_TOUR_REPORT_WORKOVE A
+        inner  join PC_AQSC_START_WELL B on  A.DID=B.DID
+        where A.OILFIELD=#{oilfield}
+        <if test='tab=="1"'   >
+            and   trunc(REPORT_TIME,'DD')  =trunc(sysdate,'DD') and ORDER_CLASSES='四'
+        </if>
+        <if test='tab=="2"'   >
+            and (trunc(REPORT_TIME,'DD')  =trunc(sysdate,'DD')   or (trunc(REPORT_TIME,'DD')  =trunc((sysdate-1),'DD') and ORDER_CLASSES='四' ))
+        </if>
+        <if test='well_common_name !=null and well_common_name.length() &gt;0'>
+            and   A.well_common_name like '%'|| upper( #{well_common_name})||'%'
+        </if>
+        <if test='construct_team !=null and construct_team.length() &gt;0'>
+            and   (A.TEAM_NAME like '%'|| upper( #{construct_team})||'%' or A.INTELLIGENCE_CODE like '%'|| upper( #{construct_team})||'%' )
+        </if>
+        <if test='report_time !=null and report_time.length() &gt;0'>
+            and   to_char(REPORT_TIME,'yyyy-MM-dd')  =#{report_time}
+        </if>
+        <if test="search!=null and search.length() &gt; 0 and attribute==1">
+            and A.TEAM_ID like '%'|| #{search}||'%'
+        </if>
+        <if test="search!=null and search.length() &gt; 0 and attribute==2">
+            and B.ZYQID like '%'|| #{search}||'%'
+        </if>
+        <!--<if test='team_id !=null and team_id.length() &gt;0'>-->
+            <!--and   team_id like '%'|| #{team_id}||'%'-->
+        <!--</if>-->
+
+        )
+    </select>
+    <select id="findAll"
+            parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity"
+            resultType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity">
+        select * from (
+        select p.*,rownum row_num from (
+        SELECT		DISTINCT 	A.WELL_COMMON_NAME,
+        A. BB_ID,
+        A. DID,
+        A. INTELLIGENCE_CODE,
+        A.TEAM_NAME construct_team,
+        A. WORK_BRIEF,
+        A.ORDER_CLASSES,
+        to_char(A.REPORT_TIME,'yyyy-MM-dd')  REPORT_TIME,
+        to_char(A.WORK_DATE,'yyyy-MM-dd')  WORK_DATE,
+        A.NEXT_CIRCUIT,
+        A. COMPLETE_JUDGEMENT,
+        A.BANBAO_TYPE bblx
+        FROM	PC_AQSC_TOUR_REPORT_WORKOVE A
+        inner  join PC_AQSC_START_WELL B on  A.DID=B.DID
+        where A.OILFIELD=#{oilfield}
+        <if test=' tab=="1"'   >
+            and   trunc(REPORT_TIME,'DD')  =trunc(sysdate,'DD') and ORDER_CLASSES='四'
+        </if>
+        <if test=' tab=="2"'   >
+            and (trunc(REPORT_TIME,'DD')  =trunc(sysdate,'DD')   or (trunc(REPORT_TIME,'DD')  =trunc((sysdate-1),'DD') and ORDER_CLASSES='四' ))
+        </if>
+        <if test='well_common_name !=null and well_common_name.length() &gt;0'>
+            and   A.well_common_name like '%'|| upper( #{well_common_name})||'%'
+        </if>
+        <if test='construct_team !=null and construct_team.length() &gt;0'>
+            and   (A.TEAM_NAME like '%'|| upper( #{construct_team})||'%' or A.INTELLIGENCE_CODE like '%'|| upper( #{construct_team})||'%' )
+        </if>
+        <if test='report_time !=null and report_time.length() &gt;0'>
+            and   to_char(REPORT_TIME,'yyyy-MM-dd')  =#{report_time}
+        </if>
+        <!--<if test='team_id !=null and team_id.length() &gt;0'>-->
+            <!--and   team_id like '%'|| #{team_id}||'%'-->
+        <!--</if>-->
+        <if test="search!=null and search.length() &gt; 0 and attribute==1">
+            and A.TEAM_ID like '%'|| #{search}||'%'
+        </if>
+        <if test="search!=null and search.length() &gt; 0 and attribute==2">
+            and B.ZYQID like '%'|| #{search}||'%'
+        </if>
+        order by REPORT_TIME desc
+        ) p
+        )
+        <where>
+            <if test="endRow!=0">
+                row_num &lt;= #{endRow}
+            </if>
+            <if test="startRow!=0">
+                and row_num &gt;= #{startRow}
+            </if>
+        </where>
+    </select>
+    <select id="sgbbList" parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity">
+
+           SELECT
+			A.BB_ID,
+			A.WELL_COMMON_NAME,
+			A.DID,
+			A.INTELLIGENCE_CODE,
+			A.team_id,
+			A.TEAM_NAME construct_team,
+			A.WORK_BRIEF,
+			A.ORDER_CLASSES,
+			to_char(A.REPORT_TIME,'yyyy-MM-dd')  REPORT_TIME,
+			to_char(A.WORK_DATE,'yyyy-MM-dd')  WORK_DATE,
+			A.NEXT_CIRCUIT,
+			A.CONSTRUCT_INTERVAL,
+			A.DENSITY_STRATURM,
+			A.STRATIGRAPHIC_POSITION,
+			A.LEVEL_NUMBER,
+			A.SPID,
+			A.PDID,
+			A.SPID ||'.'||A.PDID    spid_pdid,
+			A.GX_TYPE,
+			A.CIRCUIT_NAME,
+			A.BEGIN_TIME_HOUR,
+			A.BEGIN_TIME_MINUTE,
+			A.END_TIME_MINUTE,
+			A.END_TIME_HOUR,
+			A.WORK_CONTENT,
+			A.IS_COMPLETE,
+			A.RECORD_NAME,
+			A.CLASS_MONITOR,
+			A.WATCH_CADRE,
+			A.REDACTION_NAME,
+			A.BANBAO_TYPE bblx,
+			A.COMPLETE_JUDGEMENT,
+			A.FANGS,
+			A.COMPLETE_CW,
+			A.SUPERVISOR,
+			A.customid,
+			A.parame_val_num,
+			A.remarks,
+			A.BUILDCONTENTTMP,
+			A.SPNO,
+			 test_oil_interval,ceng_wei_hao, test_oil_cengxu,test_oil_method,liquidity,density,cubic_capacity,oil1,gas1,water1,oil2,gas2,water2,
+			 chou_ci,chou_shen,producing_fluid_level,submergence_depth,pump_pressure,nitrogen_gas_delivery,nitrogen_gas_volume,
+            ju_shen,oil_pressure,casing_pressure,glib_talker,rotate_speed,output_ye_volume,output_oil_volume,
+            output_gas_volume,free_water_content,composite_water_cut,cumulative_ye_production,cumulative_oil_production,cumulative_gas_production,
+            cumulative_water_production,jkwd,height_level,yes_no,emulsified_water,crude_oil_water
+			FROM
+			PC_AQSC_TOUR_REPORT_WORKOVE A
+			INNER  JOIN PC_AQSC_STA_PROCESS B ON B.SPID= A.SPID
+	       LEFT JOIN PC_AQSC_PRO_CIRCUIT_CODE C ON B.CIRCUIT_ID = C.CIRCUIT_ID
+			where BB_ID=#{bb_id}
+			order by A.id
+       </select>
+    <select id="jhSelect"	parameterType="com.sydx.aqsc.entity.Security.SgbbEntity" resultType="com.sydx.aqsc.entity.Security.SgbbEntity">
+
+        SELECT
+        DID,
+        CASE WHEN END_TIME IS NULL THEN  WELL_COMMON_NAME  ELSE  WELL_COMMON_NAME || '(已完工)' end WELL_COMMON_NAME
+        FROM	PC_AQSC_START_WELL
+        where OILFIELD =#{oilfield} and  (END_TIME is null or trunc(END_TIME)>trunc((sysdate - 20)))
+        <!--<if test='team_id !=null and team_id.length() &gt;0'>-->
+            <!--and   team_id like '%'|| #{team_id}||'%'-->
+        <!--</if>-->
+        <if test="search!=null and search.length() &gt; 0 and attribute==1">
+            and TEAM_ID like '%'|| #{search}||'%'
+        </if>
+        <if test="search!=null and search.length() &gt; 0 and attribute==2">
+            and ZYQID like '%'|| #{search}||'%'
+        </if>
+        ORDER BY END_TIME
+
+    </select>
+    <select id="rbAddVeiwSelect1"	parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity">
+
+	   SELECT
+			DID,
+			WELL_COMMON_NAME,
+			TEAM_ID,
+			TEAM_NAME construct_team,
+			INTELLIGENCE_CODE,
+			WORK_CONTENT work_brief,
+			to_char(START_TIME,'yyyy-MM-dd')work_date,
+			to_char(END_TIME,'yyyy-MM-dd') end_date
+			FROM PC_AQSC_START_WELL
+	  where DID=#{did}
+	</select>
+    <select id="ry" parameterType="com.sydx.aqsc.entity.Security.DwryEntity"	resultType="com.sydx.aqsc.entity.Security.DwryEntity">
+        select xm  from PC_AQSC_DWGL_RYQK_TJ
+        <!--where UNITID ='pc0jd008003001'-->
+        where UNITID =#{unitid}
+        <if test="zw !=null and zw.length() &gt;0  and zw=='sg'">
+            and   zw  like  '%四岗%'
+        </if>
+        <if test="zw !=null and zw.length() &gt;0  and zw=='bz'" >
+            and   zw ='班长'
+        </if>
+        <if test="zw !=null and zw.length() &gt;0  and zw=='gb'" >
+            and   zw  in ('队长','副队长','技术员')
+        </if>
+    </select>
+    <delete id="removePPDataJd" parameterType="com.sydx.aqsc.entity.Security.RbEntity">
+       delete from ${circuit_table}
+       where parame_val_num=#{parame_val_num}
+     </delete>
+    <select id="sgbbSaveselect3Jd"		parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="int">
+                        SELECT NVL(MAX(ID),0)  FROM PC_AQSC_TOUR_REPORT_WORKOVE  where  DID =#{did} and to_char(REPORT_TIME,'yyyy-MM-dd') =#{report_time} and TEAM_ID= #{team_id}
+            </select>
+    <insert id="sgbbSaveinsert1Jd" parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" >
+
+        begin
+        INSERT INTO PC_AQSC_TOUR_REPORT_WORKOVE
+        (WELL_COMMON_NAME,INTELLIGENCE_CODE,TEAM_NAME,WORK_BRIEF,
+        ORDER_CLASSES,REPORT_TIME,WORK_DATE,NEXT_CIRCUIT,CONSTRUCT_INTERVAL,
+        DENSITY_STRATURM,STRATIGRAPHIC_POSITION,LEVEL_NUMBER,CIRCUIT_NAME,
+        BEGIN_TIME_HOUR,END_TIME_HOUR,WORK_CONTENT,RECORD_NAME,
+        CLASS_MONITOR,WATCH_CADRE,REDACTION_NAME,BANBAO_TYPE,COMPLETE_JUDGEMENT,
+        FANGS,COMPLETE_CW,ID,SUPERVISOR,BEGIN_TIME_MINUTE,END_TIME_MINUTE,BB_ID,DID,
+        spid,pdid,gx_type,is_complete,create_user,create_time,oilfield,TEAM_ID ,pro_status,customid,remarks,parame_val_num,BUILDCONTENTTMP
+        )
+        (
+        <foreach collection="entity_list" index="" item="item" separator="union all">
+            select
+            #{well_common_name,jdbcType=VARCHAR},
+            #{intelligence_code,jdbcType=VARCHAR},
+            #{construct_team,jdbcType=VARCHAR},
+            #{work_brief,jdbcType=VARCHAR},
+            #{order_classes,jdbcType=VARCHAR},
+            to_date(#{report_time},'yyyy-MM-dd'),
+            to_date(#{work_date},'yyyy-MM-dd'),
+            #{next_circuit,jdbcType=VARCHAR},
+            #{construct_interval,jdbcType=VARCHAR},
+            #{density_straturm,jdbcType=VARCHAR},
+            #{stratigraphic_position,jdbcType=VARCHAR},
+            #{level_number,jdbcType=VARCHAR},
+            (select spname from PC_AQSC_STA_PROCESS where SPID =#{item.spid}),
+            #{item.begin_time_hour,jdbcType=INTEGER},
+            #{item.end_time_hour,jdbcType=INTEGER},
+            #{item.work_content,jdbcType=VARCHAR},
+            #{record_name,jdbcType=VARCHAR},
+            #{class_monitor,jdbcType=VARCHAR},
+            #{watch_cadre,jdbcType=VARCHAR},
+            #{redaction_name,jdbcType=VARCHAR},
+            #{bblx,jdbcType=VARCHAR},
+            #{complete_judgement,jdbcType=VARCHAR},
+            #{fangs,jdbcType=VARCHAR},
+            #{complete_cw,jdbcType=VARCHAR},
+            #{item.id,jdbcType=INTEGER},
+            #{supervisor,jdbcType=VARCHAR},
+            #{item.begin_time_minute,jdbcType=INTEGER},
+            #{item.end_time_minute,jdbcType=INTEGER},
+            #{bb_id,jdbcType=VARCHAR},
+            #{did,jdbcType=VARCHAR},
+            #{item.spid,jdbcType=INTEGER},
+            #{item.pdid,jdbcType=INTEGER},
+            #{item.gx_type,jdbcType=VARCHAR},
+            #{item.is_complete,jdbcType=VARCHAR},
+            #{create_user,jdbcType=VARCHAR},
+            sysdate,
+            #{oilfield,jdbcType=VARCHAR} ,
+            #{team_id} ,
+            #{item.pro_status,jdbcType=VARCHAR},
+            #{item.customid,jdbcType=VARCHAR},
+            #{item.remarks,jdbcType=VARCHAR},
+            #{item.parame_val_num,jdbcType=VARCHAR},
+            #{item.buildcontenttmp,jdbcType=VARCHAR}
+            from dual
+        </foreach>
+        );
+        end;
+    </insert>
+    <select id="config" resultType="com.sydx.aqsc.entity.Security.AqscConfigEntity">
+        select * from  PC_AQSC_CONFIG
+    </select>
+    <select id="xjkgCount"		parameterType="com.sydx.aqsc.entity.Security.SgbbEntity" resultType="int">
+        select count(*) from  JDJXZY.PC_MOVING_PLAN
+        <where>
+            <if test="configTab!=null and configTab.length() &gt; 0 and configTab==1">
+                WORK_DATE IS NULL
+            </if>
+            <if test="search!=null and search.length() &gt; 0 and attribute==1">
+                and TEAM_ID like '%'|| #{search}||'%'
+            </if>
+            <if test="search!=null and search.length() &gt; 0 and attribute==2">
+                and ZYQID like '%'|| #{search}||'%'
+            </if>
+            <if test='well_common_name !=null and well_common_name.length() &gt;0'>
+                and   well_common_name like '%'|| upper( #{well_common_name})||'%'
+            </if>
+        </where>
+    </select>
+    <select id="xjkgList"		parameterType="com.sydx.aqsc.entity.Security.SgbbEntity"		resultType="com.sydx.aqsc.entity.Security.SgbbEntity">
+        select * from (
+        select p.*,rownum row_num from (
+        select
+        well_common_name,
+        ZYQ,
+        team_name work_team,
+        intelligence_code well_code,
+        work_date start_time,
+        MOVING_PLAN_ID ,
+        DESIGN_ID,
+        WORK_CONTENT,
+        to_char(ASSIGNMENT_DATE,'yyyy-MM-dd')ASSIGNMENT_DATE
+        from  JDJXZY.PC_MOVING_PLAN
+
+        <where>
+            <if test="configTab!=null and configTab.length() &gt; 0 and configTab==1">
+                WORK_DATE IS NULL
+            </if>
+            <if test="search!=null and search.length() &gt; 0 and attribute==1">
+                and TEAM_ID like '%'|| #{search}||'%'
+            </if>
+            <if test="search!=null and search.length() &gt; 0 and attribute==2">
+                and ZYQID like '%'|| #{search}||'%'
+            </if>
+            <if test='well_common_name !=null and well_common_name.length() &gt;0'>
+                and   well_common_name like '%'|| upper( #{well_common_name})||'%'
+            </if>
+        </where>
+        order by ASSIGNMENT_DATE desc
+        ) p
+        )
+        where  row_num  &gt;= #{startRow} and row_num &lt;= #{endRow}
+    </select>
+    <select id="sgbz_yz"	parameterType="com.sydx.aqsc.entity.Security.SgbzEntity"		resultType="com.sydx.aqsc.entity.Security.SgbzEntity">
+		SELECT *  from PC_AQSC_CON_STEP where SGID=#{did}
+	</select>
+    <select id="findA"
+            parameterType="com.sydx.aqsc.entity.Security.SgbbEntity"
+            resultType="com.sydx.aqsc.entity.Security.SgbbEntity">
+		select
+		well_common_name,
+		to_char(sysdate,'yyyy-mm-dd') work_shift1,
+		team_name work_team,
+		intelligence_code well_code,
+		work_date start_time,
+		MOVING_PLAN_ID did
+		from  JDJXZY.PC_MOVING_PLAN
+		where well_common_name=#{well_common_name}	and MOVING_PLAN_ID=#{did}
+	</select>
+    <insert id="insertXjkgSave"  parameterType="com.sydx.aqsc.entity.Security.SgbbEntity"	>
+        begin
+        insert into PC_AQSC_START_WELL
+        (
+        DID,
+        WELL_COMMON_NAME,
+        WELL_PURPOSE,
+        CONSTRUCTION_DEPARTMENT,
+        TEAM_NAME,
+        TEAM_ID,
+        INTELLIGENCE_CODE,
+        WORK_CONTENT,
+        START_TIME,
+        SCDW,
+        ip,
+        OILFIELD,
+        CREATE_USER,
+        CREATE_TIME	,
+        PLATFORM_ID,
+        ZYQID
+        )
+        select
+        '${did}',
+        WELL_COMMON_NAME,
+        (select JB  from PC_AQSC_CON_STEP where SGID=#{did} ),
+        COMPANY_NAME,
+        TEAM_NAME,
+        TEAM_ID,
+        INTELLIGENCE_CODE,
+        WORK_CONTENT,
+        to_date('${start_time}','yyyy-MM-dd'),
+        ZYQ,
+        '${ip}',
+        '${oilfield}',
+        '${create_user}',
+        sysdate,
+        PLATFORM_ID,
+        zyqid
+        from  JDJXZY.PC_MOVING_PLAN where MOVING_PLAN_ID=#{did};
+        <if test="configTab!=null and configTab.length() &gt; 0 and configTab==1">
+            update  JDJXZY.PC_MOVING_PLAN
+            set WORK_DATE =to_date('${start_time}','yyyy-MM-dd')
+            where MOVING_PLAN_ID=#{did};
+        </if>
+        end;
+    </insert>
+    <select id="kgjCount"		parameterType="com.sydx.aqsc.entity.Security.SgbbEntity" resultType="int">
+        select count(*) from PC_AQSC_START_WELL
+        where OILFIELD =#{oilfield}
+        <if test="search!=null and search.length() &gt; 0 and attribute==1">
+            and TEAM_ID like '%'|| #{search}||'%'
+        </if>
+        <if test="search!=null and search.length() &gt; 0 and attribute==2">
+            and ZYQID like '%'|| #{search}||'%'
+        </if>
+        <if test='well_common_name !=null and well_common_name.length() &gt;0'>
+            and   well_common_name like '%'|| upper( #{well_common_name})||'%'
+        </if>
+    </select>
+        <select id="kgjList"		parameterType="com.sydx.aqsc.entity.Security.SgbbEntity" resultType="com.sydx.aqsc.entity.Security.SgbbEntity">
+
+            select * from (
+            select p.*,rownum row_num from (
+
+            SELECT
+            PC_AQSC_START_WELL.DID,
+            PC_AQSC_START_WELL.WELL_COMMON_NAME,
+            CASE WHEN   PC_AQSC_START_WELL.WELL_PURPOSE ='1' then '油井' WHEN   PC_AQSC_START_WELL.WELL_PURPOSE ='3' then '水井' end     jb,
+            PC_AQSC_START_WELL.CONSTRUCTION_DEPARTMENT,
+            PC_AQSC_START_WELL.TEAM_NAME work_team,
+            PC_AQSC_START_WELL.TEAM_ID,
+            PC_AQSC_START_WELL.INTELLIGENCE_CODE well_code,
+            PC_AQSC_START_WELL.WORK_CONTENT,
+            to_char(PC_AQSC_START_WELL.START_TIME,'yyyy-MM-dd') START_TIME,
+            to_char(PC_AQSC_START_WELL.END_TIME,'yyyy-MM-dd') END_TIME,
+            PC_AQSC_START_WELL.SCDW zyq,
+            PC_AQSC_START_WELL.OILFIELD,
+            PC_AQSC_START_WELL.CREATE_USER,
+            PC_AQSC_START_WELL.CREATE_TIME,
+            PC_AQSC_START_WELL.LAST_USER,
+            PC_AQSC_START_WELL.LAST_TIME
+            FROM	PC_AQSC_START_WELL
+            where OILFIELD =#{oilfield}
+            <if test="search!=null and search.length() &gt; 0 and attribute==1">
+                and TEAM_ID like '%'|| #{search}||'%'
+            </if>
+            <if test="search!=null and search.length() &gt; 0 and attribute==2">
+                and ZYQID like '%'|| #{search}||'%'
+            </if>
+            <if test='well_common_name !=null and well_common_name.length() &gt;0'>
+                and   well_common_name like '%'|| upper( #{well_common_name})||'%'
+            </if>
+            ) p
+            )
+            where  row_num  &gt;= #{startRow} and row_num &lt;= #{endRow}
+        </select>
+
+    <!--     查询泵类型下拉框-->
+    <select id="bxx"  resultType="java.lang.String">
+     SELECT DISTINCT ccfs  FROM   PC_V_PUMP_FLB  order by ccfs
+    </select>
+
+    <!--     查询泵规范下拉框-->
+    <select id="bgf"		parameterType="java.lang.String" resultType="java.lang.String">
+     SELECT  gf  FROM   PC_V_PUMP_FLB where ccfs=#{ccfs}
+    </select>
+<!--    判断检泵类措施是否添加泵型号、泵径-->
+    <select id="yz_bxx"		parameterType="java.lang.String" resultType="int">
+         select count(*) from   PK_MEASURE_PUMPCHECK_CODE where id=#{csid}
+    </select>
+
+    <!--完工报表数据保存时查询施工总结表数据-->
+    <select id="bbSaveSelect1"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+           select
+           well_common_name,
+           SSDWDM,
+           to_char(COMPLETE_TIME,'yyyy-mm-dd')COMPLETE_TIME ,
+           to_char(START_TIME,'yyyy-mm-dd')START_TIME ,
+           (select max(well_id) from   GYSJ_ADD  where construction_id=#{construction_id} ) well_id,
+           OP_TEAM,
+            CASE WHEN  instr(OP_TEAM,'pc0dq023')>0 THEN (select unitname from PC_SYS_UNIT_CODE where id= substr(OP_TEAM, 0, 11))||'.'||(select unitname from PC_SYS_UNIT_CODE where id= substr(OP_TEAM, 0, 14))
+           ELSE (select unitname from PC_SYS_UNIT_CODE where id= substr(OP_TEAM, 0, 8))||'.'||(select unitname from PC_SYS_UNIT_CODE where id= substr(OP_TEAM, 0, 11))||'.'||(select unitname from PC_SYS_UNIT_CODE where id= substr(OP_TEAM, 0, 14)) END sgdwmc,
+           jbdm,
+           WELL_PURPOSE,
+           cydid,
+           IS_UNDER_PRESSURE,
+           DESIGN_NUM,
+           INPUT_DATE
+            from   PC_CON_MANAGEMENT_INFO where CONSTRUCTION_ID=#{construction_id}
+    </select>
+
+    <delete id="bbSaveRemove1" parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+        begin
+        <!-- 报表数据表（总表）-->
+          DELETE  FROM    PC_CON_REPORT_FORMS  where  CONSIRUCTION_ID=#{construction_id};
+        <!-- 酸化表-->
+          DELETE  FROM    PC_ACIDIFICATION_HORIZON  WHERE CONSTRUCTION_SUMMARY_ID=#{construction_id};
+        <!-- 修改施工总结表完工日期-->
+        UPDATE   PC_CON_MANAGEMENT_INFO SET COMPLETE_TIME=null ,STATUS='0' WHERE  CONSTRUCTION_ID=#{construction_id};
+        <!-- 工程措施类型-->
+         delete from   PC_PRO_WELL_STIM_EFFCTMON where DESIGN_IMEI not in (select DESIGN_IMEI from   PC_R_CON_MANAGEMENT_INFO_SUM);
+         delete from   PC_INJ_WELL_STIM_EFFEMON  where DESIGN_IMEI not in (select DESIGN_IMEI from   PC_R_CON_MANAGEMENT_INFO_SUM);
+         delete from   PC_PRO_WELL_STIMMON where DESIGN_IMEI not in (select DESIGN_IMEI from   PC_R_CON_MANAGEMENT_INFO_SUM);
+         delete from   PC_INJ_WELL_STIMMON where DESIGN_IMEI not in (select DESIGN_IMEI from   PC_R_CON_MANAGEMENT_INFO_SUM);
+         DELETE  FROM     PC_PRO_WELL_STIMMON  where  DESIGN_IMEI in(SELECT DESIGN_IMEI from    PC_R_CON_MANAGEMENT_INFO_SUM WHERE DESIGN_ID=#{construction_id});
+         DELETE  FROM    PC_PRO_WELL_STIM_EFFCTMON  where  DESIGN_IMEI in(SELECT DESIGN_IMEI from    PC_R_CON_MANAGEMENT_INFO_SUM WHERE DESIGN_ID=#{construction_id});
+         DELETE  FROM    PC_INJ_WELL_STIM_EFFEMON  where  DESIGN_IMEI  in(SELECT DESIGN_IMEI from    PC_R_CON_MANAGEMENT_INFO_SUM WHERE DESIGN_ID=#{construction_id});
+         DELETE  FROM    PC_INJ_WELL_STIMMON  where  DESIGN_IMEI   in(SELECT DESIGN_IMEI from    PC_R_CON_MANAGEMENT_INFO_SUM WHERE DESIGN_ID=#{construction_id});
+         DELETE  FROM    PC_R_CON_MANAGEMENT_INFO_SUM  where  DESIGN_ID=#{construction_id};
+         DELETE  FROM    PC_CON_DE_VER_OPINION  where  DESIGN_ID=#{construction_id};
+         UPDATE   PC_JDK_CONTENT set TJBS=''  where  DESIGN_ID=#{construction_id};
+        UPDATE   PC_CS_HANDOVER_MAINTAIN set WGJJJG='',WGJJSJ='',QRRQ1='',WGRQ=''  where  SJID=#{construction_id};
+         end;
+     </delete>
+     <delete id="bbSaveRemove2" parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+         begin
+         <!-- 报表数据表（总表）-->
+        DELETE  FROM    PC_CON_REPORT_FORMS  where  CONSIRUCTION_ID=#{construction_id};
+        <!-- 酸化表-->
+        DELETE  FROM    PC_ACIDIFICATION_HORIZON  WHERE CONSTRUCTION_SUMMARY_ID=#{construction_id};
+         <!-- 工程措施类型-->
+         delete from   PC_PRO_WELL_STIM_EFFCTMON where DESIGN_IMEI not in (select DESIGN_IMEI from   PC_R_CON_MANAGEMENT_INFO_SUM);
+         delete from   PC_INJ_WELL_STIM_EFFEMON  where DESIGN_IMEI not in (select DESIGN_IMEI from   PC_R_CON_MANAGEMENT_INFO_SUM);
+         delete from   PC_PRO_WELL_STIMMON where DESIGN_IMEI not in (select DESIGN_IMEI from   PC_R_CON_MANAGEMENT_INFO_SUM);
+         delete from   PC_INJ_WELL_STIMMON where DESIGN_IMEI not in (select DESIGN_IMEI from   PC_R_CON_MANAGEMENT_INFO_SUM);
+         DELETE  FROM    PC_R_CON_MANAGEMENT_INFO_SUM  where  DESIGN_ID not in (select CONSTRUCTION_ID from   PC_CON_MANAGEMENT_INFO);
+         DELETE  FROM    PC_R_CON_MANAGEMENT_INFO_SUM  where  DESIGN_ID=#{construction_id};
+        end;
+    </delete>
+    <update id="bbSaveUpdate1" parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+         UPDATE   PC_CON_MANAGEMENT_INFO
+          SET COMPLETE_TIME=TO_DATE(#{complete_time},'yyyy-MM-dd'),
+          update_date=sysdate,
+          update_user_id=#{username}
+          WHERE  CONSTRUCTION_ID=#{construction_id}
+    </update>
+
+    <select id="bbSaveSelect2"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+            select
+            (SELECT  DOMAIN_DESCRIPTION name FROM   SYS_DOMAIN_LOCAL where  DOMAIN_ALIASNAME = '检泵结果代码' and domain_code=#{stim_i_appraise_code,jdbcType=VARCHAR}) STIM_I_APPRAISE,
+            (SELECT  DOMAIN_DESCRIPTION name FROM   SYS_DOMAIN_LOCAL where  DOMAIN_ALIASNAME = '检泵结果代码' and domain_code=#{stim_ii_appraise_code,jdbcType=VARCHAR}) STIM_II_APPRAISE,
+            (SELECT  DOMAIN_DESCRIPTION name FROM   SYS_DOMAIN_LOCAL where  DOMAIN_ALIASNAME = '检泵结果代码' and domain_code=#{stim_iii_appraise_code,jdbcType=VARCHAR}) STIM_III_APPRAISE,
+            (SELECT  DOMAIN_DESCRIPTION name FROM   SYS_DOMAIN_LOCAL where  DOMAIN_ALIASNAME = '检泵结果代码' and domain_code=#{stim_iiii_appraise_code,jdbcType=VARCHAR}) STIM_IIII_APPRAISE
+            from  dual
+
+    </select>
+    <insert id="bbSaveInsert1"  parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+     INSERT INTO   PC_CON_REPORT_FORMS (
+                CONSIRUCTION_ID, WELL_COMMON_NAME,WELL_ID,CREATE_USER_ID,CREATE_DATE,START_TIME,COMPLETE_TIME,SSDWDM,STIM_I_CAIEGORY,STIM_II_CAIEGORY,
+                STIM_III_CAIEGORY,STIM_KEY_ID, MEASURE_FOURTH, MEASURE_FOURTH_ID,STIM_I_APPRAISE,STIM_II_APPRAISE,STIM_III_APPRAISE,STIM_IIII_APPRAISE,PUMP_DIAMETER, PUMP_SPECIFICATION,
+                STIM_I_APPRAISE_CODE,STIM_II_APPRAISE_CODE,STIM_III_APPRAISE_CODE,STIM_IIII_APPRAISE_CODE, CONSTRUCTION_FRACTURING,BEFOREMEASURE_PRE,AFTERMEASURE_PRE,LIQUID_MEASURE,MAX_DISPLACEMENT,MIN_DISPLACEMENT,
+                 LAYERCOUNT,TOTAL_SAND,SANDTHINCK,VALIDTHINCK,LOGINDEVICE,
+                 FRACTUR_AVE_SAND_RATIO,YLZCLX,YLYTX,TEAM_ID_YL,COILED_TUB,SFDGZ,LXYG_GYLX,TEAM_ID_LXYG,CLEANING_OPERATION,QJZY_FL,
+                 JSGFL_WT,JSGFL_FSB,JSFY,lxyg_maxpressure,lxyg_depth
+            )VALUES
+            (
+             #{construction_id,jdbcType=VARCHAR},#{well_common_name,jdbcType=VARCHAR},#{well_id,jdbcType=VARCHAR},#{username,jdbcType=VARCHAR},SYSDATE,
+             TO_DATE(#{start_time},'yyyy-MM-dd'),TO_DATE(#{complete_time},'yyyy-MM-dd'),#{ssdwdm,jdbcType=VARCHAR},#{stim_i_caiegory,jdbcType=VARCHAR},#{stim_ii_caiegory,jdbcType=VARCHAR},
+             #{stim_iii_caiegory,jdbcType=VARCHAR},#{stim_key_id,jdbcType=VARCHAR},#{measure_fourth,jdbcType=VARCHAR},#{measure_fourth_id,jdbcType=VARCHAR},#{stim_i_appraise,jdbcType=VARCHAR},
+             #{stim_ii_appraise,jdbcType=VARCHAR},#{stim_iii_appraise,jdbcType=VARCHAR},#{stim_iiii_appraise,jdbcType=VARCHAR},#{pump_diameter,jdbcType=VARCHAR},#{pump_specification,jdbcType=VARCHAR},
+              #{stim_i_appraise_code,jdbcType=VARCHAR},#{stim_ii_appraise_code,jdbcType=VARCHAR},#{stim_iii_appraise_code,jdbcType=VARCHAR},#{stim_iiii_appraise_code,jdbcType=VARCHAR},#{construction_fracturing,jdbcType=VARCHAR},
+             #{beforemeasure_pre,jdbcType=VARCHAR},#{aftermeasure_pre,jdbcType=VARCHAR},#{liquid_measure,jdbcType=VARCHAR},#{max_displacement,jdbcType=VARCHAR},#{min_displacement,jdbcType=VARCHAR},
+             #{layercount,jdbcType=VARCHAR},#{total_sand,jdbcType=VARCHAR},#{sandthinck,jdbcType=VARCHAR},#{validthinck,jdbcType=VARCHAR},'AQSC_HTML',
+              #{fractur_ave_sand_ratio,jdbcType=VARCHAR},#{ylzclx,jdbcType=VARCHAR},#{ylytx,jdbcType=VARCHAR},#{team_id_yl,jdbcType=VARCHAR},#{coiled_tub,jdbcType=VARCHAR},
+               #{sfdgz,jdbcType=VARCHAR},#{lxyg_gylx,jdbcType=VARCHAR},#{team_id_lxyg,jdbcType=VARCHAR},#{cleaning_operation,jdbcType=VARCHAR},#{qjzy_fl,jdbcType=VARCHAR},
+                #{jsgfl_wt,jdbcType=VARCHAR},#{jsgfl_fsb,jdbcType=VARCHAR},#{jsfy,jdbcType=VARCHAR},#{lxyg_maxpressure,jdbcType=VARCHAR},#{lxyg_depth,jdbcType=VARCHAR}
+            )
+    </insert>
+
+
+    <select id="cwid"  resultType="int">
+         select NVL(max(id),0) from   PC_ACIDIFICATION_HORIZON
+    </select>
+    <insert id="bbSaveInsert2"  parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+        begin
+        INSERT INTO   PC_ACIDIFICATION_HORIZON(
+        ID,
+        XH,
+        CONSTRUCTION_SUMMARY_ID,
+        WELL_COMMON_NAME,
+        ACIDIFICATION_HORIZON,
+        ACID_CONTENT,
+        ACID_DISPLACEMENT,
+        ACID_INTAKE,
+        ACID_SINK,
+        SYLX,
+        SYTX,
+        TEAM_ID_SH
+        )
+        (
+        <foreach collection="entityList2" index="" item="item" separator="union all">
+            select
+            #{item.cwid,jdbcType=INTEGER},
+            #{item.xh,jdbcType=INTEGER},
+            #{item.construction_id,jdbcType=INTEGER},
+            #{item.well_common_name,jdbcType=INTEGER},
+            #{item.acidification_horizon,jdbcType=VARCHAR},
+            #{item.acid_content,jdbcType=VARCHAR},
+            #{item.acid_displacement,jdbcType=VARCHAR},
+            #{item.acid_intake,jdbcType=VARCHAR},
+            #{item.acid_sink,jdbcType=VARCHAR},
+            #{item.sylx,jdbcType=VARCHAR},
+            #{item.sytx,jdbcType=VARCHAR},
+            #{item.team_id_sh,jdbcType=VARCHAR}
+            from dual
+        </foreach>
+        );
+        end;
+    </insert>
+
+    <select id="bbSaveSelect3"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="java.util.Map">
+            select a.well_id,b.domain_description domain_description from   CD_WELL_SOURCE a,(select * from   SYS_DOMAIN  where domain_aliasname='井型') b where a.well_id=#{well_id} and a.REASON=b.domain_code
+    </select>
+    <select id="bbSaveSelect4"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+            select
+            (SELECT name from   PK_MEASURE_CODE WHERE id=#{csdl,jdbcType=VARCHAR}) csdl_mc,
+            (SELECT name from   PK_MEASURE_CODE WHERE id=#{csxl,jdbcType=VARCHAR}) csxl_mc,
+            (SELECT name from   PK_MEASURE_CODE WHERE id=#{cslb,jdbcType=VARCHAR}) cslb_mc,
+            (SELECT name from   PK_MEASURE_CODE WHERE id=#{cssil,jdbcType=VARCHAR}) cssil_mc
+            from  dual
+    </select>
+    <select id="bbSaveSelect5"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+                 SELECT CCFS,CCFSMC,QDFSDM,QDFS,SCDW ,sfdgmyl  from   GYSJ_ADD WHERE sjid=#{sjid}
+    </select>
+
+    <select id="bbSaveSelect6"		parameterType="java.lang.String" resultType="java.util.Map">
+         SELECT * from   PC_R_WORKLOAD_CONTRAST_DAILYRE WHERE WORKMEASURE like '%'||#{csid}||'%'
+    </select>
+    <select id="bbSaveSelect7"		parameterType="java.lang.String" resultType="java.util.Map">
+         SELECT * from   PC_R_WORKLOAD_CONTRAST WHERE WORKMEASURE like '%'||#{csid}||'%'
+    </select>
+    <select id="bbSaveSelect8"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="java.util.Map">
+        select construction_reason from   PC_CON_GYSJ_FORMS where sjid=#{sjid}
+    </select>
+    <insert id="bbSaveInsert3"  parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+ begin
+        INSERT INTO   PK_OP_PROCESS (
+            OP_ID,WELL_COMMON_NAME,OP_DATE,NODE_NAME,STATUS,DEPARTMENT,
+            USER_ID,SEQUENCE,DESIGN_NUM,DESIGN_CODE,IP
+        )VALUES(
+           #{construction_id,jdbcType=VARCHAR},#{well_common_name,jdbcType=VARCHAR},SYSDATE,#{node_name,jdbcType=VARCHAR}, '2',#{unitid,jdbcType=VARCHAR},
+           #{username,jdbcType=VARCHAR}, '0',#{design_num,jdbcType=VARCHAR},'',''
+		  );
+
+		  INSERT INTO   PC_R_CON_MANAGEMENT_INFO_SUM (
+            WELL_COMMON_NAME,WELL_ID,WELL_PURPOSE,WELL_UNITID,STIM_KEY_ID,START_DATE,END_DATE,DESIGN_IMEI,IS_UNDER_PRESSURE,INPUT_DATE,
+            INPUT_USER,DESIGN_ID,REASON,LIFT_TYPE,DRIVING_WAY,  CONSTRUCTION_DEPARTMENT,ENGIN_DESIGN_ID,DESIGN_NUM,STIM_I_CATEGORY,STIM_II_CATEGORY,
+            STIM_III_CATEGORY,STIM_I_CATEGORY_CHECK,STIM_II_CATEGORY_CHECK,STIM_III_CATEGORY_CHECK,STIM_KEY_ID_CHECK,  MEASURE_FOURTH,MEASURE_FOURTH_ID,TYPES_CLASSIFIED,INPUT_UNIT,WELL_PURPOSE_NAME,
+            PRO_UNIT,DRIVING_WAY_NAME,LIFT_TYPE_NAME,REPORTFLAG_DAILY,STIM_IV_CATEGORY,  REPORTFLAG,REPORTFLAG_NAME,NO_CONSTRUCTION,CONSTRUCTION_DEPNAME,
+            largefract,pumpcheck,unitflag,pump_cation,construction_reason
+             )VALUES
+            (#{well_common_name,jdbcType=VARCHAR},#{well_id,jdbcType=VARCHAR},#{jbdm,jdbcType=VARCHAR},#{cydid,jdbcType=VARCHAR},#{csid,jdbcType=VARCHAR},
+            TO_DATE(#{start_time},'yyyy-MM-dd'),TO_DATE(#{complete_time},'yyyy-MM-dd'),#{design_imei,jdbcType=VARCHAR},#{is_under_pressure,jdbcType=VARCHAR},SYSDATE,
+             'auto',#{construction_id,jdbcType=VARCHAR},#{reason,jdbcType=VARCHAR},#{ccfs,jdbcType=VARCHAR},#{qdfsdm,jdbcType=VARCHAR},
+            #{op_team,jdbcType=VARCHAR},#{sjid,jdbcType=VARCHAR},#{design_num,jdbcType=VARCHAR},#{csdl_mc,jdbcType=VARCHAR},#{csxl_mc,jdbcType=VARCHAR},
+            #{cslb_mc,jdbcType=VARCHAR},#{csdl_mc,jdbcType=VARCHAR},#{csxl_mc,jdbcType=VARCHAR},#{cslb_mc,jdbcType=VARCHAR},#{cslb,jdbcType=VARCHAR},
+            #{cssil_mc,jdbcType=VARCHAR},#{cssil,jdbcType=VARCHAR},#{types_classified,jdbcType=VARCHAR},#{unitname,jdbcType=VARCHAR},#{well_purpose,jdbcType=VARCHAR},
+            #{scdw,jdbcType=VARCHAR},#{qdfs,jdbcType=VARCHAR},#{ccfsmc,jdbcType=VARCHAR},#{reportflag_daily,jdbcType=VARCHAR},#{cssil_mc,jdbcType=VARCHAR},
+            #{reportflag,jdbcType=VARCHAR},#{reportflag_name,jdbcType=VARCHAR},#{no_construction,jdbcType=VARCHAR},#{sgdwmc,jdbcType=VARCHAR},
+            #{largefract,jdbcType=VARCHAR},#{pumpcheck,jdbcType=VARCHAR},#{unitflag,jdbcType=VARCHAR},#{pump_cation,jdbcType=VARCHAR},#{construction_reason,jdbcType=VARCHAR}
+            );
+   end;
+    </insert>
+
+    <update id="bbSaveUpdate2" parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+         UPDATE   PC_CON_MANAGEMENT_INFO
+          SET INPUT_DATE=sysdate
+          WHERE  CONSTRUCTION_ID=#{construction_id}
+    </update>
+
+    <select id="bbSaveSelect9"		parameterType="com.sydx.aqsc.entity.Security.CompleteReportEntity" resultType="com.sydx.aqsc.entity.Security.CompleteReportEntity">
+             SELECT distinct STIM_I_CATEGORY_CHECK csdl_mc ,STIM_II_CATEGORY_CHECK csxl_mc,STIM_III_CATEGORY_CHECK cslb_mc,MEASURE_FOURTH cssil_mc,MEASURE_FOURTH_ID cssil,STIM_KEY_ID_CHECK cslb
+             FROM     PC_R_CON_MANAGEMENT_INFO_SUM WHERE DESIGN_ID=#{construction_id} and NO_CONSTRUCTION is null
+    </select>
+
+    <update id="bbSaveUpdate3" parameterType="java.lang.String">
+        ${sql}
+    </update>
+
+
+    <update id="ztsgUpdate" parameterType="com.sydx.aqsc.entity.Security.SgbbEntity">
+       update   PC_CON_MANAGEMENT_INFO
+        set complete_time='',
+              ztsg='1',
+              update_date=sysdate,
+              update_user_id=#{username}
+              WHERE  CONSTRUCTION_ID=#{construction_id}
+    </update>
+
+    <select id="bbckCount2" parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="int">
+        select count(*) from (SELECT		DISTINCT 	A.WELL_COMMON_NAME,	A.BB_ID,	A.DID,	A.INTELLIGENCE_CODE,	A.TEAM_NAME,A.WORK_BRIEF,
+        A.ORDER_CLASSES,A.REPORT_TIME,	A.WORK_DATE,A.NEXT_CIRCUIT,	A.COMPLETE_JUDGEMENT,	A.BANBAO_TYPE
+        FROM	PC_AQSC_TOUR_REPORT_WORKOVE A
+        inner join  PC_AQSC_START_WELL B ON A.DID=B.DID
+        where A.OILFIELD=#{oilfield}
+        <if test='well_common_name !=null and well_common_name.length() &gt;0'>
+            and   A.well_common_name like '%'|| upper( #{well_common_name})||'%'
+        </if>
+        <if test='construct_team !=null and construct_team.length() &gt;0'>
+            and   (A.TEAM_NAME like '%'|| upper( #{construct_team})||'%' or A.INTELLIGENCE_CODE like '%'|| upper( #{construct_team})||'%' )
+        </if>
+        <if test='report_time !=null and report_time.length() &gt;0'>
+            and   to_char(REPORT_TIME,'yyyy-MM-dd')  =#{report_time}
+        </if>
+<!--        <if test='team_id !=null and team_id.length() &gt;0'>-->
+<!--            and   team_id like '%'|| #{team_id}||'%'-->
+<!--        </if>-->
+        <if test="search!=null and search.length() &gt; 0 and attribute==1">
+            and A.TEAM_ID like '%'|| #{search}||'%'
+        </if>
+        <if test="search!=null and search.length() &gt; 0 and attribute==2">
+            and B.ZYQID like '%'|| #{search}||'%'
+        </if>
+        )
+    </select>
+
+    <select id="bbckList2"
+            parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity"
+            resultType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity">
+        select p.*,rownum row_num from (
+        SELECT		DISTINCT 	A.WELL_COMMON_NAME,
+        A.BB_ID,
+        A.DID,
+        A.INTELLIGENCE_CODE,
+        A.TEAM_NAME construct_team,
+        A.WORK_BRIEF,
+        A.ORDER_CLASSES,
+        to_char(REPORT_TIME,'yyyy-MM-dd')  REPORT_TIME,
+        to_char(WORK_DATE,'yyyy-MM-dd')  WORK_DATE,
+        A.NEXT_CIRCUIT,
+        A.COMPLETE_JUDGEMENT,
+        A.BANBAO_TYPE bblx
+        FROM	PC_AQSC_TOUR_REPORT_WORKOVE A
+        inner join  PC_AQSC_START_WELL B ON A.DID=B.DID
+        where A.OILFIELD=#{oilfield}
+        <if test='well_common_name !=null and well_common_name.length() &gt;0'>
+            and   A.well_common_name like '%'|| upper( #{well_common_name})||'%'
+        </if>
+        <if test='construct_team !=null and construct_team.length() &gt;0'>
+            and   (A.TEAM_NAME like '%'|| upper( #{construct_team})||'%' or A.INTELLIGENCE_CODE like '%'|| upper( #{construct_team})||'%' )
+        </if>
+        <if test='report_time !=null and report_time.length() &gt;0'>
+            and   to_char(REPORT_TIME,'yyyy-MM-dd')  =#{report_time}
+        </if>
+        <if test="search!=null and search.length() &gt; 0 and attribute==1">
+            and A.TEAM_ID like '%'|| #{search}||'%'
+        </if>
+        <if test="search!=null and search.length() &gt; 0 and attribute==2">
+            and B.ZYQID like '%'|| #{search}||'%'
+        </if>
+        order by REPORT_TIME desc
+        ) p
+    </select>
+
+    <select id="ykgjList"		parameterType="com.sydx.aqsc.entity.Security.ZyrbEntity" resultType="com.sydx.aqsc.entity.Security.ZyrbEntity">
+        SELECT A.*,B.WORK_CONTENT0,B.WORK_CONTENT8,B.WORK_CONTENT16 FROM(
+        SELECT * FROM(
+        SELECT DISTINCT
+        A.did,
+        A.WELL_COMMON_NAME,
+        CASE WHEN   A.WELL_PURPOSE ='1' then '油井' WHEN   A.WELL_PURPOSE ='3' then '水井' end WELL_PURPOSE,
+        A.CONSTRUCTION_DEPARTMENT,
+        A.TEAM_NAME,
+        A.TEAM_ID,
+        A.INTELLIGENCE_CODE,
+        A.SCDW,
+        A.PLATFORM_ID,
+        TO_CHAR (A.START_TIME,'yyyy-MM-dd') start_time_Str ,
+        b.STRATIGRAPHIC_POSITION,
+        b.CONSTRUCT_INTERVAL,
+        b.WORK_BRIEF,b.NEXT_CIRCUIT,
+        row_number()over(partition by b.did order by b.REPORT_TIME DESC,DECODE( b.ORDER_CLASSES ,'零' ,0,'八',8,'四',16) DESC)row_number
+        from PC_AQSC_TOUR_REPORT_WORKOVE b
+        INNER JOIN PC_AQSC_START_WELL A ON A.DID =B.DID
+        <where> b.oilfield=#{oilfield}
+            <if test='report_time_Str !=null and report_time_Str .length() &gt;0'>
+                and ((to_char (b.REPORT_TIME ,'yyyy-MM-dd') =#{report_time_Str} and b.order_classes in ('零' ,'八' ))
+                or(  to_char (b.REPORT_TIME+1 ,'yyyy-MM-dd') =#{report_time_Str}  and b.order_classes ='四'  ))
+            </if>
+            <if test='report_time_Str ==null or report_time_Str .length() ==0'>
+                <if test='order_classes !=null  and order_classes==0' >
+                    and trunc(b.REPORT_TIME,'dd')  = trunc(sysdate-1,'dd')
+                </if>
+                <if test='order_classes !=null  and order_classes==8' >
+                    and ( (trunc(b.REPORT_TIME,'dd')  = trunc(sysdate-1,'dd') and b.order_classes in ('八','四') )
+                    or   (trunc(b.REPORT_TIME,'dd')  = trunc(sysdate,'dd') and b.order_classes ='零' ))
+                </if>
+                <if test='order_classes !=null and order_classes==16' >
+                    and ((trunc(b.REPORT_TIME,'dd')  = trunc(sysdate-1,'dd') and b.order_classes ='四')
+                    or   (trunc(b.REPORT_TIME,'dd')  = trunc(sysdate,'dd') and b.order_classes in ('零' ,'八' )))
+                </if>
+            </if>
+            <if test='well_common_name !=null and well_common_name.length() &gt;0'>
+                and   A.well_common_name like '%'|| upper( #{well_common_name})||'%'
+            </if>
+            <if test='platform_id !=null and platform_id.length() &gt;0'>
+                and   A.platform_id like '%'|| upper( #{platform_id})||'%'
+            </if>
+
+            <if test='scdw !=null and scdw .length() &gt;0'>
+                and   A.scdw like '%'|| upper( #{scdw})||'%'
+            </if>
+            <if test='well_purpose !=null and well_purpose .length() &gt;0'>
+                and   A.well_purpose like '%'|| upper( #{well_purpose})||'%'
+            </if>
+            <if test='work_brief !=null and work_brief .length() &gt;0'>
+                and   b.work_brief like '%'|| upper( #{work_brief})||'%'
+            </if>
+            <if test='team_name !=null and team_name .length() &gt;0'>
+                and   A.team_name like '%'|| upper( #{team_name})||'%'
+            </if>
+            <if test='team_id !=null and team_id.length() &gt;0'>
+                and   A.team_id like '%'|| #{team_id}||'%'
+            </if>
+            <if test='scdwid !=null and scdwid.length() &gt;0'>
+                and   A.scdw = (select  UNITNAME from PC_SYS_UNIT_CODE where id=#{scdwid} )
+            </if>
+            <if test="search!=null and search.length() &gt; 0 and attribute==1">
+                and A.TEAM_ID like '%'|| #{search}||'%'
+            </if>
+            <if test="search!=null and search.length() &gt; 0 and attribute==2">
+                and A.ZYQID like '%'|| #{search}||'%'
+            </if>
+        </where>
+        )where   row_number=1
+        ) A
+        INNER JOIN  (
+        SELECT did,
+        max(decode(ORDER_CLASSES, '零', TO_CHAR(WORK_CONTENT), '')) WORK_CONTENT0,
+        max(decode(ORDER_CLASSES, '八', TO_CHAR(WORK_CONTENT), '')) WORK_CONTENT8,
+        max(decode(ORDER_CLASSES, '四', TO_CHAR(WORK_CONTENT), '')) WORK_CONTENT16
+        FROM(
+        SELECT	b.did,	b.REPORT_TIME,b.ORDER_CLASSES,
+        WM_CONCAT(b.WORK_CONTENT) over(partition by b.did,b.REPORT_TIME,b.ORDER_CLASSES order by b.ID) WORK_CONTENT
+        from PC_AQSC_TOUR_REPORT_WORKOVE b
+        INNER JOIN PC_AQSC_START_WELL A ON A.DID =B.DID
+        <where> b.oilfield=#{oilfield}
+            <if test='report_time_Str !=null and report_time_Str .length() &gt;0'>
+                and ((to_char (b.REPORT_TIME ,'yyyy-MM-dd') =#{report_time_Str} and b.order_classes in ('零' ,'八' ))
+                or(  to_char (b.REPORT_TIME+1 ,'yyyy-MM-dd') =#{report_time_Str}  and b.order_classes ='四'  ))
+            </if>
+            <if test='report_time_Str ==null or report_time_Str .length() ==0'>
+                <if test='order_classes !=null  and order_classes==0' >
+                    and trunc(b.REPORT_TIME,'dd')  = trunc(sysdate-1,'dd')
+                </if>
+                <if test='order_classes !=null  and order_classes==8' >
+                    and ( (trunc(b.REPORT_TIME,'dd')  = trunc(sysdate-1,'dd') and b.order_classes in ('八','四') )
+                    or   (trunc(b.REPORT_TIME,'dd')  = trunc(sysdate,'dd') and b.order_classes ='零' ))
+                </if>
+                <if test='order_classes !=null and order_classes==16' >
+                    and ((trunc(b.REPORT_TIME,'dd')  = trunc(sysdate-1,'dd') and b.order_classes ='四')
+                    or   (trunc(b.REPORT_TIME,'dd')  = trunc(sysdate,'dd') and b.order_classes in ('零' ,'八' )))
+                </if>
+            </if>
+            <if test='well_common_name !=null and well_common_name.length() &gt;0'>
+                and   A.well_common_name like '%'|| upper( #{well_common_name})||'%'
+            </if>
+            <if test='scdw !=null and scdw .length() &gt;0'>
+                and   A.scdw like '%'|| upper( #{scdw})||'%'
+            </if>
+            <if test='well_purpose !=null and well_purpose .length() &gt;0'>
+                and   A.well_purpose like '%'|| upper( #{well_purpose})||'%'
+            </if>
+            <if test='work_brief !=null and work_brief .length() &gt;0'>
+                and   b.work_brief like '%'|| upper( #{work_brief})||'%'
+            </if>
+            <if test='team_name !=null and team_name .length() &gt;0'>
+                and   A.team_name like '%'|| upper( #{team_name})||'%'
+            </if>
+            <if test='team_id !=null and team_id.length() &gt;0'>
+                and   A.team_id like '%'|| #{team_id}||'%'
+            </if>
+            <if test='scdwid !=null and scdwid.length() &gt;0'>
+                and   A.scdw = (select  UNITNAME from PC_SYS_UNIT_CODE where id=#{scdwid} )
+            </if>
+        </where>
+        )
+        GROUP BY did
+        ) B ON A.DID=B.DID
+        ORDER BY TEAM_ID
+    </select>
+
+
+    <insert id="gcSaveinsert1Jd" parameterType="com.sydx.aqsc.entity.Security.GcEntity" >
+
+        begin
+         delete  from  PC_AQSC_GC where   DID=#{did} and spid=#{spid} and PDID=#{pdid}   and sgdyid=#{sgdyid}   and sgdyNo=#{sgdyNo}  and  to_char(REPORT_TIME,'yyyy-MM-dd')=#{report_time}  and ORDER_CLASSES=#{order_classes};
+        INSERT INTO PC_AQSC_GC
+        (
+        name,
+        type,
+        amout,
+        length,
+        depth,
+        UNIT,
+        bz,
+        create_user,
+        create_time,
+        ip,
+        oilfield,
+        did,
+        pdid,
+        spid,
+        spname,
+        SGDYID,
+        SGDYNO,
+        REPORT_TIME,
+        ORDER_CLASSES
+        )
+        (
+        <foreach collection="entityList" index="" item="item" separator="union all">
+            select
+            #{item.name,jdbcType=VARCHAR},
+            #{item.type,jdbcType=VARCHAR},
+            #{item.amout,jdbcType=INTEGER},
+            #{item.length,jdbcType=INTEGER},
+            #{item.depth,jdbcType=INTEGER},
+            #{item.unit,jdbcType=VARCHAR},
+            #{item.bz,jdbcType=VARCHAR},
+            #{create_user,jdbcType=VARCHAR},
+            sysdate,
+            #{ip,jdbcType=VARCHAR},
+            #{oilfield,jdbcType=VARCHAR},
+            #{did,jdbcType=VARCHAR},
+            #{pdid,jdbcType=INTEGER},
+            #{spid,jdbcType=INTEGER},
+            #{spname,jdbcType=VARCHAR},
+            #{sgdyid,jdbcType=VARCHAR},
+            #{sgdyNo,jdbcType=INTEGER},
+            to_date(#{report_time},'yyyy-MM-dd'),
+            #{order_classes,jdbcType=VARCHAR}
+            from dual
+        </foreach>
+        );
+        end;
+    </insert>
+    <select id="gcSelect"	parameterType="com.sydx.aqsc.entity.Security.GcEntity" resultType="com.sydx.aqsc.entity.Security.GcEntity">
+        select * from PC_AQSC_GC where  DID=#{did} and spid=#{spid} and PDID=#{pdid}   and sgdyid=#{sgdyid}   and sgdyNo=#{sgdyNo}  and  to_char(REPORT_TIME,'yyyy-MM-dd')=#{report_time}  and ORDER_CLASSES=#{order_classes}
+    </select>
+
+    <select id="gcname" parameterType="com.sydx.aqsc.entity.Security.GcEntity"	resultType="com.sydx.aqsc.entity.Security.GcEntity">
+        select kind ,spid from PC_AQSC_TOOLS
+        where part ='2'
+    </select>
+    <select id="gctype" parameterType="com.sydx.aqsc.entity.Security.GcEntity"	resultType="com.sydx.aqsc.entity.Security.GcEntity">
+        select xhtype,id  from PC_AQSC_TOOLS_PARAM
+        where spid =#{spid}
+    </select>
+
+    <select id="shdw_select" parameterType="com.sydx.aqsc.entity.Admin.PcUnitEntity"	resultType="com.sydx.aqsc.entity.Admin.PcUnitEntity">
+
+       select * from PC_SYS_UNIT_CODE where OILFIELD='pc0dq' and  parentid=#{parentid} and UNITEPROPERTY='作业'  order by id
+    </select>
+    <select id="yldw_select" parameterType="com.sydx.aqsc.entity.Admin.PcUnitEntity"	resultType="com.sydx.aqsc.entity.Admin.PcUnitEntity">
+
+       select * from PC_SYS_UNIT_CODE where OILFIELD='pc0dq' and parentid in ('pc0dq019013','pc0dq019014','pc0dq019016') and UNITEPROPERTY='作业' order by id
+    </select>
+    <select id="lxygdw_select" parameterType="com.sydx.aqsc.entity.Admin.PcUnitEntity"	resultType="com.sydx.aqsc.entity.Admin.PcUnitEntity">
+
+      select * from PC_SYS_UNIT_CODE where OILFIELD='pc0dq' and parentid='pc0dq019009' and UNITEPROPERTY='作业' and unitname like '连续油管%' order by id
+    </select>
+    <select id="max_spno" parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="int">
+           SELECT NVL(MAX(SPNO),1) SPNO FROM PC_AQSC_TOUR_REPORT_WORKOVE  where BB_ID=#{bb_id}
+    </select>
+    <select id="sgbbSaveselect_table"  parameterType="com.sydx.aqsc.entity.Security.ReportWorkoveEntity" resultType="com.sydx.aqsc.entity.Security.SgdyEntity">
+        select distinct  * from (
+        SELECT DISTINCT B.CIRCUIT_TABLE,B.PARAME_VAL_NUM FROM PC_AQSC_TRW_SGDY B
+        INNER JOIN PC_AQSC_TOUR_REPORT_WORKOVE A ON A.DID =B.DID and TO_CHAR(A.REPORT_TIME,'yyyy-MM-dd') =B.REPORT_TIME AND A.ORDER_CLASSES=B.ORDER_CLASSES AND A.SPNO=B.SPNO AND A.SPID=B.SPID AND A.PDID=B.PDID
+        WHERE A.DID=#{did} and TO_CHAR(A.REPORT_TIME,'yyyy-MM-dd')=#{report_time} and A.ORDER_CLASSES=#{order_classes} AND B.TAB in('0','2')
+        AND B.CIRCUIT_TABLE is NOT NULL
+        )A
+    </select>
+    <delete id="sgbbSave_table_remove" parameterType="com.sydx.aqsc.entity.Security.SgdyEntity">
+        begin
+        <foreach collection="entityList" index="" item="item" separator="">
+            delete from ${item.circuit_table}   where parame_val_num=#{item.parame_val_num};
+        </foreach>
+        end ;
+    </delete>
+
+    <!-- 查询厂级生产单位编码、名称-->
+    <select id="unit_select" parameterType="com.sydx.aqsc.entity.Admin.PcUnitEntity"  resultType="com.sydx.aqsc.entity.Admin.PcUnitEntity">
+        SELECT id, UNITNAME from PC_SYS_UNIT_CODE where   OILFIELD=#{oilfield} and parentid =#{parentid} and uniteproperty2 like '%生产%'
+        <if test="search!=null and search.length() &gt; 0 ">
+            and id like '%'|| #{search}||'%'
+        </if>
+        ORDER BY id
+    </select>
+</mapper>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.VqqxtDao">
+
+<select id="selectByParam3" parameterType="com.cyrj.jxzy.entity.Constractor.VqqxtEntity" resultType="com.cyrj.jxzy.entity.Constractor.VqqxtEntity">
+${whc}
+</select>
+
+<select id="selectSj" parameterType="com.cyrj.jxzy.entity.Constractor.VqqxtEntity" resultType="com.cyrj.jxzy.entity.Constractor.VqqxtEntity">
+SELECT
+	V_QXXT_APPENDICE.DOMAIN_DESCRIPTION,
+	V_QXXT_APPENDICE.DOMAIN_ORDER
+FROM
+	V_QXXT_APPENDICE
+<where>
+	<if test="domain_aliasname!=null and domain_aliasname.length() &gt;0">
+		V_QXXT_APPENDICE.DOMAIN_ALIASNAME = #{domain_aliasname}
+	</if>
+</where>
+ORDER BY
+	V_QXXT_APPENDICE.DOMAIN_ORDER
+</select>
+
+
+<!-- 代码自动生成，请核对数据类型 -->
+<!-- 查询 -->
+<select id="select" parameterType="com.cyrj.jxzy.entity.Constractor.VqqxtEntity" resultType="com.cyrj.jxzy.entity.Constractor.VqqxtEntity">
+select
+domain_name,
+domain_aliasname,
+domain_code,
+domain_description,
+domain_order,
+domain_level,
+flags,
+input_userid,
+input_unitname,
+input_date,
+oilfield
+from V_QXXT_APPENDICE
+<where>
+<if test="design_id!=null and design_id.length() &gt;0">
+	design_id = #{design_id} and code_state is null
+</if>
+</where>
+</select>
+<!-- 根据id删除 -->
+<delete id="deleteParam" parameterType="com.cyrj.jxzy.entity.Constractor.VqqxtEntity">
+delete from V_QXXT_APPENDICE where design_id = #{design_id} 
+<if test="code_state!=null and code_state.length() &gt;0">
+and code_state = #{code_state}
+</if>
+</delete>
+<!-- 插入数据 -->
+ <insert id="insert" parameterType="com.cyrj.jxzy.entity.Constractor.VqqxtEntity">
+insert into
+V_QXXT_APPENDICE(
+domain_name,
+domain_aliasname,
+domain_code,
+domain_description,
+domain_order,
+domain_level,
+flags,
+input_userid,
+input_unitname,
+input_date,
+oilfield
+)
+values(
+#{domain_name,jdbcType=VARCHAR},
+#{domain_aliasname,jdbcType=VARCHAR},
+#{domain_code,jdbcType=VARCHAR},
+#{domain_description,jdbcType=VARCHAR},
+#{domain_order,jdbcType=INTEGER},
+#{domain_level,jdbcType=INTEGER},
+#{flags,jdbcType=VARCHAR},
+#{input_userid,jdbcType=INTEGER},
+#{input_unitname,jdbcType=VARCHAR},
+#{input_date,jdbcType=TIMESTAMP},
+#{oilfield,jdbcType=VARCHAR}
+)
+</insert></mapper>

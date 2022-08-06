@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.HtxxckDao">
+
+<select id="cbs_select" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity" resultType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity">
+	
+	   select DISTINCT  EJDWMC contractor_name ,CONTRACTOR_ID  FROM PC_CBS_CONTRACT
+   <where>
+        oilfield =#{oilfield}
+            <if test="attribute!=null   and attribute.length() &gt;0 and  attribute==1">
+				and PC_CBS_CONTRACT.contractor_id  =#{search}
+			</if> 
+			 <if test="attribute!=null   and attribute.length() &gt;0 and  attribute==2">
+				and PC_CBS_CONTRACT.unit_id  like #{search}||'%'
+			</if> 
+          	 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and PC_CBS_CONTRACT.unit_id  =#{unit_id}
+			</if> 
+   			<if test="unit_name!=null   and unit_name.length() &gt;0">
+				and PC_CBS_CONTRACT.unit_name = #{unit_name}
+			</if>  
+			<if test="contractor_name!=null   and contractor_name.length() &gt;0">
+				and  PC_CBS_CONTRACT.contractor_name = #{contractor_name}
+			</if> 
+			 <if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and  PC_CBS_CONTRACT.contractor_id =#{contractor_id}
+			</if> 
+   </where>
+   ORDER BY NLSSORT(EJDWMC,'NLS_SORT = SCHINESE_PINYIN_M')
+
+</select>
+
+<select id="nf_select" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity" resultType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity">
+	
+ SELECT DISTINCT to_char(EFFECTIVE_DATE,'yyyy')  effective_dates FROM PC_CBS_CONTRACT WHERE AUDITTAB != 0 order by effective_dates desc
+
+
+</select>
+<select id="countHtxxck" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity" resultType="int">
+ SELECT count(*) from PC_CBS_CONTRACT 
+    LEFT JOIN (SELECT PC_CBS_CONTRACT.CONTRACT_ID,count(PC_CBS_CONTRACT.CONTRACT_ID) file_tab FROM PC_CBS_CONTRACT
+    INNER JOIN PC_CBS_UPLOAD_FILES ON PC_CBS_UPLOAD_FILES.CONTRACT_ID = PC_CBS_CONTRACT.CONTRACT_ID
+    where  PC_CBS_CONTRACT.oilfield=#{oilfield}   and   to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy') = #{effective_dates} and PC_CBS_UPLOAD_FILES.FILETYPE='合同附件'
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>   
+			<if test="audittab==null   or audittab=='' or  audittab.length() ==0">
+			    and AUDITTAB in('1','2')
+			</if>
+			<if test="audittab!=null  and audittab.length() &gt;0">
+			    and AUDITTAB =#{audittab}
+			</if>
+			<if test="whether_to_perform!=null  and whether_to_perform.length() &gt;0">
+			    and whether_to_perform =#{whether_to_perform}
+			</if>
+			
+	 GROUP BY PC_CBS_CONTRACT.CONTRACT_ID ) A ON A.CONTRACT_ID= PC_CBS_CONTRACT.CONTRACT_ID
+	 LEFT JOIN (SELECT PC_CBS_CONTRACT_TEAM.CONTRACT_ID ,COUNT(PC_CBS_CONTRACT_TEAM.CONTRACT_ID) term_num  FROM PC_CBS_CONTRACT
+	 INNER JOIN PC_CBS_CONTRACT_TEAM ON PC_CBS_CONTRACT.CONTRACT_ID = PC_CBS_CONTRACT_TEAM.CONTRACT_ID
+	     where  PC_CBS_CONTRACT.oilfield=#{oilfield}   and   to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy') = #{effective_dates} 
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>    
+			<if test="audittab==null   or audittab=='' or  audittab.length() ==0">
+			    and AUDITTAB in('1','2')
+			</if>
+			<if test="audittab!=null  and audittab.length() &gt;0">
+			    and AUDITTAB =#{audittab}
+			</if>
+			<if test="whether_to_perform!=null  and whether_to_perform.length() &gt;0">
+			    and whether_to_perform =#{whether_to_perform}
+			</if>
+	 GROUP BY PC_CBS_CONTRACT_TEAM.CONTRACT_ID )B ON B.CONTRACT_ID=PC_CBS_CONTRACT.CONTRACT_ID
+	 	     where  PC_CBS_CONTRACT.oilfield=#{oilfield}   and   to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy') = #{effective_dates} 
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>    
+			<if test="audittab==null   or audittab=='' or  audittab.length() ==0">
+			    and AUDITTAB in('1','2')
+			</if>
+			<if test="audittab!=null  and audittab.length() &gt;0">
+			    and AUDITTAB =#{audittab}
+			</if>
+					<if test="whether_to_perform!=null  and whether_to_perform.length() &gt;0">
+			    and whether_to_perform =#{whether_to_perform}
+			</if>
+</select>
+<select id="listHtxxck" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity" resultType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity">
+
+		SELECT * from(
+SELECT A.* ,rownum row_num from (
+    SELECT
+    AUDITTAB, 
+    PC_CBS_CONTRACT.CONTRACT_ID, 
+    CONTRACTOR_NAME,
+	contractor_id,
+     CONSTRUCTION_PROJECT, 
+     CONTRACT_NAME,
+     CONTRACT_NUMBER,
+     CONTRACT_SOURCE,
+     to_char(OPERATION_START_DATE,'yyyy-mm-dd')operation_start_dates,
+    to_char(COMPLETION_DATE,'yyyy-mm-dd') completion_dates,
+    WORKLOAD,
+    MONEY,
+    WHETHER_TO_PERFORM,
+    ENTRY_TIME,
+    INPUT_PERSON,
+    to_char(EFFECTIVE_DATE,'yyyy-mm-dd')effective_dates,
+    UNIT_NAME,
+    UNIT_ID ,
+    IF_BG ,
+    tax_rate,
+    AUDITREMARK,
+    CASE WHEN a.file_tab IS NULL THEN 0 ELSE a.file_tab END  file_tab,
+    CASE WHEN B.term_num IS NULL THEN 0 ELSE B.term_num END  term_num
+     from PC_CBS_CONTRACT 
+    LEFT JOIN (SELECT PC_CBS_CONTRACT.CONTRACT_ID,count(PC_CBS_CONTRACT.CONTRACT_ID) file_tab FROM PC_CBS_CONTRACT
+    INNER JOIN PC_CBS_UPLOAD_FILES ON PC_CBS_UPLOAD_FILES.CONTRACT_ID = PC_CBS_CONTRACT.CONTRACT_ID
+    where  PC_CBS_CONTRACT.oilfield=#{oilfield}   and   to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy') = #{effective_dates} and PC_CBS_UPLOAD_FILES.FILETYPE='合同附件'
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>  
+			<if test="audittab==null   or audittab=='' or  audittab.length() ==0">
+			    and AUDITTAB in('1','2')
+			</if>
+			<if test="audittab!=null  and audittab.length() &gt;0">
+			    and AUDITTAB =#{audittab}
+			</if>
+			<if test="whether_to_perform!=null  and whether_to_perform.length() &gt;0">
+			    and whether_to_perform =#{whether_to_perform}
+			</if>
+	 GROUP BY PC_CBS_CONTRACT.CONTRACT_ID ) A ON A.CONTRACT_ID= PC_CBS_CONTRACT.CONTRACT_ID
+	 LEFT JOIN (SELECT PC_CBS_CONTRACT_TEAM.CONTRACT_ID ,COUNT(PC_CBS_CONTRACT_TEAM.CONTRACT_ID) term_num  FROM PC_CBS_CONTRACT
+	 INNER JOIN PC_CBS_CONTRACT_TEAM ON PC_CBS_CONTRACT.CONTRACT_ID = PC_CBS_CONTRACT_TEAM.CONTRACT_ID
+	     where  PC_CBS_CONTRACT.oilfield=#{oilfield}   and   to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy') = #{effective_dates} 
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>  
+			<if test="audittab==null   or audittab=='' or  audittab.length() ==0">
+			    and AUDITTAB in('1','2')
+			</if>
+			<if test="audittab!=null  and audittab.length() &gt;0">
+			    and AUDITTAB =#{audittab}
+			</if>
+						<if test="whether_to_perform!=null  and whether_to_perform.length() &gt;0">
+			    and whether_to_perform =#{whether_to_perform}
+			</if>
+	 GROUP BY PC_CBS_CONTRACT_TEAM.CONTRACT_ID )B ON B.CONTRACT_ID=PC_CBS_CONTRACT.CONTRACT_ID
+	 	     where  PC_CBS_CONTRACT.oilfield=#{oilfield}   and   to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy') = #{effective_dates} 
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>   
+			<if test="audittab==null   or audittab=='' or  audittab.length() ==0">
+			    and AUDITTAB in('1','2')
+			</if>
+			<if test="audittab!=null  and audittab.length() &gt;0">
+			    and AUDITTAB =#{audittab}
+			</if>
+			<if test="whether_to_perform!=null  and whether_to_perform.length() &gt;0">
+			    and whether_to_perform =#{whether_to_perform}
+			</if>
+		order by ENTRY_TIME desc
+) A )
+where 	row_num &lt;=#{endRow} and row_num	&gt;= #{startRow}
+</select>
+
+<select id="count_Audit_cj" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity" resultType="int">
+
+ SELECT count(*) from PC_CBS_CONTRACT 
+	 	     where  PC_CBS_CONTRACT.oilfield=#{oilfield}   and   to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy') = #{effective_dates} 
+    		 and AUDITTAB ='1' and UNIT_ID like #{search}||'%'
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+                    and UNIT_ID  = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and  PC_CBS_CONTRACT.contractor_id = #{contractor_id}
+			</if> 
+</select>
+
+
+<select id="list_Audit_cj" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity" resultType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity">
+	
+		SELECT * from(
+SELECT A.* ,rownum row_num from (
+    SELECT
+    AUDITTAB, 
+    PC_CBS_CONTRACT.CONTRACT_ID, 
+    CONTRACTOR_NAME, 
+     CONSTRUCTION_PROJECT, 
+     CONTRACT_NAME,
+     CONTRACT_NUMBER,
+     CONTRACT_SOURCE,
+     to_char(OPERATION_START_DATE,'yyyy-mm-dd')operation_start_dates,
+    to_char(COMPLETION_DATE,'yyyy-mm-dd') completion_dates,
+    WORKLOAD,
+    MONEY,
+    WHETHER_TO_PERFORM,
+    ENTRY_TIME,
+    INPUT_PERSON,
+    to_char(EFFECTIVE_DATE,'yyyy-mm-dd')effective_dates,
+    UNIT_NAME,
+    UNIT_ID ,
+    IF_BG ,
+    tax_rate,
+        CASE WHEN a.file_tab IS NULL THEN 0 ELSE a.file_tab END  file_tab,
+    CASE WHEN B.term_num IS NULL THEN 0 ELSE B.term_num END  term_num 
+     from PC_CBS_CONTRACT 
+         LEFT JOIN (SELECT PC_CBS_CONTRACT.CONTRACT_ID,count(PC_CBS_CONTRACT.CONTRACT_ID) file_tab FROM PC_CBS_CONTRACT
+    INNER JOIN PC_CBS_UPLOAD_FILES ON PC_CBS_UPLOAD_FILES.CONTRACT_ID = PC_CBS_CONTRACT.CONTRACT_ID
+    where  PC_CBS_CONTRACT.oilfield=#{oilfield}   and   to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy') = #{effective_dates} 
+    and PC_CBS_UPLOAD_FILES.FILETYPE='合同附件'  and PC_CBS_CONTRACT.AUDITTAB ='1'
+    		 and UNIT_ID like #{search}||'%'
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+                    and UNIT_ID  = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and  PC_CBS_CONTRACT.contractor_id = #{contractor_id}
+			</if> 
+	 GROUP BY PC_CBS_CONTRACT.CONTRACT_ID ) A ON A.CONTRACT_ID= PC_CBS_CONTRACT.CONTRACT_ID
+	 LEFT JOIN (SELECT PC_CBS_CONTRACT_TEAM.CONTRACT_ID ,COUNT(PC_CBS_CONTRACT_TEAM.CONTRACT_ID) term_num  FROM PC_CBS_CONTRACT
+	 INNER JOIN PC_CBS_CONTRACT_TEAM ON PC_CBS_CONTRACT.CONTRACT_ID = PC_CBS_CONTRACT_TEAM.CONTRACT_ID
+	     where  PC_CBS_CONTRACT.oilfield=#{oilfield}   and   to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy') = #{effective_dates}  and PC_CBS_CONTRACT.AUDITTAB ='1'
+    		 and UNIT_ID like #{search}||'%'
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+                    and UNIT_ID  = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and  PC_CBS_CONTRACT.contractor_id = #{contractor_id}
+			</if> 
+	 GROUP BY PC_CBS_CONTRACT_TEAM.CONTRACT_ID )B ON B.CONTRACT_ID=PC_CBS_CONTRACT.CONTRACT_ID    
+	where  PC_CBS_CONTRACT.oilfield=#{oilfield}   and   to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy') = #{effective_dates} 
+    		 and AUDITTAB ='1'
+    		and UNIT_ID like #{search}||'%'
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+                    and UNIT_ID  = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and  PC_CBS_CONTRACT.contractor_id = #{contractor_id}
+			</if> 
+		order by ENTRY_TIME desc
+) A )
+where 	row_num &lt;=#{endRow} and row_num	&gt;= #{startRow}
+</select>
+
+
+
+<select id="countHtxxckChang" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity" resultType="int">
+
+   select count(*) from PC_CBS_CONTRACT
+   INNER JOIN PC_CBS_CONTRACT_CHANGE ON PC_CBS_CONTRACT_CHANGE.CONTRACT_ID = PC_CBS_CONTRACT.CONTRACT_ID
+   where PC_CBS_CONTRACT.oilfield=#{oilfield}   and WHETHER_TO_PERFORM = '否'
+    and PC_CBS_CONTRACT.AUDITTAB='2' and PC_CBS_CONTRACT_CHANGE.AUDITTAB = 1  
+    		and PC_CBS_CONTRACT.UNIT_ID like #{search}||'%'
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+                    and PC_CBS_CONTRACT.UNIT_ID  = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and  PC_CBS_CONTRACT.contractor_id = #{contractor_id}
+			</if> 
+
+</select>
+<select id="listHtxxckChang" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity" resultType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity">
+  
+  
+  
+  		SELECT * from(
+SELECT A.* ,rownum row_num from (
+
+   select  DISTINCT PC_CBS_CONTRACT.CONTRACT_ID, 
+   PC_CBS_CONTRACT.CONTRACTOR_NAME, 
+   PC_CBS_CONTRACT.CONSTRUCTION_PROJECT,
+   PC_CBS_CONTRACT.CONTRACT_NAME,
+   PC_CBS_CONTRACT.CONTRACT_NUMBER,
+   PC_CBS_CONTRACT.CONTRACT_SOURCE,
+   to_char(PC_CBS_CONTRACT.OPERATION_START_DATE,'yyyy-mm-dd')operation_start_dates,
+   to_char(PC_CBS_CONTRACT.COMPLETION_DATE,'yyyy-mm-dd') completion_dates,
+   PC_CBS_CONTRACT.WORKLOAD,
+   PC_CBS_CONTRACT.MONEY,
+   PC_CBS_CONTRACT.WHETHER_TO_PERFORM,
+   PC_CBS_CONTRACT.ENTRY_TIME,
+   PC_CBS_CONTRACT.INPUT_PERSON,
+   to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy-mm-dd')effective_dates,
+   PC_CBS_CONTRACT.UNIT_NAME,
+   PC_CBS_CONTRACT.UNIT_ID ,
+   PC_CBS_CONTRACT.IF_BG 
+   from PC_CBS_CONTRACT
+   INNER JOIN PC_CBS_CONTRACT_CHANGE ON PC_CBS_CONTRACT_CHANGE.CONTRACT_ID = PC_CBS_CONTRACT.CONTRACT_ID
+   where PC_CBS_CONTRACT.oilfield=#{oilfield}   and WHETHER_TO_PERFORM = '否'
+    and PC_CBS_CONTRACT.AUDITTAB='2' and PC_CBS_CONTRACT_CHANGE.AUDITTAB = 1  
+    		and PC_CBS_CONTRACT.UNIT_ID like #{search}||'%'
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+                    and PC_CBS_CONTRACT.UNIT_ID  = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and  PC_CBS_CONTRACT.contractor_id = #{contractor_id}
+			</if>  
+     order by ENTRY_TIME desc
+) A )
+where 	row_num &lt;=#{endRow} and row_num	&gt;= #{startRow}
+</select>
+
+<select id="listTerm" parameterType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity" resultType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity">
+	
+  SELECT CONTRACT_ID,TEAM_NAME,TEAM_QUALIFICATION FROM PC_CBS_CONTRACT_TEAM
+   WHERE CONTRACT_ID =#{contract_id}
+   order by TERMID
+		
+</select>
+
+<update id="updateAuditSave"  parameterType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity">
+
+  update PC_CBS_CONTRACT
+  set AUDITTAB =#{audittab},
+  
+	<if test="auditremark!=null   and auditremark.length() &gt;0">
+		AUDITREMARK =#{auditremark},
+	</if> 
+  
+  AUDITPERSON =#{auditperson},
+  AUDITTIME =sysdate
+  where PC_CBS_CONTRACT.CONTRACT_ID=#{contract_id}
+
+
+</update>
+
+</mapper>

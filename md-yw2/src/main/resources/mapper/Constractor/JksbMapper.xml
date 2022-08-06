@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.JksbDao">
+
+
+<select id="countShowList" parameterType="com.cyrj.jxzy.entity.Constractor.JksbEntity" resultType="int">
+   SELECT count(*) FROM PC_CBS_WELL_CONTROL_EQU   
+    <where>
+      oilfield=#{oilfield} and     STATE !=0 
+       <if test="sbmc!=null   and sbmc.length() &gt;0">  
+        and   sbmc=#{sbmc}     
+      </if>
+       <if test="sbxh!=null   and sbxh.length() &gt;0">  
+        and   sbxh=#{sbxh}     
+      </if>
+      <if test="sbbh!=null   and sbbh.length() &gt;0">  
+        and   sbbh=#{sbbh}     
+      </if>
+       <if test="dwmc!=null   and dwmc.length() &gt;0">  
+         and   DWDM=(select id from PC_SYS_UNIT_CODE where UNITNAME=#{dwmc})     
+      </if>  
+      <if test="dwdm!=null   and dwdm.length() &gt;0">  
+         and   dwdm=#{dwdm}     
+      </if>    
+     </where>
+</select>
+
+<select id="listShowList" parameterType="com.cyrj.jxzy.entity.Constractor.JksbEntity" resultType="com.cyrj.jxzy.entity.Constractor.JksbEntity">
+
+SELECT * from(
+SELECT A.* ,rownum row_num from (
+   SELECT
+   sbbh,
+	JKSBID,
+	OILFIELD,
+	DWDM,
+	DWMC,
+	XH,
+	sbmc,
+	sbxh,
+	YLJB,
+	to_char(KSRQ,'yyyy-mm-dd')KSRQ,
+	to_char(JZRQ,'yyyy-mm-dd')JZRQ,
+	SCCJ,
+	STATE,
+	FILEURL 
+	FROM
+	PC_CBS_WELL_CONTROL_EQU   
+    <where> 
+        oilfield=#{oilfield} and STATE !=0 
+       <if test="sbmc!=null   and sbmc.length() &gt;0">  
+        and   sbmc=#{sbmc}     
+      </if>
+       <if test="sbxh!=null   and sbxh.length() &gt;0">  
+        and   sbxh=#{sbxh}     
+      </if>
+      <if test="sbbh!=null   and sbbh.length() &gt;0">  
+        and   sbbh=#{sbbh}     
+      </if>
+       <if test="dwmc!=null   and dwmc.length() &gt;0">  
+         and   DWDM=(select id from PC_SYS_UNIT_CODE where UNITNAME=#{dwmc})     
+      </if>  
+      <if test="dwdm!=null   and dwdm.length() &gt;0">  
+         and   dwdm=#{dwdm}     
+      </if>    
+     </where>
+   order by   nlssort(SBMC,'NLS_SORT=SCHINESE_PINYIN_M') , sbbh
+ ) A )
+where 	row_num &lt;=#{endRow} and row_num	&gt;= #{startRow}
+</select>
+
+
+<select id="listSbbh_yz" parameterType="com.cyrj.jxzy.entity.Constractor.JksbEntity" resultType="com.cyrj.jxzy.entity.Constractor.JksbEntity">
+
+SELECT * FROM PC_CBS_WELL_CONTROL_EQU       
+ where  SBBH=#{sbbh}  and STATE !=0  
+      <if test="dwdm!=null   and dwdm.length() &gt;0">  
+         and   DWDM =#{dwdm}     
+      </if> 
+        <if test="jksbid!=null   and jksbid.length() &gt;0">  
+         and   jksbid !=#{jksbid}     
+      </if> 
+</select>
+<insert id="insertSave" parameterType="com.cyrj.jxzy.entity.Constractor.JksbEntity">
+
+  insert into PC_CBS_WELL_CONTROL_EQU(
+		JKSBID,
+		OILFIELD,
+		DWDM,
+		DWMC,
+		XH,
+		SBMC,
+		SBXH,
+		YLJB,
+		KSRQ,
+		JZRQ,
+		SCCJ,
+		STATE,
+		LRR,
+		LRSJ,
+		FILEURL ,
+		sbbh 
+		)
+			(
+		 <foreach collection="el" index="" item="item" separator="union all">
+		  select
+		  #{item.jksbid,jdbcType=VARCHAR},
+		  #{oilfield ,jdbcType=VARCHAR},
+		  #{dwdm,jdbcType=VARCHAR},
+		  (select DWMC  from PC_CBS_COMPANY where DWDM=#{dwdm,jdbcType=VARCHAR}),
+		#{item.xh,jdbcType=VARCHAR},
+		#{item.sbmc,jdbcType=VARCHAR},
+		#{item.sbxh,jdbcType=VARCHAR},
+		#{item.yljb,jdbcType=VARCHAR},
+		TO_DATE(#{item.ksrq,jdbcType=VARCHAR},'yyyy-MM-dd'),
+		TO_DATE(#{item.jzrq,jdbcType=VARCHAR},'yyyy-MM-dd'),
+		#{item.sccj,jdbcType=VARCHAR},
+		2,
+		#{lrr,jdbcType=VARCHAR},
+		sysdate ,
+		#{item.fileurl,jdbcType=VARCHAR} ,
+		#{item.sbbh,jdbcType=VARCHAR} 
+		from dual
+		  </foreach> 
+		)
+
+
+</insert>
+		<update id="updateRemove" parameterType="com.cyrj.jxzy.entity.Constractor.JksbEntity">
+	
+			update PC_CBS_WELL_CONTROL_EQU 
+			set STATE='0',
+			    LRR=#{lrr},
+			    LRSJ=sysdate 
+			where JKSBID =#{jksbid} 	
+	</update>
+	
+		<update id="updateSave" parameterType="com.cyrj.jxzy.entity.Constractor.JksbEntity">
+	
+			update PC_CBS_WELL_CONTROL_EQU 
+			set sbbh=#{sbbh},
+		    	SBMC=#{sbmc},
+		    	SBXH=#{sbxh},
+		    	YLJB=#{yljb,jdbcType=VARCHAR},
+		    	KSRQ=TO_DATE(#{ksrq,jdbcType=VARCHAR},'yyyy-MM-dd'),
+		    	JZRQ=TO_DATE(#{jzrq,jdbcType=VARCHAR},'yyyy-MM-dd'),
+		    	SCCJ=#{sccj,jdbcType=VARCHAR},
+		    	FILEURL=#{fileurl,jdbcType=VARCHAR},
+			    LRR=#{lrr},
+			    LRSJ=sysdate 
+			where JKSBID =#{jksbid} 	
+	</update>
+</mapper>

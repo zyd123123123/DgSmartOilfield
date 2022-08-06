@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.NlpgDao">
+<!-- 查询能力评估附录表数据 -->
+<select id="listNlpgflb"    resultType="com.cyrj.jxzy.entity.Constractor.CbsFj2Entity">
+  select
+		lb,
+		scxm,
+		sczynr,
+		scjg,
+		scrqz,
+		sort
+		from PC_CBS_FJ2 where  oilfield=#{oilfield}
+		order by to_number(regexp_substr(sort,'[0-9]*[0-9]',1))
+</select>
+<!-- 能力评估附录表数据删除 -->
+<delete id="deleteflbSave" parameterType="com.cyrj.jxzy.entity.Constractor.CbsFj2Entity">
+
+  delete from PC_CBS_FJ2 where  oilfield=#{oilfield}
+</delete>
+<!-- 能力评估附录表数据保存 -->
+<insert id="insertflbSave" parameterType="com.cyrj.jxzy.entity.Constractor.CbsFj2Entity">
+
+
+	insert into
+		PC_CBS_FJ2(
+		lb,
+		scxm,
+		sczynr,
+		scjg,
+		scrqz,
+		sort,
+		datatime,
+	oilfield
+		)
+			(
+		 <foreach collection="entity_list" index="" item="item" separator="union all">
+		  select
+		#{item.lb,jdbcType=VARCHAR},
+		#{item.scxm,jdbcType=VARCHAR},
+		#{item.sczynr,jdbcType=VARCHAR},
+		#{item.scjg,jdbcType=VARCHAR},
+		#{item.scrqz,jdbcType=VARCHAR},
+		#{item.sort,jdbcType=VARCHAR},
+		sysdate,
+		#{oilfield}
+		  from dual
+		  </foreach> 
+		)
+
+</insert>
+
+<!-- 能力评估申请记录总数 -->
+<select id="countNlpgsq"  parameterType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity"   resultType="int">
+
+
+SELECT count(*) from (
+					SELECT
+					PC_CBS_CONTRACT.CONTRACT_ID,
+					PC_CBS_CONTRACT.CONTRACTOR_NAME,
+					PC_CBS_CONTRACT.CONTRACTOR_ID,
+					PC_CBS_CONTRACT.CONTRACT_NAME,
+					PC_CBS_CONTRACT.CONTRACT_NUMBER,
+					PC_CBS_CONTRACT.UNIT_NAME 
+					FROM PC_CBS_CONTRACT
+					WHERE oilfield=#{oilfield} and  AUDITTAB='2'	and	PC_CBS_CONTRACT.WHETHER_TO_PERFORM = '否' 	  	
+					and to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy')=#{effective_dates} 
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>  
+					 
+					 )
+
+
+
+</select>
+<!-- 能力评估申请记录 -->
+<select id="listNlpgsq"  parameterType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity"   resultType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity">
+
+
+SELECT * from(
+   SELECT A.* ,rownum row_num
+      FROM(
+					SELECT
+					PC_CBS_CONTRACT.CONTRACT_ID,
+					PC_CBS_CONTRACT.CONTRACTOR_NAME,
+					PC_CBS_CONTRACT.CONTRACTOR_ID,
+					PC_CBS_CONTRACT.CONTRACT_NAME,
+					PC_CBS_CONTRACT.CONTRACT_NUMBER,
+					PC_CBS_CONTRACT.UNIT_NAME ,
+					PC_CBS_CONTRACT.construction_project,
+					PC_CBS_CONTRACT.ENTRY_TIME 
+					FROM PC_CBS_CONTRACT 
+					WHERE oilfield=#{oilfield} and AUDITTAB='2'	and PC_CBS_CONTRACT.WHETHER_TO_PERFORM = '否' 
+<!-- 					and to_char(COMPLETION_DATE,'yyyy-MM-dd')  &gt;=to_char(sysdate,'yyyy-MM-dd')	 -->
+					and to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy')=#{effective_dates} 
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>  
+					order by PC_CBS_CONTRACT.ENTRY_TIME DESC,PC_CBS_CONTRACT.CONTRACT_ID 
+					) A				   
+					)
+               where 	row_num &lt;=#{endRow} and row_num	&gt;= #{startRow}
+
+
+
+</select>
+
+<select id="applyTerm"  parameterType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity"   resultType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity">
+
+	SELECT PC_CBS_QUALIFICATION_INFO.SJID, PC_SYS_UNIT_CODE.ID team_id, PC_SYS_UNIT_CODE.UNITNAME team_name,PC_CBS_QUALIFICATION_INFO.DWZZBH team_qualification FROM PC_SYS_UNIT_CODE 
+	INNER JOIN PC_CBS_QUALIFICATION_INFO ON PC_SYS_UNIT_CODE.ID = PC_CBS_QUALIFICATION_INFO.TERMID
+	LEFT JOIN(SELECT team_id FROM PC_CBS_NLZRPGB WHERE PC_CBS_NLZRPGB.CONTRACT_ID=#{contract_id} and PC_CBS_NLZRPGB.AUDIT_TAB not in('2','3'))A ON A.team_id=PC_SYS_UNIT_CODE.ID
+	WHERE PC_SYS_UNIT_CODE.PARENTID = #{contractor_id} AND PC_SYS_UNIT_CODE.UNITEPROPERTY2  like '%作业%'
+	     AND PC_CBS_QUALIFICATION_INFO.AUDIT_TAB='2'
+	     AND  A.team_id IS NULL
+	ORDER BY PC_SYS_UNIT_CODE.ID
+
+
+</select>
+
+<select id="termList"  parameterType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity"   resultType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity">
+
+	SELECT * from PC_CBS_NLZRPGB
+	 where CONTRACT_ID=#{contract_id} 
+	 and TEAM_ID =(SELECT TERMID FROM PC_CBS_QUALIFICATION_INFO WHERE SJID =#{sjid} and AUDIT_TAB in ('0','1') )
+
+</select>
+<insert id="applySave" parameterType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity" >
+
+  insert into PC_CBS_NLZRPGB(
+  OILFIELD,
+    pgb_id,
+	CONTRACT_ID,
+	team_qualification,
+	AUDIT_TAB,
+	APPLY_PERSON,
+	APPLY_TIME ,
+	TEAM_ID,
+	SJID  
+	)
+	values(
+	#{oilfield,jdbcType=VARCHAR},
+	#{pgb_id,jdbcType=VARCHAR},
+	#{contract_id,jdbcType=VARCHAR},
+	(SELECT DWZZBH team_qualification  FROM PC_CBS_QUALIFICATION_INFO WHERE SJID =#{sjid}),
+	'0',
+	#{apply_person,jdbcType=VARCHAR},
+	sysdate,
+	(SELECT TERMID TEAM_ID FROM PC_CBS_QUALIFICATION_INFO WHERE SJID =#{sjid}),
+	#{sjid,jdbcType=VARCHAR}
+	)
+
+</insert>
+<!-- 能力评估申请记录查看总条数 -->
+<select id="countNlpgsqjl"  parameterType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity"   resultType="int">
+
+SELECT count(*)  from (
+  SELECT
+	PC_CBS_CONTRACT.CONTRACTOR_NAME,
+	PC_CBS_CONTRACT.UNIT_NAME,
+	PC_CBS_NLZRPGB.CONTRACT_ID,
+	PC_CBS_NLZRPGB.TEAM_QUALIFICATION 
+	FROM
+	PC_CBS_NLZRPGB
+	INNER JOIN PC_CBS_CONTRACT ON PC_CBS_CONTRACT.CONTRACT_ID = PC_CBS_NLZRPGB.CONTRACT_ID
+    <where> 
+     PC_CBS_CONTRACT.oilfield=#{oilfield}
+      <if test="effective_dates!=null   and effective_dates.length() &gt;0">  
+       and to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy')=#{effective_dates}    
+      </if> 
+      <if test="audit_tab!=null   and audit_tab.length() &gt;0">  
+       and PC_CBS_NLZRPGB.AUDIT_TAB =#{audit_tab}      
+      </if> 
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>   
+    </where>
+     ) A
+
+</select>
+<!-- 能力评估申请记录查看总条数 -->
+<select id="listNlpgsqjl"  parameterType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity"   resultType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity">
+SELECT * from(
+SELECT A.* ,rownum row_num  from (
+  SELECT
+	PC_CBS_CONTRACT.CONTRACTOR_NAME,
+	PC_CBS_CONTRACT.CONSTRUCTION_PROJECT,
+	PC_CBS_CONTRACT.CONTRACT_NAME,
+	PC_CBS_CONTRACT.CONTRACT_NUMBER,
+	PC_CBS_CONTRACT.UNIT_NAME,
+	PC_CBS_NLZRPGB.pgb_id,
+	PC_CBS_NLZRPGB.CONTRACT_ID,
+	PC_CBS_NLZRPGB.TEAM_QUALIFICATION,
+	PC_CBS_NLZRPGB.AUDIT_TAB,
+	PC_CBS_NLZRPGB.APPLY_PERSON,
+	PC_CBS_NLZRPGB.APPLY_TIME,
+	 to_char(PC_CBS_NLZRPGB.APPLY_TIME,'yyyy-MM-dd')apply_times,
+	PC_CBS_NLZRPGB.team_id,
+	PC_SYS_UNIT_CODE.UNITNAME team_name ,
+	SJID 
+	FROM
+	PC_CBS_NLZRPGB
+	INNER JOIN PC_CBS_CONTRACT ON PC_CBS_CONTRACT.CONTRACT_ID = PC_CBS_NLZRPGB.CONTRACT_ID
+	INNER JOIN PC_SYS_UNIT_CODE ON PC_CBS_NLZRPGB.team_id = PC_SYS_UNIT_CODE.id
+     
+    <where> 
+     PC_CBS_CONTRACT.oilfield=#{oilfield}
+      <if test="effective_dates!=null   and effective_dates.length() &gt;0">  
+       and to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy')=#{effective_dates}    
+      </if> 
+      <if test="audit_tab!=null   and audit_tab.length() &gt;0">  
+       and PC_CBS_NLZRPGB.AUDIT_TAB =#{audit_tab}      
+      </if> 
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>    
+    </where> 
+       order by APPLY_TIME desc   
+     ) A
+)
+where 	row_num &lt;=#{endRow} and row_num	&gt;= #{startRow}
+
+</select>
+
+<select id="contractTeam" parameterType="java.lang.String" resultType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity">
+  SELECT
+	PC_CBS_CONTRACT.CONTRACTOR_NAME,
+	PC_CBS_CONTRACT.CONSTRUCTION_PROJECT,
+	PC_CBS_CONTRACT.CONTRACT_NAME,
+	PC_CBS_CONTRACT.CONTRACT_NUMBER,
+	PC_CBS_CONTRACT.UNIT_NAME,
+	PC_CBS_NLZRPGB.pgb_id,
+	PC_CBS_NLZRPGB.CONTRACT_ID,
+	PC_CBS_NLZRPGB.TEAM_QUALIFICATION,
+	PC_CBS_NLZRPGB.AUDIT_TAB,
+	PC_CBS_NLZRPGB.team_id,
+	PC_SYS_UNIT_CODE.UNITNAME team_name  
+	FROM
+	PC_CBS_NLZRPGB
+	INNER JOIN PC_CBS_CONTRACT ON PC_CBS_CONTRACT.CONTRACT_ID = PC_CBS_NLZRPGB.CONTRACT_ID
+	INNER JOIN PC_SYS_UNIT_CODE ON PC_CBS_NLZRPGB.team_id = PC_SYS_UNIT_CODE.id
+ where    PC_CBS_NLZRPGB.pgb_id =#{0} 
+</select>
+
+<!-- 插入数据 -->
+ <insert id="insertAudit" >
+		insert into
+		PC_CBS_NLZRPGB_JL(
+		pgb_id,
+		lb,
+		scxm,
+		sczynr,
+		scjg,
+		scrqz,
+		sort,
+		datatime,
+	 OILFIELD,
+	 CREATE_USER_ID
+		)
+					(
+			 <foreach collection="entity_fj2_list" index="" item="item" separator="union all">
+			  select
+				#{pgb_id,jdbcType=VARCHAR},
+				#{item.lb,jdbcType=VARCHAR},
+				#{item.scxm,jdbcType=VARCHAR},
+				#{item.sczynr,jdbcType=VARCHAR},
+				#{item.scjg,jdbcType=VARCHAR},
+				#{item.scrqz,jdbcType=VARCHAR},
+				#{item.sort,jdbcType=VARCHAR},
+				sysdate,
+				 #{oilfield,jdbcType=VARCHAR},
+				 #{apply_person,jdbcType=VARCHAR}
+			  from dual
+			  </foreach> 
+			)
+</insert>
+
+<update id="updateAudit"  parameterType="com.cyrj.jxzy.entity.Constractor.NlpgshEntity">
+
+   update PC_CBS_NLZRPGB
+  set AUDIT_TAB =#{audit_tab}
+   where    PC_CBS_NLZRPGB.pgb_id =#{pgb_id} 
+
+</update>
+
+<!-- 能力评估查看-->
+<select id="countNlpgck"  parameterType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity"   resultType="int">
+SELECT count(*)  from (
+  SELECT
+	PC_CBS_CONTRACT.CONTRACTOR_NAME,
+	PC_CBS_CONTRACT.UNIT_NAME,
+	PC_CBS_NLZRPGB.CONTRACT_ID,
+	PC_CBS_NLZRPGB.TEAM_QUALIFICATION 
+	FROM
+	PC_CBS_NLZRPGB
+	INNER JOIN PC_CBS_CONTRACT ON PC_CBS_CONTRACT.CONTRACT_ID = PC_CBS_NLZRPGB.CONTRACT_ID
+     where  PC_CBS_CONTRACT.oilfield=#{oilfield} and  PC_CBS_NLZRPGB.AUDIT_TAB = '1' and   to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy') = #{effective_dates}
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>    
+     ) A
+
+</select>
+<!-- 能力评估查看 -->
+<select id="listNlpgck"  parameterType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity"   resultType="com.cyrj.jxzy.entity.Constractor.ContractTeamEntity">
+SELECT * from(
+SELECT A.* ,rownum row_num
+  from (
+  SELECT
+	PC_CBS_CONTRACT.CONTRACTOR_NAME,
+	PC_CBS_CONTRACT.CONTRACTOR_ID,
+	PC_CBS_CONTRACT.CONSTRUCTION_PROJECT,
+	PC_CBS_CONTRACT.CONTRACT_NAME,
+	PC_CBS_CONTRACT.CONTRACT_NUMBER,
+	PC_CBS_CONTRACT.UNIT_NAME,
+	PC_CBS_NLZRPGB.pgb_id,
+	PC_CBS_NLZRPGB.CONTRACT_ID,
+	PC_CBS_NLZRPGB.TEAM_QUALIFICATION,
+	PC_CBS_NLZRPGB.AUDIT_TAB,
+	PC_CBS_NLZRPGB.APPLY_PERSON,
+	PC_CBS_NLZRPGB.APPLY_TIME,
+	PC_CBS_NLZRPGB.team_id,
+	PC_CBS_NLZRPGB.SJID,
+	PC_SYS_UNIT_CODE.UNITNAME team_name , 
+	CASE WHEN  C.CONTRACT_ID is NOT NULL THEN '是' ELSE '否' END if_dy , 
+    CASE WHEN  F.CONTRACT_ID is NOT NULL THEN '是' ELSE '否' END if_sc  
+	FROM
+	PC_CBS_NLZRPGB
+	INNER JOIN PC_CBS_CONTRACT ON PC_CBS_CONTRACT.CONTRACT_ID = PC_CBS_NLZRPGB.CONTRACT_ID
+	INNER JOIN PC_SYS_UNIT_CODE ON PC_CBS_NLZRPGB.team_id = PC_SYS_UNIT_CODE.id 
+    LEFT JOIN (SELECT * from PC_CBS_TEXT where PC_CBS_TEXT.TYPE='能力评估表' ) C   on PC_CBS_NLZRPGB.pgb_id = C.TEXT_ID<!-- 					 ON C.CONTRACT_ID =PC_CBS_NLZRPGB.CONTRACT_ID     AND C.TEAM_QUALIFICATION =PC_CBS_NLZRPGB.TEAM_QUALIFICATION     -->
+    LEFT JOIN ( SELECT id,contract_id from PC_CBS_UPLOAD_FILES WHERE PC_CBS_UPLOAD_FILES.FILETYPE ='能力评估表'  group by id,contract_id) F on PC_CBS_NLZRPGB.pgb_id =F.ID
+     where PC_CBS_CONTRACT.oilfield=#{oilfield} and  PC_CBS_NLZRPGB.AUDIT_TAB = '1' and   to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy') = #{effective_dates}
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if> 
+     ) A
+)
+where 	row_num &lt;=#{endRow} and row_num	&gt;= #{startRow}
+
+</select>
+
+<select id="nlpgList" parameterType="java.lang.String" resultType="com.cyrj.jxzy.entity.Constractor.CbsFj2Entity">
+	SELECT
+	PC_CBS_NLZRPGB_JL.PGB_ID,
+	PC_CBS_NLZRPGB_JL.LB,
+	PC_CBS_NLZRPGB_JL.SCXM,
+	PC_CBS_NLZRPGB_JL.SCZYNR,
+	PC_CBS_NLZRPGB_JL.SCJG,
+	PC_CBS_NLZRPGB_JL.SCRQZ,
+	PC_CBS_NLZRPGB_JL.SORT
+	FROM PC_CBS_NLZRPGB_JL
+	WHERE	PC_CBS_NLZRPGB_JL.PGB_ID=#{pgb_id}
+	ORDER BY to_number(regexp_substr(SORT,'[0-9]*[0-9]',1))
+
+</select>
+<update id="revokeSave" parameterType="com.cyrj.jxzy.entity.Constractor.NlpgshEntity">
+
+ update PC_CBS_NLZRPGB
+ set AUDIT_TAB ='3',
+     back_cause=#{back_cause,jdbcType=VARCHAR},
+      back_person=#{back_person},
+      back_time= sysdate
+     where  PGB_ID=#{pgb_id}
+
+</update>
+
+
+</mapper>

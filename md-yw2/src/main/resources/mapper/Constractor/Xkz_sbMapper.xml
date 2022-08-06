@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.Xkz_sbDao">
+
+
+<select id="listShowView" parameterType="com.cyrj.jxzy.entity.Constractor.Xkz_sbEntity" resultType="com.cyrj.jxzy.entity.Constractor.Xkz_sbEntity">
+
+select * from PC_CBS_EQU_TERM where DWDM=#{dwdm} and TERMID=#{termid} 
+</select>
+
+<select id="listSelect" parameterType="com.cyrj.jxzy.entity.Constractor.Xkz_sbEntity" resultType="com.cyrj.jxzy.entity.Constractor.Xkz_sbEntity">
+  <choose>
+        <when test="tab==1">
+            SELECT  
+            SBBH ||'('|| SBXH||')' sbbh,
+             JKSBID sbid,
+             SBMC
+              FROM PC_CBS_WELL_CONTROL_EQU 
+              WHERE DWDM = #{dwdm} AND SBMC = #{sbmc} AND STATE = 2
+          
+        </when>
+         <when test="tab==2">
+           SELECT 
+            SBBH sbbh  ,
+            SBMC,
+            HBSBID sbid
+            FROM PC_CBS_ENVI_PRO_EQU 
+            WHERE DWDM = #{dwdm} AND SBMC =#{sbmc} AND STATE = 2
+         </when>
+         <when test="tab==3">
+                   SELECT  
+                   SBBH ||'('||BZ||')' sbbh, 
+                   SBMC,
+                   FSSBID sbid  
+                   FROM PC_CBS_ACCESSORY_EQU 
+                   WHERE DWDM = #{dwdm} AND SBMC =#{sbmc} AND STATE = 2
+         </when>
+  </choose>
+</select>
+<select id="listBangdingSave" parameterType="com.cyrj.jxzy.entity.Constractor.Xkz_sbEntity" resultType="com.cyrj.jxzy.entity.Constractor.Xkz_sbEntity">
+
+  select * from PC_CBS_EQU_TERM where DWDM=#{dwdm} and TERMID=#{termid} and SBMC=#{sbmc}
+
+</select>
+
+
+<update id="updateBangdingSave" parameterType="com.cyrj.jxzy.entity.Constractor.Xkz_sbEntity">
+
+	  <choose>
+        <when test="tab==1">
+    
+         update    PC_CBS_EQU_TERM
+         set SBID =#{sbid} ,
+         SBBH =(select SBBH from PC_CBS_WELL_CONTROL_EQU where JKSBID =#{sbid}),   
+         RQ= (select to_char(KSRQ,'yyyy.mm.dd')||'~'||to_char(JZRQ,'yyyy.mm.dd') rq from PC_CBS_WELL_CONTROL_EQU where JKSBID =#{sbid}),
+         QT= (select SBXH from PC_CBS_WELL_CONTROL_EQU where JKSBID =#{sbid}),
+         LRR=#{lrr},
+         LRSJ=sysdate 
+         where DWDM=#{dwdm} and TERMID=#{termid} and SBMC=#{sbmc}
+        </when>
+        <when test="tab==2">
+         update    PC_CBS_EQU_TERM
+         set SBID =#{sbid} ,
+         SBBH =(select SBBH from PC_CBS_ENVI_PRO_EQU where HBSBID =#{sbid}),   
+         RQ= (select to_char(TCRQ,'yyyy-mm-dd')rq from PC_CBS_ENVI_PRO_EQU where HBSBID =#{sbid}),
+         QT= (select SCCJ from PC_CBS_ENVI_PRO_EQU where HBSBID =#{sbid}),
+         LRR=#{lrr},
+         LRSJ=sysdate 
+         where DWDM=#{dwdm} and TERMID=#{termid} and SBMC=#{sbmc}
+        </when>
+        <when test="tab==3">
+         update    PC_CBS_EQU_TERM
+         set SBID =#{sbid} ,
+         SBBH =(select SBBH from PC_CBS_ACCESSORY_EQU where FSSBID =#{sbid}),   
+         RQ= (select to_char(TCRQ,'yyyy-mm-dd')rq from PC_CBS_ACCESSORY_EQU where FSSBID =#{sbid}),
+         QT= (select BZ from PC_CBS_ACCESSORY_EQU where FSSBID =#{sbid}),
+         LRR=#{lrr},
+         LRSJ=sysdate 
+         where DWDM=#{dwdm} and TERMID=#{termid} and SBMC=#{sbmc}
+        </when>
+
+    </choose>
+
+
+</update>
+
+  <insert id="insertBangdingSave" parameterType="com.cyrj.jxzy.entity.Constractor.Xkz_sbEntity">
+  
+  insert into PC_CBS_EQU_TERM (OILFIELD,DWDM,DWMC,TERMID,TERMNAME,SBID,SBBH,SBMC,RQ,QT,TAB,LRR,LRSJ)
+  	  <choose>
+        <when test="tab==1">
+    
+		    select 
+		     '${oilfield}',
+		     '${dwdm}',
+		     (select UNITNAME from PC_SYS_UNIT_CODE where id=#{dwdm}),
+		     '${termid}',
+		     (select UNITNAME from PC_SYS_UNIT_CODE where id=#{termid}),
+		     '${sbid}',   
+		     SBBH,
+		     '${sbmc}',
+		     to_char(KSRQ,'yyyy.mm.dd')||'~'||to_char(JZRQ,'yyyy.mm.dd')rq,
+		     SBXH,
+		     '${tab}',
+		     '${lrr}',
+		     sysdate
+		     from PC_CBS_WELL_CONTROL_EQU
+		     where JKSBID =#{sbid}
+        </when>
+        <when test="tab==2">
+		    select 
+		     '${oilfield}',
+		     '${dwdm}',
+		     (select UNITNAME from PC_SYS_UNIT_CODE where id=#{dwdm}),
+		     '${termid}',
+		     (select UNITNAME from PC_SYS_UNIT_CODE where id=#{termid}),
+		     '${sbid}',   
+		     SBBH,
+		     '${sbmc}',
+		     to_char(TCRQ,'yyyy-mm-dd')rq,
+		     SCCJ,
+		     '${tab}',
+		     '${lrr}',
+		     sysdate
+		     from PC_CBS_ENVI_PRO_EQU
+		     where HBSBID =#{sbid}
+        </when>
+        <when test="tab==3">
+		    select 
+		     '${oilfield}',
+		     '${dwdm}',
+		     (select UNITNAME from PC_SYS_UNIT_CODE where id=#{dwdm}),
+		    '${termid}',
+		     (select UNITNAME from PC_SYS_UNIT_CODE where id=#{termid}),
+		     '${sbid}',   
+		     SBBH,
+		     '${sbmc}',
+		     to_char(TCRQ,'yyyy-mm-dd')rq,
+		     BZ,
+		    '${tab}',
+		     '${lrr}',
+		     sysdate
+		     from PC_CBS_ACCESSORY_EQU
+		     where FSSBID =#{sbid}
+        </when>
+
+    </choose>
+  
+  
+  </insert>
+
+</mapper>

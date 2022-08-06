@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.ZysbDao">
+
+
+<select id="selectByParam" parameterType="com.cyrj.jxzy.entity.Constractor.ZysbEntity" resultType="com.cyrj.jxzy.entity.Constractor.ZysbEntity">
+select 
+	dwdm,
+	termid,
+	dwmc,
+	termname,
+	xhjcs,
+	zzcj,
+	cph,
+	sbm,
+	fileurl,
+	lrr,
+	lrsj,
+	oilfield,
+	zysbid,
+	sbbz,
+	sb,
+	tcrq,
+	TO_CHAR (tcrq, 'YYYY-MM-DD') stcrq 
+	from PC_CBS_EQUIPMENT_ZY   
+	where TERMID=#{termid} ORDER BY sbbz 
+</select>
+
+<select id="countShow" parameterType="com.cyrj.jxzy.entity.Constractor.ZysbEntity"		resultType="int">
+		SELECT count(*) from PC_CBS_EQUIPMENT_ZY
+		<where> 
+		oilfield =#{oilfield}
+       <if test="dwdm!=null   and dwdm.length() &gt;0">  
+         and  DWDM=#{dwdm}   
+      </if>  
+       <if test="termid!=null   and termid.length() &gt;0">  
+       		and TERMID=#{termid}
+        </if>
+        <if test="sbm !=null   and sbm.length() &gt;0">  
+       		and sbm=#{sbm}
+        </if>
+     </where>
+</select>
+
+<select id="listShow" parameterType="com.cyrj.jxzy.entity.Constractor.ZysbEntity" resultType="com.cyrj.jxzy.entity.Constractor.ZysbEntity">
+SELECT * from(
+SELECT A.* ,rownum row_num from (
+   SELECT
+	dwdm,
+	termid,
+	dwmc,
+	termname,
+	xhjcs,
+	zzcj,
+	cph,
+	sbm,
+	fileurl,
+	lrr,
+	lrsj,
+	oilfield,
+	zysbid,
+	sbbz,
+	sb,
+	tcrq,
+	TO_CHAR (tcrq, 'YYYY-MM-DD') stcrq
+	FROM
+	PC_CBS_EQUIPMENT_ZY 
+     <where>
+     oilfield =#{oilfield}
+       <if test="dwdm!=null   and dwdm.length() &gt;0">  
+           and DWDM=#{dwdm}     
+      </if>  
+       <if test="termid!=null   and termid.length() &gt;0">  
+       		and TERMID=#{termid}
+        </if> 
+        <if test="sbm !=null   and sbm.length() &gt;0">  
+       		and sbm=#{sbm}
+        </if>
+     </where>
+   order by termid, sbbz 
+   
+    ) A )
+where 	row_num &lt;=#{endRow} and row_num	&gt;= #{startRow}
+</select>
+
+
+<!-- 查询未录入主要设备施工队伍-->
+<select id="listTermSelect_Zysb" parameterType="com.cyrj.jxzy.entity.Constractor.ZysbEntity" resultType="com.cyrj.jxzy.entity.Constractor.ZysbEntity">
+SELECT id termid, UNITNAME termname  from PC_SYS_UNIT_CODE 
+LEFT JOIN PC_CBS_EQUIPMENT_ZY ON PC_CBS_EQUIPMENT_ZY.termid = PC_SYS_UNIT_CODE.id 
+where  PC_SYS_UNIT_CODE.parentid=#{dwdm} and PC_SYS_UNIT_CODE.uniteproperty2 like '%作业队%'
+AND PC_CBS_EQUIPMENT_ZY.termid IS NULL ORDER BY termid
+<where>
+
+</where>
+</select>
+
+
+
+
+<!-- 代码自动生成，请核对数据类型 -->
+<!-- 查询 -->
+<select id="select" parameterType="com.cyrj.jxzy.entity.Constractor.ZysbEntity" resultType="com.cyrj.jxzy.entity.Constractor.ZysbEntity">
+select
+dwdm,
+termid,
+dwmc,
+termname,
+xhjcs,
+zzcj,
+cph,
+sbm,
+fileurl,
+lrr,
+lrsj,
+oilfield,
+zysbid,
+sbbz,
+sb,
+tcrq,
+TO_CHAR (tcrq, 'YYYY-MM-DD') stcrq
+from PC_CBS_EQUIPMENT_ZY
+<where>
+
+</where>
+</select>
+<!-- 根据id删除 -->
+<delete id="deleteUpdateSave" parameterType="com.cyrj.jxzy.entity.Constractor.ZysbEntity">
+delete from PC_CBS_EQUIPMENT_ZY  where zysbid = #{zysbid}
+</delete>
+<!-- 根据id删除 -->
+<delete id="delete"  parameterType="com.cyrj.jxzy.entity.Constractor.ZysbEntity">
+
+ delete from PC_CBS_EQUIPMENT_ZY where  termid=#{termid}
+</delete>
+
+<insert id="insertSave" parameterType="com.cyrj.jxzy.entity.Constractor.ZysbEntity">
+insert into
+PC_CBS_EQUIPMENT_ZY(
+dwdm,
+termid,
+dwmc,
+termname,
+xhjcs,
+zzcj,
+cph,
+sbm,
+fileurl,
+lrr,
+lrsj,
+oilfield,
+zysbid,
+sbbz,
+sb,
+tcrq
+)
+(
+ <foreach collection="entity_list" index="" item="item" separator="union all">
+  select
+    #{dwdm,jdbcType=VARCHAR},
+	#{termid,jdbcType=VARCHAR},
+	(SELECT PC_CBS_COMPANY.DWMC termname FROM PC_CBS_COMPANY WHERE PC_CBS_COMPANY.dwdm = #{dwdm} ),
+	(SELECT PC_SYS_UNIT_CODE.UNITNAME termname FROM PC_SYS_UNIT_CODE WHERE PC_SYS_UNIT_CODE.ID = #{termid} ),
+	#{item.xhjcs,jdbcType=VARCHAR},
+	#{item.zzcj,jdbcType=VARCHAR},
+	#{item.cph,jdbcType=VARCHAR},
+	#{item.sbm,jdbcType=VARCHAR},
+	#{item.fileurl,jdbcType=VARCHAR},
+	#{item.lrr,jdbcType=VARCHAR},
+	sysdate,
+	#{oilfield,jdbcType=VARCHAR},
+	#{item.zysbid,jdbcType=VARCHAR},
+	#{item.sbbz,jdbcType=VARCHAR},
+	#{item.sb,jdbcType=VARCHAR},
+	TO_DATE('${item.tcrq}','yyyy-MM-dd') 
+	from dual
+	</foreach> 
+		)
+</insert>
+
+<!-- 插入数据 -->
+ <insert id="insertUpdateSave" parameterType="com.cyrj.jxzy.entity.Constractor.ZysbEntity">
+insert into
+PC_CBS_EQUIPMENT_ZY(
+dwdm,
+termid,
+dwmc,
+termname,
+xhjcs,
+zzcj,
+cph,
+sbm,
+fileurl,
+lrr,
+lrsj,
+oilfield,
+zysbid,
+sbbz,
+sb,
+tcrq
+)
+values(
+#{dwdm,jdbcType=VARCHAR},
+#{termid,jdbcType=VARCHAR},
+#{dwmc,jdbcType=VARCHAR},
+#{termname,jdbcType=VARCHAR},
+#{xhjcs,jdbcType=VARCHAR},
+#{zzcj,jdbcType=VARCHAR},
+#{cph,jdbcType=VARCHAR},
+#{sbm,jdbcType=VARCHAR},
+#{fileurl,jdbcType=VARCHAR},
+#{lrr,jdbcType=VARCHAR},
+sysdate,
+#{oilfield,jdbcType=VARCHAR},
+#{zysbid,jdbcType=VARCHAR},
+#{sbbz,jdbcType=VARCHAR},
+#{sb,jdbcType=VARCHAR},
+TO_DATE('${tcrq}','yyyy-MM-dd') 
+)
+</insert>
+
+<select id="unit_select" parameterType="com.cyrj.jxzy.entity.Constractor.QylrEntity" resultType="com.cyrj.jxzy.entity.Constractor.QylrEntity">
+SELECT DWMC,DWDM,unitname  from PC_CBS_COMPANY where  oilfield=#{oilfield}
+<if test="dwdm!=null and dwdm.length() &gt;0">
+ and dwdm=#{dwdm} 
+</if>
+ORDER BY NLSSORT (unitname, 'NLS_SORT=SCHINESE_PINYIN_M' )
+</select>
+
+	<select id="term_select" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity"
+		resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+		
+		SELECT id, UNITNAME,uniteproperty  from PC_SYS_UNIT_CODE
+		where    PC_SYS_UNIT_CODE.uniteproperty2 like  '%作业队%'		and PC_SYS_UNIT_CODE.parentid=#{parentid}
+		ORDER BY id
+		
+	</select>
+
+
+</mapper>

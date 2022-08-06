@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.SbtjDao">
+
+
+<select id="countShowList" parameterType="com.cyrj.jxzy.entity.Constractor.SbtjEntity" resultType="int">
+     SELECT count(*) FROM PC_CBS_COMPANY
+     	 <where>
+     	 oilfield =#{oilfield} 
+      <if test="dwlb!=null   and dwlb.length() &gt;0">  
+        and   PC_CBS_COMPANY.DWLB=(select ANNEX_NAME from PC_CBS_ANNEX where id=#{dwlb} and oilfield =#{oilfield})
+      </if>
+       <if test="dwdm!=null   and dwdm.length() &gt;0">  
+         and  PC_CBS_COMPANY.dwdm=#{dwdm}     
+      </if>    
+     </where>
+</select>
+
+<select id="listShowList" parameterType="com.cyrj.jxzy.entity.Constractor.SbtjEntity" resultType="com.cyrj.jxzy.entity.Constractor.SbtjEntity">
+<!-- SELECT * from( -->
+SELECT AA.* ,rownum row_num from (
+
+   SELECT
+	PC_CBS_COMPANY.DWDM,
+	PC_CBS_COMPANY.UNITNAME,
+	PC_CBS_COMPANY.DWMC,
+	PC_CBS_COMPANY.DWLB,
+	CASE WHEN A.jksb IS NULL THEN 0 ELSE A.jksb END jksb,
+	CASE WHEN B.hbsb IS NULL THEN 0 ELSE B.hbsb END hbsb,
+	CASE WHEN C.fssb IS NULL THEN 0 ELSE C.fssb END fssb ,
+	CASE WHEN D.zysb IS NULL THEN 0 ELSE D.zysb END zysb  
+	FROM PC_CBS_COMPANY
+	LEFT JOIN (select *  from PC_CBS_ANNEX where PARENT_ID ='FJ20181219203500036791' and TAB='1' and oilfield =#{oilfield})E on E.ANNEX_NAME=PC_CBS_COMPANY.DWLB
+	LEFT JOIN (
+	     SELECT DWDM,count(*) zysb FROM (SELECT DISTINCT (PC_CBS_EQUIPMENT_ZY.CPH) ,DWDM from PC_CBS_EQUIPMENT_ZY) ZY
+         GROUP BY ZY.DWDM  )D ON D.DWDM=PC_CBS_COMPANY.DWDM     
+	LEFT JOIN (
+	        SELECT DWDM,count(*) jksb
+			FROM PC_CBS_WELL_CONTROL_EQU
+			WHERE PC_CBS_WELL_CONTROL_EQU.STATE = 2 and oilfield =#{oilfield} 
+			GROUP BY PC_CBS_WELL_CONTROL_EQU.DWDM )A ON A.DWDM=PC_CBS_COMPANY.DWDM 
+	LEFT JOIN (
+	      SELECT
+			PC_CBS_ENVI_PRO_EQU.DWDM,COUNT(*) hbsb 
+			FROM PC_CBS_ENVI_PRO_EQU
+			WHERE PC_CBS_ENVI_PRO_EQU.STATE = 2 and oilfield =#{oilfield} 
+			GROUP BY PC_CBS_ENVI_PRO_EQU.DWDM) B ON B.DWDM=PC_CBS_COMPANY.DWDM 
+	LEFT JOIN (
+			SELECT PC_CBS_ACCESSORY_EQU.DWDM,COUNT(*)fssb 
+			FROM PC_CBS_ACCESSORY_EQU
+			WHERE PC_CBS_ACCESSORY_EQU.STATE = 2 and oilfield =#{oilfield} 
+			GROUP BY PC_CBS_ACCESSORY_EQU.DWDM )C ON c.DWDM=PC_CBS_COMPANY.DWDM
+	 <where>
+	 PC_CBS_COMPANY.oilfield =#{oilfield} 
+      <if test="dwlb!=null   and dwlb.length() &gt;0">  
+        and   PC_CBS_COMPANY.DWLB=(select ANNEX_NAME from PC_CBS_ANNEX where id=#{dwlb} and  oilfield =#{oilfield})
+      </if>
+       <if test="dwdm!=null   and dwdm.length() &gt;0">  
+         and  PC_CBS_COMPANY.dwdm=#{dwdm}     
+      </if>    
+     </where>
+	ORDER BY E.NUM,NLSSORT(UNITNAME,'NLS_SORT = SCHINESE_PINYIN_M')
+
+ ) AA
+<!--   ) -->
+<!-- where 	row_num &lt;=#{endRow} and row_num	&gt;= #{startRow} -->
+</select>
+
+
+
+</mapper>

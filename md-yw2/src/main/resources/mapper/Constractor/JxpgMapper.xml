@@ -1,0 +1,1331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.JxpgDao">
+
+
+    <select id="countContractor" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity" resultType="int">
+
+        SELECT count(*) from (
+        SELECT DISTINCT CONTRACTOR_NAME,contractor_id ,EJDWMC FROM PC_CBS_CONTRACT
+        where OILFIELD=#{oilfield} and AUDITTAB ='2' and trunc(OPERATION_START_DATE,'DD') &lt;=trunc(sysdate,'DD') and
+        to_char(OPERATION_START_DATE,'yyyy')= #{effective_dates}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and PC_CBS_CONTRACT.unit_id like #{unit_id}||'%'
+        </if>
+        )
+    </select>
+    <select id="listContractor" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity">
+        SELECT * from(
+        SELECT A.* ,rownum row_num from (
+        SELECT DISTINCT CONTRACTOR_NAME,
+        contractor_id ,
+        EJDWMC
+        FROM PC_CBS_CONTRACT
+        where OILFIELD=#{oilfield} and AUDITTAB ='2' and trunc(OPERATION_START_DATE,'DD') &lt;=trunc(sysdate,'DD')
+        and to_char(OPERATION_START_DATE,'yyyy')= #{effective_dates}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and PC_CBS_CONTRACT.unit_id like #{unit_id}||'%'
+        </if>
+        order by NLSSORT(EJDWMC,'NLS_SORT = SCHINESE_PINYIN_M')
+        ) A )where row_num &lt;=#{endRow} and row_num &gt;= #{startRow}
+    </select>
+
+    <select id="contractList" parameterType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity">
+        SELECT A.* ,rownum row_num from (
+        SELECT DISTINCT A.CONTRACTOR_NAME,
+        A.contractor_id ,
+        A.EJDWMC,
+        A.CONTRACT_ID,
+        A.CONTRACT_NAME,
+        A.CONTRACT_NUMBER,
+        A .unit_id,
+        A.UNIT_NAME,
+        A.OPERATION_START_DATE,
+        to_char(A.OPERATION_START_DATE,'yyyy-mm-dd') OPERATION_START_DATES,
+        to_char(A.COMPLETION_DATE,'yyyy-mm-dd') COMPLETION_DATES,
+        A.CONSTRUCTION_PROJECT,
+        CASE WHEN B.CONTRACT_ID IS NULL THEN '否' ELSE '是' END is_pg ,
+        to_char(B.DATETIME,'yyyy-mm-dd') pg_date
+        FROM PC_CBS_CONTRACT A
+        LEFT JOIN ( SELECT D.CONTRACT_ID,D.DATETIME FROM (
+        SELECT C.CONTRACT_ID,C.DATETIME ,row_number() over (partition by C.CONTRACT_ID order by C.DATETIME DESC) ro FROM
+        ( SELECT DISTINCT B.CONTRACT_ID, B.DATETIME FROM PC_CBS_CONTRACT A
+        INNER JOIN PC_CBS_ASSESSMENT_PRO_SUR B ON A.CONTRACT_ID=B.CONTRACT_ID
+        where A.OILFIELD=#{oilfield} and A.AUDITTAB ='2' and trunc(A.OPERATION_START_DATE,'DD') &lt;=trunc(sysdate,'DD')
+        and to_char(A.OPERATION_START_DATE,'yyyy')= #{effective_dates} and contractor_id=#{contractor_id}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.unit_id like #{unit_id}||'%'
+        </if>
+        )C
+        )D WHERE d.ro=1
+        )B on B.CONTRACT_ID=A.CONTRACT_ID
+        where A.OILFIELD=#{oilfield} and A.AUDITTAB ='2' and trunc(A.OPERATION_START_DATE,'DD') &lt;=trunc(sysdate,'DD')
+        and to_char(A.OPERATION_START_DATE,'yyyy')= #{effective_dates} and contractor_id=#{contractor_id}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.unit_id like #{unit_id}||'%'
+        </if>
+        order by A.unit_id,A.OPERATION_START_DATE
+        ) A
+    </select>
+    <select id="jxpgTeam" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity">
+    SELECT CONTRACT_NAME, wmsys.wm_concat(UNITNAME)TEAM_NAME FROM (
+				select DISTINCT A.CONTRACT_NAME, D.UNITNAME from PC_CBS_CONTRACT A
+				INNER JOIN V_CBS_SGJDJC B ON A.CONTRACTOR_ID=B.CONSTRUCTION_DEPARTMENT
+				INNER JOIN PC_SYS_UNIT_CODE D ON D.id=B.OP_TEAM
+				INNER JOIN (select DISTINCT CONTRACT_ID,TEAM_ID  from  PC_CBS_NLZRPGB WHERE CONTRACT_ID in ${whc} and AUDIT_TAB ='1') E ON E.CONTRACT_ID=A.CONTRACT_ID and B.OP_TEAM=E.TEAM_ID
+				LEFT JOIN (select DISTINCT A.CONTRACT_ID,A.CONTRACTOR_ID, B.TEAM_ID  from PC_CBS_CONTRACT A
+								INNER JOIN PC_CBS_PERMIT B ON A.CONTRACT_ID=B.CONTRACT_ID
+								WHERE A.CONTRACT_ID in ${whc}	AND B.AUDIT_TAB BETWEEN '2' AND '3') C ON B.OP_TEAM=C.TEAM_ID
+				WHERE A.CONTRACT_ID in ${whc}
+				AND B.START_TIME &gt;= A.OPERATION_START_DATE
+				AND B.COMPLETE_TIME IS not null AND  B.COMPLETE_TIME &lt;=A.COMPLETION_DATE
+				AND substr(B.CYDID, 0,8)=A.UNIT_ID AND C.TEAM_ID IS NULL
+   )GROUP BY CONTRACT_NAME
+    </select>
+
+    <insert id="jxpgSave1" parameterType="com.cyrj.jxzy.entity.Constractor.JxpgEntity">
+	     insert into PC_CBS_ASSESSMENT_CONCLUSION(
+				oilfield,
+				jxpgid,
+				contractor_name,
+				contractor_id,
+				construction_project,
+				unit_name,
+				workload_ht,
+				money_ht,
+				workload_dw,
+				money_dw,
+				hse_score,
+				hse_remarks,
+				staff_compliance_score,
+				staff_compliance_remarks,
+				healthy_score,
+				healthy_remarks,
+				safety_performance_score,
+				safety_performance_remarks,
+				safety_score,
+				safety_remarks,
+				electrical_safety_score,
+				electrical_safety_remarks,
+				fire_safety_score,
+				fire_safety_remarks,
+				construction_safety_score,
+				construction_safety_remarks,
+				construction_quality_score,
+				construction_quality_remarks,
+				well_control_score,
+				well_control_remarks,
+				environmentalprotection_score1,
+				environmentalprotection_remar1,
+				environmentalprotection_score2,
+				environmentalprotection_remar2,
+				quality_evaluation_score,
+				quality_evaluation_remarks,
+				construction_summary_score,
+				construction_summary_remarks,
+				cross_well_score,
+				cross_well_remarks,
+				small_plan_score,
+				small_plan_remarks,
+				reward_punishment_score1,
+				reward_punishment_remarks1,
+				reward_punishment_score2,
+				reward_punishment_remarks2,
+				reward_punishment_score3,
+				reward_punishment_remarks3,
+				reward_punishment_score4,
+				reward_punishment_remarks4,
+				reward_punishment_score5,
+				reward_punishment_remarks5,
+				reward_punishment_score6,
+				reward_punishment_remarks6,
+				total_score,
+				total_remarks,
+				vetoed1,
+				vetoed_remarks1,
+				vetoed2,
+				vetoed_remarks2,
+				vetoed3,
+				vetoed_remarks3,
+				evaluation_conclusion,
+				cbsfzr,
+				jxzyzg,
+				aqhbbm,
+				assessment_person,
+				assessment_time,
+				year,
+				JXPG_TAB,
+				UNIT_ID
+				)
+				values(
+				#{oilfield,jdbcType=VARCHAR},
+				#{jxpgid,jdbcType=VARCHAR},
+				#{contractor_name,jdbcType=VARCHAR},
+				#{contractor_id,jdbcType=VARCHAR},
+				#{construction_project,jdbcType=VARCHAR},
+				#{unit_name,jdbcType=VARCHAR},
+				#{workload_ht,jdbcType=INTEGER},
+				#{money_ht,jdbcType=VARCHAR},
+				#{workload_dw,jdbcType=INTEGER},
+				#{money_dw,jdbcType=VARCHAR},
+				#{hse_score,jdbcType=VARCHAR},
+				#{hse_remarks,jdbcType=VARCHAR},
+				#{staff_compliance_score,jdbcType=VARCHAR},
+				#{staff_compliance_remarks,jdbcType=VARCHAR},
+				#{healthy_score,jdbcType=VARCHAR},
+				#{healthy_remarks,jdbcType=VARCHAR},
+				#{safety_performance_score,jdbcType=VARCHAR},
+				#{safety_performance_remarks,jdbcType=VARCHAR},
+				#{safety_score,jdbcType=VARCHAR},
+				#{safety_remarks,jdbcType=VARCHAR},
+				#{electrical_safety_score,jdbcType=VARCHAR},
+				#{electrical_safety_remarks,jdbcType=VARCHAR},
+				#{fire_safety_score,jdbcType=VARCHAR},
+				#{fire_safety_remarks,jdbcType=VARCHAR},
+				#{construction_safety_score,jdbcType=VARCHAR},
+				#{construction_safety_remarks,jdbcType=VARCHAR},
+				#{construction_quality_score,jdbcType=VARCHAR},
+				#{construction_quality_remarks,jdbcType=VARCHAR},
+				#{well_control_score,jdbcType=VARCHAR},
+				#{well_control_remarks,jdbcType=VARCHAR},
+				#{environmentalprotection_score1,jdbcType=VARCHAR},
+				#{environmentalprotection_remar1,jdbcType=VARCHAR},
+				#{environmentalprotection_score2,jdbcType=VARCHAR},
+				#{environmentalprotection_remar2,jdbcType=VARCHAR},
+				#{quality_evaluation_score,jdbcType=VARCHAR},
+				#{quality_evaluation_remarks,jdbcType=VARCHAR},
+				#{construction_summary_score,jdbcType=VARCHAR},
+				#{construction_summary_remarks,jdbcType=VARCHAR},
+				#{cross_well_score,jdbcType=VARCHAR},
+				#{cross_well_remarks,jdbcType=VARCHAR},
+				#{small_plan_score,jdbcType=VARCHAR},
+				#{small_plan_remarks,jdbcType=VARCHAR},
+				#{reward_punishment_score1,jdbcType=VARCHAR},
+				#{reward_punishment_remarks1,jdbcType=VARCHAR},
+				#{reward_punishment_score2,jdbcType=VARCHAR},
+				#{reward_punishment_remarks2,jdbcType=VARCHAR},
+				#{reward_punishment_score3,jdbcType=VARCHAR},
+				#{reward_punishment_remarks3,jdbcType=VARCHAR},
+				#{reward_punishment_score4,jdbcType=VARCHAR},
+				#{reward_punishment_remarks4,jdbcType=VARCHAR},
+				#{reward_punishment_score5,jdbcType=VARCHAR},
+				#{reward_punishment_remarks5,jdbcType=VARCHAR},
+				#{reward_punishment_score6,jdbcType=VARCHAR},
+				#{reward_punishment_remarks6,jdbcType=VARCHAR},
+				#{total_score,jdbcType=VARCHAR},
+				#{total_remarks,jdbcType=VARCHAR},
+				#{vetoed1,jdbcType=VARCHAR},
+				#{vetoed_remarks1,jdbcType=VARCHAR},
+				#{vetoed2,jdbcType=VARCHAR},
+				#{vetoed_remarks2,jdbcType=VARCHAR},
+				#{vetoed3,jdbcType=VARCHAR},
+				#{vetoed_remarks3,jdbcType=VARCHAR},
+				#{evaluation_conclusion,jdbcType=VARCHAR},
+				#{cbsfzr,jdbcType=VARCHAR},
+				#{jxzyzg,jdbcType=VARCHAR},
+				#{aqhbbm,jdbcType=VARCHAR},
+				#{assessment_person,jdbcType=VARCHAR},
+				sysdate,
+				#{year,jdbcType=VARCHAR},
+				#{jxpg_tab,jdbcType=VARCHAR},
+				#{unit_id,jdbcType=VARCHAR}			
+				)
+					     
+	     </insert>
+    <insert id="jxpgSave2" parameterType="com.cyrj.jxzy.entity.Constractor.JxpgEntity">
+        insert into PC_CBS_ASSESSMENT_PRO_SUR
+        (OILFIELD,
+        JXPGID,
+        CONTRACTOR_NAME,
+        CONTRACT_ID,
+        TEAM_QUALIFICATION,
+        PROJECT_OVERVIEW,
+        CONTRACT_NAME,
+        CONTRACT_NUMBER,
+        CONTRACT_SOURCE,
+        OPERATION_START_DATES,
+        COMPLETION_DATES,
+        WORKLOAD_HT,
+        MONEY_HT,
+        WHETHER_TO_PERFORM,
+        TEAM_NAME,
+        WORKLOAD_DW,
+        MONEY_DW,
+        DATETIME,
+		CREATE_USER_ID,
+		UNIT
+        )
+        (
+        <foreach collection="entity_list" index="" item="item" separator="union all">
+            select
+            #{oilfield,jdbcType=VARCHAR},
+            #{jxpgid,jdbcType=VARCHAR},
+            #{item.contractor_name,jdbcType=VARCHAR},
+            #{item.contract_id,jdbcType=VARCHAR},
+            #{item.team_qualification,jdbcType=VARCHAR},
+            '项目概况',
+            #{item.contract_name,jdbcType=VARCHAR},
+            #{item.contract_number,jdbcType=VARCHAR},
+            #{item.contract_source,jdbcType=VARCHAR},
+            #{item.operation_start_dates,jdbcType=VARCHAR},
+            #{item.completion_dates,jdbcType=VARCHAR},
+            #{item.workload_ht,jdbcType=INTEGER},
+            #{item.money_ht,jdbcType=VARCHAR},
+            #{item.whether_to_perform,jdbcType=VARCHAR},
+            #{item.team_name,jdbcType=VARCHAR},
+            #{item.workload_dw,jdbcType=INTEGER},
+            #{item.money_dw,jdbcType=VARCHAR},
+            sysdate,
+			#{assessment_person,jdbcType=VARCHAR},
+			#{unit_id,jdbcType=VARCHAR}
+            from dual
+        </foreach>
+        )
+    </insert>
+    <select id="jxpgckCount" parameterType="com.cyrj.jxzy.entity.Constractor.JxpgEntity" resultType="int">
+        select count(*) from PC_CBS_ASSESSMENT_CONCLUSION where OILFIELD=#{oilfield}
+        <if test="year!=null   and year.length() &gt;0">
+            and year = #{year}
+        </if>
+        <if test="jxpg_tab!=null   and jxpg_tab.length() &gt;0">
+            and jxpg_tab =#{jxpg_tab}
+        </if>
+        <if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+            and contractor_id = #{search}
+        </if>
+        <if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+            and UNIT_ID like '%'||#{search}||'%'
+        </if>
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and unit_id = #{unit_id}
+        </if>
+        <if test="contractor_id!=null   and contractor_id.length() &gt;0">
+            and contractor_id = #{contractor_id}
+        </if>
+    </select>
+    <select id="jxpgckList" parameterType="com.cyrj.jxzy.entity.Constractor.JxpgEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.JxpgEntity">
+        SELECT * from(
+        SELECT A.* ,rownum row_num from (
+        select
+        JXPGID,
+        CONTRACTOR_NAME,
+        CONSTRUCTION_PROJECT,
+        UNIT_NAME,
+        TOTAL_SCORE,
+        EVALUATION_CONCLUSION,
+        year,
+        to_char(ASSESSMENT_TIME,'yyyy-mm-dd') ASSESSMENT_TIME
+        from PC_CBS_ASSESSMENT_CONCLUSION
+        where OILFIELD=#{oilfield}
+        <if test="year!=null   and year.length() &gt;0">
+            and year = #{year}
+        </if>
+        <if test="jxpg_tab!=null   and jxpg_tab.length() &gt;0">
+            and jxpg_tab =#{jxpg_tab}
+        </if>
+        <if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+            and contractor_id = #{search}
+        </if>
+        <if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+            and UNIT_ID like '%'||#{search}||'%'
+        </if>
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and unit_id = #{unit_id}
+        </if>
+        <if test="contractor_id!=null   and contractor_id.length() &gt;0">
+            and contractor_id = #{contractor_id}
+        </if>
+        order by ASSESSMENT_TIME desc
+        ) A )where row_num &lt;=#{endRow} and row_num &gt;= #{startRow}
+    </select>
+    <select id="jxpgckSelect1" parameterType="com.cyrj.jxzy.entity.Constractor.JxpgEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.JxpgEntity">
+ 	        select
+				oilfield,
+				jxpgid,
+				contractor_name,
+				contractor_id,
+				construction_project,
+				unit_name,
+				workload_ht,
+				money_ht,
+				workload_dw,
+				money_dw,
+				hse_score,
+				hse_remarks,
+				staff_compliance_score,
+				staff_compliance_remarks,
+				healthy_score,
+				healthy_remarks,
+				safety_performance_score,
+				safety_performance_remarks,
+				safety_score,
+				safety_remarks,
+				electrical_safety_score,
+				electrical_safety_remarks,
+				fire_safety_score,
+				fire_safety_remarks,
+				construction_safety_score,
+				construction_safety_remarks,
+				construction_quality_score,
+				construction_quality_remarks,
+				well_control_score,
+				well_control_remarks,
+				environmentalprotection_score1,
+				environmentalprotection_remar1,
+				environmentalprotection_score2,
+				environmentalprotection_remar2,
+				quality_evaluation_score,
+				quality_evaluation_remarks,
+				construction_summary_score,
+				construction_summary_remarks,
+				cross_well_score,
+				cross_well_remarks,
+				small_plan_score,
+				small_plan_remarks,
+				reward_punishment_score1,
+				reward_punishment_remarks1,
+				reward_punishment_score2,
+				reward_punishment_remarks2,
+				reward_punishment_score3,
+				reward_punishment_remarks3,
+				reward_punishment_score4,
+				reward_punishment_remarks4,
+				reward_punishment_score5,
+				reward_punishment_remarks5,
+				reward_punishment_score6,
+				reward_punishment_remarks6,
+				total_score,
+				total_remarks,
+				vetoed1,
+				vetoed_remarks1,
+				vetoed2,
+				vetoed_remarks2,
+				vetoed3,
+				vetoed_remarks3,
+				evaluation_conclusion,
+				cbsfzr,
+				jxzyzg,
+				aqhbbm,
+				assessment_person,
+				to_char(assessment_time,'yyyy-MM-dd') assessment_time	,
+				year
+ 	       from PC_CBS_ASSESSMENT_CONCLUSION where jxpgid=#{jxpgid}
+ 	     </select>
+    <select id="jxpgckSelect2" parameterType="com.cyrj.jxzy.entity.Constractor.JxpgEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity">
+ 	       select 	
+ 	        OILFIELD,
+			 JXPGID,
+			 CONTRACTOR_NAME,
+			 CONTRACT_ID,
+			 TEAM_QUALIFICATION,
+			 PROJECT_OVERVIEW,
+			 CONTRACT_NAME,
+			 CONTRACT_NUMBER,
+			 CONTRACT_SOURCE,
+			 OPERATION_START_DATES,
+			 COMPLETION_DATES,
+			 WORKLOAD_HT,
+			 MONEY_HT,
+			 WHETHER_TO_PERFORM,			 
+			 TEAM_NAME,
+			 WORKLOAD_DW,
+			 MONEY_DW,
+			 DATETIME 
+ 	      from PC_CBS_ASSESSMENT_PRO_SUR where JXPGID=#{jxpgid}
+ 	     </select>
+    <!--  	     按承包商单位评估 -->
+    <select id="cbs_pg" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_cbsEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.Jxpg_cbsEntity">
+        SELECT * from(
+        SELECT A.* ,rownum row_num from (
+        SELECT A.dwdm contractor_id,A.UNITNAME contractor_name,A.DWLB,A.contractNum,B.teamInfoNum,D.teamActualNum,E.wellNum ,F.fraction
+        FROM ( SELECT A.dwdm,A.UNITNAME,A.DWLB,COUNT(*)contractNum FROM PC_CBS_COMPANY A
+        INNER JOIN PC_CBS_CONTRACT B ON A.dwdm=B.CONTRACTOR_ID
+        WHERE A.OILFIELD=#{oilfield} AND B.OILFIELD=#{oilfield} AND B.AUDITTAB='2' and    to_char(B.OPERATION_START_DATE,'yyyy') &lt;= #{year} AND to_char(B.COMPLETION_DATE,'yyyy') &gt;= #{year}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and B.UNIT_ID = #{unit_id}
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and B.contract_id in (
+            SELECT DISTINCT contract_id FROM PC_CBS_CONTRACT A
+            INNER JOIN (SELECT ANNEX_NAME FROM PC_CBS_ANNEX WHERE OILFIELD=#{oilfield} AND  PARENT_ID='FJ20191022103700009144' AND ANNEX_NAME not IN ('大修','带压') and TAB='1' )B ON INSTR(A.CONSTRUCTION_PROJECT, B.ANNEX_NAME)>0
+            )
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and instr(B.CONSTRUCTION_PROJECT,'大修')>0
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and instr(B.CONSTRUCTION_PROJECT,'带压')>0
+        </if>
+        GROUP BY A.dwdm,A.UNITNAME,A.DWLB )A
+        INNER JOIN ( SELECT DWDM ,COUNT(DWDM)teamInfoNum FROM PC_CBS_QUALIFICATION_INFO WHERE OILFIELD=#{oilfield} AND    audit_tab='2' GROUP BY DWDM) B ON B.DWDM=A.DWDM
+        INNER JOIN (
+        SELECT dwdm CONTRACTOR_ID,COUNT(dwdm) teamActualNum FROM(
+        SELECT DISTINCT CONSTRUCTION_DEPARTMENT dwdm ,OP_TEAM ,B.TEAM_CLASS FROM V_CBS_SGJDJC A
+        inner join ( select id from PC_SYS_UNIT_CODE where OILFIELD=#{oilfield} and UNITEPROPERTY2 like '%作业队(外)%') C on    C.id=A.OP_TEAM
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON A.OP_TEAM=B.TEAM_ID     WHERE A.OILFIELD=#{oilfield} AND to_char(A.COMPLETE_TIME,'yyyy')= #{year}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        )a GROUP BY dwdm
+        ) D ON D.CONTRACTOR_ID=A.DWDM
+        INNER JOIN(
+        SELECT dwdm,COUNT(dwdm) wellNum FROM (
+        SELECT DISTINCT A.CONSTRUCTION_ID, A.CONSTRUCTION_DEPARTMENT dwdm FROM V_CBS_SGJDJC A
+        inner join ( select id from PC_SYS_UNIT_CODE where OILFIELD=#{oilfield} and UNITEPROPERTY2 like '%作业队(外)%') C on  C.id=A.OP_TEAM
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON  OP_TEAM=B.TEAM_ID  WHERE A.OILFIELD=#{oilfield} AND to_char(A.COMPLETE_TIME,'yyyy')= #{year}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        )A GROUP BY dwdm)E ON E.dwdm=A.dwdm
+        LEFT JOIN (
+        SELECT A.CONTRACTOR_ID,('15.00'+ A.cns_df +NVL(B.SDF,'68.00') +NVL(C.sgzj_pj,'6.00') +
+        NVL(D.jj_pj,'6.00'))fraction FROM (
+        SELECT CONTRACTOR_ID,DECODE(FILEURI,NULL,'0.00','5.00')cns_df FROM (
+        SELECT B.CONTRACT_ID,B.CONTRACTOR_ID,C.FILEURI ,row_number() over (partition by CONTRACTOR_ID order by C.FILEURI     Nulls first) num FROM PC_CBS_CONTRACT B
+        LEFT JOIN(SELECT * from PC_CBS_UPLOAD_FILES WHERE PC_CBS_UPLOAD_FILES.FILETYPE ='HSE承诺书')C ON C.CONTRACT_ID =B.CONTRACT_ID
+        WHERE B.OILFIELD=#{oilfield} AND B.AUDITTAB='2' and to_char(B.OPERATION_START_DATE,'yyyy') &lt;= #{year} AND to_char(B.COMPLETION_DATE,'yyyy') &gt;= #{year}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and B.UNIT_ID = #{unit_id}
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and B.contract_id in (
+            SELECT DISTINCT contract_id FROM PC_CBS_CONTRACT A
+            INNER JOIN (SELECT ANNEX_NAME FROM PC_CBS_ANNEX         WHERE OILFIELD=#{oilfield} AND PARENT_ID='FJ20191022103700009144'       AND ANNEX_NAME not IN ('大修','带压') and TAB='1' )B ON INSTR(A.CONSTRUCTION_PROJECT, B.ANNEX_NAME)>0
+            )
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and instr(B.CONSTRUCTION_PROJECT,'大修')>0
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and instr(B.CONSTRUCTION_PROJECT,'带压')>0
+        </if>
+        )A WHERE num=1)A
+        LEFT JOIN (
+        SELECT DWDM,SUM(SDF)SDF FROM (
+        SELECT N.dwdm,CASE WHEN JS*WTZXS =0 THEN round(BZF*1.00,2) ELSE round(BZF*(1-JCWTXS/(JS*WTZXS)),2) END SDF from   (
+        SELECT P.DWDM,U.PGYJJBZ,U.BZF,U.WTZXS, CASE WHEN P.JCWTXS IS NULL THEN 0 ELSE P.JCWTXS END JCWTXS from(
+        SELECT A.PGYJJBZ ,A.BZF, COUNT(*) WTZXS FROM (SELECT *  FROM PC_CBS_FJ6 WHERE OILFIELD=#{oilfield}) A
+        LEFT JOIN (SELECT *  FROM PC_CBS_FJ4 WHERE OILFIELD=#{oilfield}) B ON B.JCXM1 = A.JCXM1 AND B.JCXM2 = A.JCXM2 AND B.JCXM3 = A.JCXM3
+        GROUP BY A.PGYJJBZ,A.BZF )U
+        LEFT JOIN(SELECT O.dwdm, F.PGYJJBZ , SUM(O.JCWTXS)JCWTXS from(
+        SELECT A.dwdm,B.JCXM1, B.JCXM2, B.JCXM3, SUM(B.LJWTXS) JCWTXS FROM (
+        SELECT DISTINCT A.CONSTRUCTION_ID,A.CONSTRUCTION_DEPARTMENT dwdm FROM V_CBS_SGJDJC A
+        inner join ( select id from PC_SYS_UNIT_CODE where OILFIELD=#{oilfield} and UNITEPROPERTY2 like '%作业队(外)%') C on    C.id=A.OP_TEAM
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON     OP_TEAM=B.TEAM_ID
+            WHERE A.OILFIELD=#{oilfield} AND to_char(A.COMPLETE_TIME,'yyyy')= #{year}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        )A
+        INNER JOIN PC_CBS_SUP_INS_WTXS B ON B.CONSTRUCTION_ID=A.CONSTRUCTION_ID
+        GROUP BY A.dwdm,B.JCXM1, B.JCXM2, B.JCXM3
+        )O INNER JOIN (SELECT *  FROM PC_CBS_FJ6 WHERE OILFIELD=#{oilfield}) F ON F.JCXM1=O.JCXM1 AND F.JCXM2=O.JCXM2 AND F.JCXM3=O.JCXM3
+        GROUP BY O.dwdm, F.PGYJJBZ)P ON P.PGYJJBZ=U.PGYJJBZ
+        )M,(
+        SELECT dwdm,COUNT(*)JS FROM (
+        SELECT DISTINCT A.CONSTRUCTION_ID, A.CONSTRUCTION_DEPARTMENT dwdm FROM V_CBS_SGJDJC A
+		inner join ( select id from PC_SYS_UNIT_CODE where OILFIELD=#{oilfield} and UNITEPROPERTY2 like '%作业队(外)%') C on    C.id=A.OP_TEAM
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON     OP_TEAM=B.TEAM_ID
+        WHERE  A.OILFIELD=#{oilfield} AND to_char(A.COMPLETE_TIME,'yyyy')= #{year}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+             and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        )GROUP BY dwdm
+
+        )N WHERE N.dwdm=M. dwdm(+)
+        )A GROUP BY DWDM
+        )B ON A.CONTRACTOR_ID=B.DWDM
+        LEFT JOIN (
+        SELECT dwdm,CASE WHEN sgzj_pj &lt;=7 THEN '6.00' WHEN sgzj_pj &gt; 7 AND sgzj_pj &lt;=8 THEN '5.00' WHEN sgzj_pj    &gt; 8 AND sgzj_pj &lt;=9 THEN '4.00'
+        WHEN sgzj_pj &gt; 9 AND sgzj_pj &lt;=10 THEN '3.00' ELSE '0.00' END sgzj_pj FROM(
+        SELECT dwdm, CASE WHEN QQ.zjs=0 THEN 0 ELSE ROUND(QQ.zts/QQ.zjs,2) END sgzj_pj FROM (
+        SELECT dwdm, COUNT(*) zjs,SUM(ROUND(TO_NUMBER( trunc(CASE WHEN COMMIT_DATE IS NULL THEN SYSDATE ELSE COMMIT_DATE  END, 'DD') - trunc(COMPLETE_TIME, 'DD'))))zts
+        FROM (
+        SELECT DISTINCT A.CONSTRUCTION_DEPARTMENT dwdm,A.CONSTRUCTION_ID,A.COMMIT_DATE ,A.COMPLETE_TIME   FROM    V_CBS_SGJDJC A
+		inner join ( select id from PC_SYS_UNIT_CODE where OILFIELD=#{oilfield} and UNITEPROPERTY2 like '%作业队(外)%') C on  C.id=A.OP_TEAM
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON    OP_TEAM=B.TEAM_ID
+        WHERE  A.OILFIELD=#{oilfield} AND to_char(A.COMPLETE_TIME,'yyyy')= #{year}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        ) GROUP BY dwdm
+        )QQ)A )C ON A.CONTRACTOR_ID=C.DWDM
+        LEFT JOIN(
+        SELECT dwdm, CASE WHEN sgzj_pj &lt;=7 THEN '6.00' WHEN sgzj_pj &gt; 7 AND sgzj_pj &lt;=8 THEN '5.00' WHEN sgzj_pj &gt; 8 AND sgzj_pj &lt;=9 THEN '4.00'  WHEN sgzj_pj &gt; 9 AND sgzj_pj &lt;=10 THEN '3.00' ELSE '0.00' END jj_pj FROM(
+        SELECT dwdm,CASE WHEN QQ.zjs=0 THEN 0 ELSE ROUND(QQ.zts/QQ.zjs,2) END sgzj_pj FROM (
+        SELECT dwdm, COUNT(*) zjs,SUM(ROUND(TO_NUMBER( trunc(CASE WHEN WGJJSJ IS NULL THEN SYSDATE ELSE WGJJSJ END , 'DD') - trunc(COMPLETE_TIME, 'DD'))))zts FROM(
+        SELECT DISTINCT A.CONSTRUCTION_DEPARTMENT dwdm, A.CONSTRUCTION_ID,D.WGJJSJ,A. COMPLETE_TIME  FROM V_CBS_SGJDJC A
+		inner join ( select id from PC_SYS_UNIT_CODE where OILFIELD=#{oilfield} and UNITEPROPERTY2 like '%作业队(外)%') C on  C.id=A.OP_TEAM
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON OP_TEAM=B.TEAM_ID
+        LEFT JOIN (select *  from V_HANDOVER_MAINTAIN where OILFIELD=#{oilfield}) D ON D.SJID=A.CONSTRUCTION_ID
+        WHERE  A.OILFIELD=#{oilfield} AND to_char(A.COMPLETE_TIME,'yyyy')= #{year}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+             and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        )A GROUP BY dwdm)QQ) A )D on A.CONTRACTOR_ID=D.dwdm
+        )F ON F.CONTRACTOR_ID=A.dwdm
+        order by fraction desc
+        )A)A
+        <where>
+            <if test="contractor_id!=null   and contractor_id.length() &gt;0 ">
+                and contractor_id=#{contractor_id}
+            </if>
+        </where>
+    </select>
+    <!-- 	     承包商合同穿透查询 -->
+    <select id="jxpg_cbs_ht" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_cbsEntity"  resultType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity">
+        SELECT A.* ,rownum row_num from (
+        SELECT
+        AUDITTAB,
+        CONTRACT_ID,
+        CONTRACTOR_NAME,
+        CONSTRUCTION_PROJECT,
+        CONTRACT_NAME,
+        CONTRACT_NUMBER,
+        CONTRACT_SOURCE,
+        OPERATION_START_DATE,
+        to_char(OPERATION_START_DATE,'yyyy-mm-dd')operation_start_dates,
+        to_char(COMPLETION_DATE,'yyyy-mm-dd') completion_dates,
+        WORKLOAD,
+        MONEY,
+        WHETHER_TO_PERFORM,
+        ENTRY_TIME,
+        INPUT_PERSON,
+        to_char(EFFECTIVE_DATE,'yyyy-mm-dd')effective_dates,
+        UNIT_NAME,
+        UNIT_ID ,
+        IF_BG ,
+        tax_rate,
+        AUDITREMARK
+        from PC_CBS_CONTRACT
+        WHERE OILFIELD=#{oilfield} AND AUDITTAB='2' and to_char(OPERATION_START_DATE,'yyyy') &lt;= #{year} AND  to_char(COMPLETION_DATE,'yyyy') &gt;= #{year}  and contractor_id=#{contractor_id}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and UNIT_ID = #{unit_id}
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and contract_id in (
+            SELECT DISTINCT contract_id FROM PC_CBS_CONTRACT A
+            INNER JOIN (SELECT ANNEX_NAME FROM PC_CBS_ANNEX WHERE OILFIELD=#{oilfield} AND PARENT_ID='FJ20191022103700009144' AND ANNEX_NAME not IN ('大修','带压') and TAB='1' )B ON INSTR(A.CONSTRUCTION_PROJECT, B.ANNEX_NAME)>0
+            )
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and instr(CONSTRUCTION_PROJECT,'大修')>0
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and instr(CONSTRUCTION_PROJECT,'带压')>0
+        </if>
+        order by UNIT_ID, OPERATION_START_DATE
+        )A
+    </select>
+
+    <!-- 	     作业队合同穿透查询 -->
+    <select id="jxpg_zyd_ht" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_cbsEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity">
+        SELECT A.* ,rownum row_num from (
+        SELECT DISTINCT
+        A.AUDITTAB,
+        A.CONTRACT_ID,
+        A.CONTRACTOR_NAME,
+        A. CONSTRUCTION_PROJECT,
+        A. CONTRACT_NAME,
+        A. CONTRACT_NUMBER,
+        A. CONTRACT_SOURCE,
+        A. OPERATION_START_DATE,
+        to_char(OPERATION_START_DATE,'yyyy-mm-dd')operation_start_dates,
+        to_char(COMPLETION_DATE,'yyyy-mm-dd') completion_dates,
+        A.WORKLOAD,
+        A.MONEY,
+        A.WHETHER_TO_PERFORM,
+        A.ENTRY_TIME,
+        A.INPUT_PERSON,
+        to_char(EFFECTIVE_DATE,'yyyy-mm-dd')effective_dates,
+        A. UNIT_NAME,
+        A. UNIT_ID ,
+        A.IF_BG ,
+        A.tax_rate,
+        A.AUDITREMARK
+        from PC_CBS_CONTRACT A
+        INNER JOIN PC_CBS_NLZRPGB B ON A.CONTRACT_ID = B.CONTRACT_ID
+        WHERE A.OILFIELD=#{oilfield} AND A.AUDITTAB='2' and to_char(A.OPERATION_START_DATE,'yyyy') &lt;= #{year} AND
+        to_char(A.COMPLETION_DATE,'yyyy') &gt;= #{year}
+        and contractor_id=#{contractor_id} and B.AUDIT_TAB='1' and B.TEAM_ID=#{team_id}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.UNIT_ID = #{unit_id}
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and A.contract_id in (
+            SELECT DISTINCT contract_id FROM PC_CBS_CONTRACT A
+            INNER JOIN (SELECT ANNEX_NAME FROM PC_CBS_ANNEX
+            WHERE OILFIELD=#{oilfield} AND PARENT_ID='FJ20191022103700009144'
+            AND ANNEX_NAME not IN ('大修','带压') and TAB='1'
+            )B ON INSTR(A.CONSTRUCTION_PROJECT, B.ANNEX_NAME)>0
+            )
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and instr(A.CONSTRUCTION_PROJECT,'大修')>0
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and instr(A.CONSTRUCTION_PROJECT,'带压')>0
+        </if>
+        order by A.UNIT_ID, A.OPERATION_START_DATE
+        )A
+    </select>
+    <select id="jxpg_cbs_one_select0" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_cbsEntity"
+            resultType="java.lang.String">
+	               select UNITNAME from PC_SYS_UNIT_CODE where id=#{unit_id}
+	     </select>
+    <!-- 	     单个承包商合同队伍查询	      -->
+    <select id="jxpg_cbs_one_select1" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_cbsEntity" resultType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity">
+        SELECT AA.* FROM(
+        SELECT
+        A.CONTRACT_ID,
+        A.CONTRACTOR_NAME,
+        A.CONTRACTOR_ID,
+        A.CONSTRUCTION_PROJECT,
+        A.CONTRACT_NAME,
+        A.CONTRACT_NUMBER,
+        A.CONTRACT_SOURCE,
+        A.UNIT_NAME,
+        to_char(A.OPERATION_START_DATE,'yyyy-mm-dd')OPERATION_START_DATES,
+        to_char(A.COMPLETION_DATE,'yyyy-mm-dd')COMPLETION_DATES,
+        A.WORKLOAD workload_ht,
+        A.MONEY money_ht,
+        A.WHETHER_TO_PERFORM,
+        A.AUDITTIME,
+        B.TEAM_ID,
+        B.UNITNAME team_name ,
+        B.wellNum workload_dw
+        FROM PC_CBS_CONTRACT A
+        LEFT JOIN (
+        SELECT A.CONTRACT_ID,A.TEAM_ID,B.UNITNAME ,NVL(A.wellNum,0) wellNum FROM (
+        SELECT A.CONTRACT_ID,A.OP_TEAM TEAM_ID,COUNT(DISTINCT A.CONSTRUCTION_ID)wellNum FROM V_CBS_SGJDJC A
+		LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON  OP_TEAM=B.TEAM_ID
+        WHERE  A.CONSTRUCTION_DEPARTMENT=#{contractor_id} and to_char(A.COMPLETE_TIME,'yyyy')= #{year} and   A.CONTRACT_ID is not null
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        GROUP BY A.CONTRACT_ID,A.OP_TEAM
+        )A INNER JOIN PC_SYS_UNIT_CODE B ON B.id=A.TEAM_ID
+        )B ON B.CONTRACT_ID = A.CONTRACT_ID
+        WHERE A.OILFIELD=#{oilfield} AND A.AUDITTAB='2' and to_char(A.OPERATION_START_DATE,'yyyy') &lt;= #{year} AND to_char(A.COMPLETION_DATE,'yyyy') &gt;= #{year} and A.contractor_id=#{contractor_id}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and UNIT_ID = #{unit_id}
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and A.contract_id in (SELECT DISTINCT contract_id FROM PC_CBS_CONTRACT A
+            INNER JOIN (SELECT ANNEX_NAME FROM PC_CBS_ANNEX WHERE OILFIELD=#{oilfield} AND PARENT_ID='FJ20191022103700009144' AND ANNEX_NAME not
+            IN ('大修','带压')
+            and TAB='1' )B ON INSTR(A.CONSTRUCTION_PROJECT, B.ANNEX_NAME)>0 )
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and instr(CONSTRUCTION_PROJECT,'大修')>0
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and instr(CONSTRUCTION_PROJECT,'带压')>0
+        </if>
+        order by A.EFFECTIVE_DATE ,B.TEAM_ID
+        ) AA ORDER BY AA.CONTRACT_ID,AA.TEAM_ID
+    </select>
+    <!-- 	单个承包商监督检查汇总 -->
+    <select id="jxpg_cbs_one_select2" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_cbsEntity"  resultType="com.cyrj.jxzy.entity.Constractor.CbsFj6Entity">
+        SELECT M.PGYJJBZ,M.BZF,M.WTZXS,M.JCWTXS,N.JS, CASE WHEN JS*WTZXS =0 THEN round(BZF*1.00,2) ELSE round(BZF*(1-JCWTXS/(JS*WTZXS)),2) END SDF, '检查问题项数'||M.JCWTXS||',完工量'||N.JS bz from (
+        SELECT U.PGYJJBZ,U.BZF,U.WTZXS,CASE WHEN P.JCWTXS IS NULL THEN 0 ELSE P.JCWTXS END JCWTXS from(
+        SELECT A.PGYJJBZ ,A.BZF, COUNT(*) WTZXS FROM (SELECT *  FROM PC_CBS_FJ6 WHERE OILFIELD=#{oilfield}) A
+        LEFT JOIN (SELECT *  FROM PC_CBS_FJ4 WHERE OILFIELD=#{oilfield}) B ON B.JCXM1 = A.JCXM1 AND B.JCXM2 = A.JCXM2 AND B.JCXM3 = A.JCXM3
+        GROUP BY A.PGYJJBZ,A.BZF )U
+        LEFT JOIN(SELECT F.PGYJJBZ , SUM(O.JCWTXS)JCWTXS from(
+        SELECT B.JCXM1, B.JCXM2, B.JCXM3, SUM(B.LJWTXS) JCWTXS FROM (
+        SELECT DISTINCT A.CONSTRUCTION_ID FROM V_CBS_SGJDJC A
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON  OP_TEAM=B.TEAM_ID
+        WHERE to_char(A.COMPLETE_TIME,'yyyy')= #{year} AND  A.CONSTRUCTION_DEPARTMENT=#{contractor_id}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        ) A
+        INNER JOIN PC_CBS_SUP_INS_WTXS B ON B.CONSTRUCTION_ID=A.CONSTRUCTION_ID
+        GROUP BY B.JCXM1,B.JCXM2,B.JCXM3
+        )O INNER JOIN (SELECT *  FROM PC_CBS_FJ6 WHERE OILFIELD=#{oilfield}) F ON F.JCXM1=O.JCXM1 AND F.JCXM2=O.JCXM2 AND F.JCXM3=O.JCXM3
+        GROUP BY F.PGYJJBZ)P ON P.PGYJJBZ=U.PGYJJBZ
+        )M,(
+        SELECT COUNT(DISTINCT A.CONSTRUCTION_ID) JS FROM V_CBS_SGJDJC A
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON OP_TEAM=B.TEAM_ID
+        WHERE to_char(A.COMPLETE_TIME,'yyyy')= #{year} AND  A.CONSTRUCTION_DEPARTMENT=#{contractor_id}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        ) N
+    </select>
+    <!-- 	单个承包商HSE评估 -->
+    <select id="jxpg_cbs_one_select3" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_cbsEntity"   resultType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity">
+        SELECT B.CONTRACT_ID,B.CONTRACTOR_ID,C.FILEURI FROM PC_CBS_CONTRACT B
+        LEFT JOIN(SELECT * from PC_CBS_UPLOAD_FILES WHERE PC_CBS_UPLOAD_FILES.FILETYPE ='HSE承诺书')C ON C.CONTRACT_ID = B.CONTRACT_ID
+        WHERE B.OILFIELD=#{oilfield} and B.CONTRACTOR_ID=#{contractor_id} AND B.AUDITTAB='2' and to_char(B.OPERATION_START_DATE,'yyyy') &lt;= #{year} AND to_char(B.COMPLETION_DATE,'yyyy') &gt;= #{year} and C.FILEURI is null
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and B.UNIT_ID = #{unit_id}
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and B.contract_id in (
+            SELECT DISTINCT contract_id FROM PC_CBS_CONTRACT A
+            INNER JOIN (SELECT ANNEX_NAME FROM PC_CBS_ANNEX
+            WHERE OILFIELD=#{oilfield} AND PARENT_ID='FJ20191022103700009144' AND ANNEX_NAME not IN ('大修','带压') and TAB='1'
+            )B ON INSTR(A.CONSTRUCTION_PROJECT, B.ANNEX_NAME)>0)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and instr(B.CONSTRUCTION_PROJECT,'大修')>0
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and instr(B.CONSTRUCTION_PROJECT,'带压')>0
+        </if>
+    </select>
+    <!--    施工总结上传周期 -->
+    <select id="jxpg_cbs_one_select4" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_cbsEntity" resultType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity">
+        SELECT CASE WHEN QQ.zjs=0 THEN 0 ELSE ROUND(QQ.zts/QQ.zjs,2) END sgzj_pj   ,'完工量'||QQ.zjs||',平均上传周期'||NVL(ROUND(QQ.zts/QQ.zjs,2),0)||'天' sgzj_pj_bz FROM (
+        SELECT COUNT(*) zjs,SUM(ROUND(TO_NUMBER( trunc(CASE WHEN COMMIT_DATE IS NULL THEN SYSDATE ELSE COMMIT_DATE END, 'DD') - trunc(COMPLETE_TIME, 'DD'))))zts
+        FROM (
+        SELECT DISTINCT A.CONSTRUCTION_ID,A.COMMIT_DATE,A.COMPLETE_TIME FROM V_CBS_SGJDJC A
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON  OP_TEAM=B.TEAM_ID
+        WHERE to_char(A.COMPLETE_TIME,'yyyy')= #{year} AND  A.CONSTRUCTION_DEPARTMENT=#{contractor_id}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        )
+        )QQ
+
+    </select>
+    <!-- 	     交接井时间 -->
+    <select id="jxpg_cbs_one_select5" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_cbsEntity" resultType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity">
+        SELECT CASE WHEN QQ.zjs=0 THEN 0 ELSE ROUND(QQ.zts/QQ.zjs,2) END jj_pj, '完工量'||QQ.zjs||',平均交井周期'||NVL(ROUND(QQ.zts/QQ.zjs,2),0)||'天' jj_pj_bz
+        FROM (
+        SELECT COUNT(*) zjs,SUM(ROUND(TO_NUMBER( trunc(CASE WHEN WGJJSJ IS NULL THEN SYSDATE ELSE WGJJSJ END , 'DD') - trunc(COMPLETE_TIME, 'DD'))))zts FROM(
+        SELECT DISTINCT A.CONSTRUCTION_DEPARTMENT dwdm, A.CONSTRUCTION_ID,D.WGJJSJ,A.COMPLETE_TIME FROM V_CBS_SGJDJC A
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON OP_TEAM=B.TEAM_ID
+        LEFT JOIN (select *  from V_HANDOVER_MAINTAIN where OILFIELD=#{oilfield}) D ON D.SJID=A.CONSTRUCTION_ID
+        WHERE to_char(A.COMPLETE_TIME,'yyyy')= #{year} AND  A.CONSTRUCTION_DEPARTMENT=#{contractor_id}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        )A )QQ
+    </select>
+
+
+    <!--  	     按作业队评估，生成排名 -->
+    <select id="zyd_pg" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_cbsEntity"  resultType="com.cyrj.jxzy.entity.Constractor.Jxpg_cbsEntity">
+        select * from (
+        SELECT A.* ,rownum row_num from (
+        SELECT A.dwdm contractor_id,A.contractor_name,A.DWLB,A.contractNum,A.TEAM_ID,A.team_name,E.wellNum  ,NVL(F.fraction,'100') fraction
+        FROM ( SELECT A.dwdm,A.UNITNAME contractor_name,A.DWLB,C.TEAM_ID,D.UNITNAME team_name,COUNT(*)contractNum FROM  PC_CBS_COMPANY A
+        INNER JOIN PC_CBS_CONTRACT B ON A.dwdm=B.CONTRACTOR_ID
+        INNER JOIN PC_CBS_NLZRPGB C ON B.CONTRACT_ID = C.CONTRACT_ID
+        INNER JOIN PC_SYS_UNIT_CODE D ON D.id=C.TEAM_ID
+        WHERE A.OILFIELD=#{oilfield} AND B.OILFIELD=#{oilfield} AND B.AUDITTAB='2' and C.AUDIT_TAB='1' and to_char(B.OPERATION_START_DATE,'yyyy') &lt;= #{year} AND to_char(B.COMPLETION_DATE,'yyyy') &gt;= #{year}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and B.UNIT_ID = #{unit_id}
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and B.contract_id in (
+            SELECT DISTINCT contract_id FROM PC_CBS_CONTRACT A
+            INNER JOIN (SELECT ANNEX_NAME FROM PC_CBS_ANNEX  WHERE OILFIELD=#{oilfield} AND PARENT_ID='FJ20191022103700009144' AND ANNEX_NAME not IN ('大修','带压') and TAB='1'  )B ON INSTR(A.CONSTRUCTION_PROJECT, B.ANNEX_NAME)>0
+            )
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and instr(B.CONSTRUCTION_PROJECT,'大修')>0
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and instr(B.CONSTRUCTION_PROJECT,'带压')>0
+        </if>
+        GROUP BY A.dwdm,A.UNITNAME,A.DWLB,C.TEAM_ID,D.UNITNAME )A
+        INNER JOIN(
+        SELECT TEAM_ID,COUNT(TEAM_ID) wellNum FROM (
+        SELECT DISTINCT A.CONSTRUCTION_ID,A.OP_TEAM TEAM_ID FROM V_CBS_SGJDJC A
+		inner join ( select id from PC_SYS_UNIT_CODE where OILFIELD=#{oilfield} and UNITEPROPERTY2 like '%作业队(外)%') C on  C.id=A.OP_TEAM
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON OP_TEAM=B.TEAM_ID
+        WHERE A. OILFIELD=#{oilfield} and to_char(A.COMPLETE_TIME,'yyyy')= #{year}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        )A GROUP BY TEAM_ID)E ON E.TEAM_ID=A.TEAM_ID
+        LEFT JOIN (
+        SELECT B.TEAM_ID,('15.00'+ '5.00'+NVL(B.SDF,'68.00') +NVL(C.sgzj_pj,'6.00') + NVL(D.jj_pj,'6.00'))fraction FROM  (
+        SELECT TEAM_ID,SUM(SDF)SDF FROM (
+        SELECT N.TEAM_ID,CASE WHEN JS*WTZXS =0 THEN round(BZF*1.00,2) ELSE round(BZF*(1-JCWTXS/(JS*WTZXS)),2) END SDF from (
+        SELECT P.TEAM_ID,U.PGYJJBZ,U.BZF,U.WTZXS, CASE WHEN P.JCWTXS IS NULL THEN 0 ELSE P.JCWTXS END JCWTXS from(
+        SELECT A.PGYJJBZ ,A.BZF, COUNT(*) WTZXS FROM (SELECT *  FROM PC_CBS_FJ6 WHERE OILFIELD=#{oilfield}) A
+        LEFT JOIN (SELECT *  FROM PC_CBS_FJ4 WHERE OILFIELD=#{oilfield}) B ON B.JCXM1 = A.JCXM1 AND B.JCXM2 = A.JCXM2 AND B.JCXM3 = A.JCXM3
+        GROUP BY A.PGYJJBZ,A.BZF )U
+        INNER JOIN(SELECT O.TEAM_ID, F.PGYJJBZ , SUM(O.JCWTXS)JCWTXS from(
+        SELECT A.TEAM_ID,B.JCXM1, B.JCXM2, B.JCXM3, SUM(B.LJWTXS) JCWTXS FROM (
+        SELECT DISTINCT A.CONSTRUCTION_ID,A.OP_TEAM TEAM_ID FROM V_CBS_SGJDJC A
+		inner join ( select id from PC_SYS_UNIT_CODE where OILFIELD=#{oilfield} and UNITEPROPERTY2 like '%作业队(外)%') C on  C.id=A.OP_TEAM
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON  OP_TEAM=B.TEAM_ID
+        WHERE  A. OILFIELD=#{oilfield} and  to_char(A.COMPLETE_TIME,'yyyy')= #{year}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        )A INNER JOIN PC_CBS_SUP_INS_WTXS B ON B.CONSTRUCTION_ID=A.CONSTRUCTION_ID
+        GROUP BY A.TEAM_ID,B.JCXM1, B.JCXM2, B.JCXM3
+        )O INNER JOIN (SELECT *  FROM PC_CBS_FJ6 WHERE OILFIELD=#{oilfield}) F ON F.JCXM1=O.JCXM1 AND F.JCXM2=O.JCXM2 AND F.JCXM3=O.JCXM3
+        GROUP BY O.TEAM_ID, F.PGYJJBZ)P ON P.PGYJJBZ=U.PGYJJBZ
+        )M,(
+        SELECT TEAM_ID,COUNT(*)JS FROM (
+        SELECT DISTINCT A.CONSTRUCTION_ID,A.OP_TEAM TEAM_ID FROM V_CBS_SGJDJC A
+		inner join ( select id from PC_SYS_UNIT_CODE where OILFIELD=#{oilfield} and UNITEPROPERTY2 like '%作业队(外)%') C on  C.id=A.OP_TEAM
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON  OP_TEAM=B.TEAM_ID
+        WHERE A. OILFIELD=#{oilfield} and to_char(A.COMPLETE_TIME,'yyyy')= #{year}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        )GROUP BY TEAM_ID
+        )N WHERE N.TEAM_ID=M.TEAM_ID(+)
+        )A GROUP BY TEAM_ID
+        )B
+        LEFT JOIN (
+        SELECT TEAM_ID,CASE WHEN sgzj_pj &lt;=7 THEN '6.00' WHEN sgzj_pj &gt; 7 AND sgzj_pj &lt;=8 THEN '5.00' WHEN  sgzj_pj &gt; 8 AND sgzj_pj &lt;=9 THEN '4.00'  WHEN sgzj_pj &gt; 9 AND sgzj_pj &lt;=10 THEN '3.00' ELSE '0.00' END sgzj_pj FROM(
+        SELECT TEAM_ID, CASE WHEN QQ.zjs=0 THEN 0 ELSE ROUND(QQ.zts/QQ.zjs,2) END sgzj_pj FROM (
+        SELECT TEAM_ID, COUNT(*) zjs,SUM(ROUND(TO_NUMBER( trunc(CASE WHEN COMMIT_DATE IS NULL THEN SYSDATE ELSE COMMIT_DATE END, 'DD') - trunc(COMPLETE_TIME, 'DD'))))zts FROM (
+        SELECT DISTINCT A.OP_TEAM TEAM_ID, A.CONSTRUCTION_ID,A.COMMIT_DATE,A.COMPLETE_TIME FROM   V_CBS_SGJDJC A
+		inner join ( select id from PC_SYS_UNIT_CODE where OILFIELD=#{oilfield} and UNITEPROPERTY2 like '%作业队(外)%') C on  C.id=A.OP_TEAM
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON OP_TEAM=B.TEAM_ID
+        WHERE A. OILFIELD=#{oilfield} and to_char(A.COMPLETE_TIME,'yyyy')= #{year}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        ) GROUP BY TEAM_ID
+        )QQ)A )C ON B.TEAM_ID=C.TEAM_ID
+        LEFT JOIN(
+        SELECT TEAM_ID, CASE WHEN sgzj_pj &lt;=7 THEN '6.00' WHEN sgzj_pj &gt; 7 AND sgzj_pj &lt;=8 THEN '5.00' WHEN  sgzj_pj &gt; 8 AND sgzj_pj &lt;=9 THEN '4.00' WHEN sgzj_pj &gt; 9 AND sgzj_pj &lt;=10 THEN '3.00' ELSE '0.00' END jj_pj FROM(
+        SELECT TEAM_ID,CASE WHEN QQ.zjs=0 THEN 0 ELSE ROUND(QQ.zts/QQ.zjs,2) END sgzj_pj FROM (
+        SELECT TEAM_ID, COUNT(*) zjs,SUM(ROUND(TO_NUMBER( trunc(CASE WHEN WGJJSJ IS NULL THEN SYSDATE ELSE WGJJSJ END , 'DD') - trunc(COMPLETE_TIME, 'DD'))))zts FROM(
+        SELECT DISTINCT A.OP_TEAM TEAM_ID, A.CONSTRUCTION_ID,D.WGJJSJ,A.COMPLETE_TIME FROM  V_CBS_SGJDJC A
+		inner join ( select id from PC_SYS_UNIT_CODE where OILFIELD=#{oilfield} and UNITEPROPERTY2 like '%作业队(外)%') C on  C.id=A.OP_TEAM
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON  OP_TEAM=B.TEAM_ID
+        LEFT JOIN (select *  from V_HANDOVER_MAINTAIN where OILFIELD=#{oilfield}) D ON D.SJID=A.CONSTRUCTION_ID
+        WHERE  A. OILFIELD=#{oilfield} and to_char(A.COMPLETE_TIME,'yyyy')= #{year}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        )A GROUP BY TEAM_ID)QQ) A )D on B.TEAM_ID=D.TEAM_ID
+        )F ON F.TEAM_ID=A.TEAM_ID
+        order by fraction desc
+        )A
+        )A
+        <where>
+            <if test="contractor_id!=null   and contractor_id.length() &gt;0 ">
+                and contractor_id=#{contractor_id}
+            </if>
+            <if test="team_id!=null   and team_id.length() &gt;0 ">
+                and team_id=#{team_id}
+            </if>
+        </where>
+    </select>
+
+    <!-- 	     单个承包商合同队伍查询	      -->
+    <select id="jxpg_zyd_one_select1" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_cbsEntity" resultType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity">
+        SELECT AA.* FROM(
+        SELECT
+        A.CONTRACT_ID,
+        A.CONTRACTOR_NAME,
+        A.CONTRACTOR_ID,
+        A.CONSTRUCTION_PROJECT,
+        A.CONTRACT_NAME,
+        A.CONTRACT_NUMBER,
+        A.CONTRACT_SOURCE,
+        A.UNIT_NAME,
+        to_char(A.OPERATION_START_DATE,'yyyy-mm-dd')OPERATION_START_DATES,
+        to_char(A.COMPLETION_DATE,'yyyy-mm-dd')COMPLETION_DATES,
+        A.WORKLOAD workload_ht,
+        A.MONEY money_ht,
+        A.WHETHER_TO_PERFORM,
+        A.AUDITTIME,
+        B.TEAM_QUALIFICATION ,
+        B.TEAM_ID,
+        C.UNITNAME team_name ,
+        NVL(D.wellNum,0) workload_dw
+        FROM PC_CBS_CONTRACT A
+        INNER JOIN PC_CBS_NLZRPGB B ON A.CONTRACT_ID = B.CONTRACT_ID
+        INNER JOIN PC_SYS_UNIT_CODE C ON C.id=B.TEAM_ID
+        LEFT JOIN (
+        SELECT A.CONTRACT_ID,COUNT(DISTINCT A.CONSTRUCTION_ID)wellNum FROM V_CBS_SGJDJC A
+		LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON  OP_TEAM=B.TEAM_ID
+        WHERE A.OP_TEAM=#{team_id} and to_char(A.COMPLETE_TIME,'yyyy')= #{year} and A.CONTRACT_ID is not null
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        GROUP BY A.CONTRACT_ID
+        )D ON D.CONTRACT_ID = A.CONTRACT_ID
+        WHERE A.OILFIELD=#{oilfield} AND A.AUDITTAB='2' and to_char(A.OPERATION_START_DATE,'yyyy') &lt;= #{year} AND to_char(A.COMPLETION_DATE,'yyyy') &gt;= #{year}  and contractor_id=#{contractor_id} and B.AUDIT_TAB='1' and B.TEAM_ID=#{team_id}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and UNIT_ID = #{unit_id}
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and contract_id in (SELECT DISTINCT contract_id FROM PC_CBS_CONTRACT A
+            INNER JOIN (SELECT ANNEX_NAME FROM PC_CBS_ANNEX WHERE OILFIELD=#{oilfield} AND PARENT_ID='FJ20191022103700009144' AND ANNEX_NAME not IN ('大修','带压') and TAB='1' )B ON INSTR(A.CONSTRUCTION_PROJECT, B.ANNEX_NAME)>0 )
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and instr(CONSTRUCTION_PROJECT,'大修')>0
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and instr(CONSTRUCTION_PROJECT,'带压')>0
+        </if>
+        order by A.EFFECTIVE_DATE ,B.TEAM_ID
+        ) AA ORDER BY AA.CONTRACT_ID,AA.TEAM_ID
+    </select>
+    <!-- 	单个承包商监督检查汇总 -->
+    <select id="jxpg_zyd_one_select2" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_cbsEntity" resultType="com.cyrj.jxzy.entity.Constractor.CbsFj6Entity">
+        SELECT M.PGYJJBZ,M.BZF,M.WTZXS,M.JCWTXS,N.JS, CASE WHEN JS*WTZXS =0 THEN round(BZF*1.00,2) ELSE
+        round(BZF*(1-JCWTXS/(JS*WTZXS)),2) END SDF,
+        '检查问题项数'||M.JCWTXS||',完工量'||N.JS bz from (
+        SELECT U.PGYJJBZ,U.BZF,U.WTZXS,CASE WHEN P.JCWTXS IS NULL THEN 0 ELSE P.JCWTXS END JCWTXS from(
+        SELECT A.PGYJJBZ ,A.BZF, COUNT(*) WTZXS FROM (SELECT *  FROM PC_CBS_FJ6 WHERE OILFIELD=#{oilfield}) A
+        LEFT JOIN (SELECT *  FROM PC_CBS_FJ4 WHERE OILFIELD=#{oilfield}) B ON B.JCXM1 = A.JCXM1 AND B.JCXM2 = A.JCXM2 AND B.JCXM3 = A.JCXM3
+        GROUP BY A.PGYJJBZ,A.BZF )U
+        LEFT JOIN(SELECT F.PGYJJBZ , SUM(O.JCWTXS)JCWTXS from(
+        SELECT B.JCXM1, B.JCXM2, B.JCXM3, SUM(B.LJWTXS) JCWTXS FROM (
+        SELECT DISTINCT A.CONSTRUCTION_ID FROM V_CBS_SGJDJC A
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON
+        OP_TEAM=B.TEAM_ID
+        WHERE to_char(A.COMPLETE_TIME,'yyyy')= #{year} AND A.OP_TEAM=#{team_id}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        ) A
+        INNER JOIN PC_CBS_SUP_INS_WTXS B ON B.CONSTRUCTION_ID=A.CONSTRUCTION_ID
+        GROUP BY B.JCXM1,B.JCXM2,B.JCXM3
+        )O INNER JOIN (SELECT *  FROM PC_CBS_FJ6 WHERE OILFIELD=#{oilfield}) F ON F.JCXM1=O.JCXM1 AND F.JCXM2=O.JCXM2 AND F.JCXM3=O.JCXM3
+        GROUP BY F.PGYJJBZ)P ON P.PGYJJBZ=U.PGYJJBZ
+        )M,(
+        SELECT COUNT(DISTINCT A.CONSTRUCTION_ID) JS FROM V_CBS_SGJDJC A
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON
+        OP_TEAM=B.TEAM_ID
+        WHERE to_char(A.COMPLETE_TIME,'yyyy')= #{year} AND A.OP_TEAM=#{team_id}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        ) N
+    </select>
+
+    <select id="jxpg_zyd_one_select4" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_cbsEntity" resultType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity">
+
+        SELECT CASE WHEN QQ.zjs=0 THEN 0 ELSE ROUND(QQ.zts/QQ.zjs,2) END sgzj_pj  ,'完工量'||QQ.zjs||',平均上传周期'||NVL(ROUND(QQ.zts/QQ.zjs,2),0)||'天' sgzj_pj_bz FROM (
+        SELECT COUNT(*) zjs,SUM(ROUND(TO_NUMBER( trunc(CASE WHEN COMMIT_DATE IS NULL THEN SYSDATE ELSE COMMIT_DATE END,  'DD') - trunc(COMPLETE_TIME, 'DD'))))zts
+        FROM (
+        SELECT DISTINCT A.CONSTRUCTION_ID,A.COMMIT_DATE,A.COMPLETE_TIME FROM V_CBS_SGJDJC A
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON  OP_TEAM=B.TEAM_ID
+        WHERE to_char(A.COMPLETE_TIME,'yyyy')= #{year} AND A.OP_TEAM=#{team_id}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        )
+        )QQ
+
+    </select>
+    <select id="jxpg_zyd_one_select5" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_cbsEntity"  resultType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity">
+        SELECT CASE WHEN QQ.zjs=0 THEN 0 ELSE ROUND(QQ.zts/QQ.zjs,2) END jj_pj, '完工量'||QQ.zjs||',平均交井周期'||NVL(ROUND(QQ.zts/QQ.zjs,2),0)||'天' jj_pj_bz
+        FROM (
+        SELECT COUNT(*) zjs,SUM(ROUND(TO_NUMBER( trunc(CASE WHEN WGJJSJ IS NULL THEN SYSDATE ELSE WGJJSJ END , 'DD') - trunc(COMPLETE_TIME, 'DD'))))zts FROM(
+        SELECT DISTINCT A.CONSTRUCTION_DEPARTMENT dwdm, A.CONSTRUCTION_ID,D.WGJJSJ,A.COMPLETE_TIME FROM V_CBS_SGJDJC A
+        LEFT JOIN (select * from V_CBS_TEAMNO_MANAGE where OILFIELD=#{oilfield}) B ON OP_TEAM=B.TEAM_ID
+        LEFT JOIN (select *  from V_HANDOVER_MAINTAIN where OILFIELD=#{oilfield}) D ON D.SJID=A.CONSTRUCTION_ID
+        WHERE to_char(A.COMPLETE_TIME,'yyyy')= #{year} AND A.OP_TEAM=#{team_id}
+        <if test="unit_id!=null   and unit_id.length() &gt;0">
+            and A.CYDID like #{unit_id}||'%'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==1">
+            and (B.TEAM_CLASS not in( '大修','带压') or B.TEAM_CLASS is null)
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==2">
+            and B.TEAM_CLASS='大修'
+        </if>
+        <if test="team_class!=null   and team_class.length() &gt;0 and team_class==3">
+            and B.TEAM_CLASS='带压'
+        </if>
+        )A )QQ
+    </select>
+
+
+    <select id="jxpg_newSelect1" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity" resultType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity">
+		   SELECT AA.*, CASE WHEN WW.workload_dw  IS NULL THEN 0 ELSE WW.workload_dw  END workload_dw   FROM(	
+				SELECT
+					PC_CBS_CONTRACT.CONTRACT_ID,
+					CONTRACTOR_NAME,
+					CONTRACTOR_ID,
+					CONSTRUCTION_PROJECT,
+					CONTRACT_NAME,
+					CONTRACT_NUMBER,
+					CONTRACT_SOURCE,
+					UNIT_NAME,
+					to_char(OPERATION_START_DATE,'yyyy-mm-dd')OPERATION_START_DATES,
+					to_char(COMPLETION_DATE,'yyyy-mm-dd')COMPLETION_DATES,
+					WORKLOAD workload_ht,
+					MONEY money_ht,
+					WHETHER_TO_PERFORM,
+					AUDITTIME,
+					PC_CBS_NLZRPGB.TEAM_QUALIFICATION ,
+					PC_CBS_NLZRPGB.TEAM_ID,
+					D.UNITNAME team_name 
+					FROM PC_CBS_CONTRACT 
+					INNER JOIN PC_CBS_NLZRPGB ON PC_CBS_NLZRPGB.CONTRACT_ID = PC_CBS_CONTRACT.CONTRACT_ID
+					INNER JOIN PC_SYS_UNIT_CODE D ON D.id=PC_CBS_NLZRPGB.TEAM_ID
+					WHERE PC_CBS_CONTRACT.CONTRACT_ID in ${whc}   AND PC_CBS_NLZRPGB.AUDIT_TAB = 1
+					order by PC_CBS_CONTRACT.EFFECTIVE_DATE ,PC_CBS_NLZRPGB.TEAM_ID
+					) AA		
+					LEFT JOIN (SELECT QQ.CONTRACT_ID,QQ.TEAM_ID,COUNT(*) workload_dw FROM 	(
+									SELECT
+										A.CONTRACT_ID,
+										B.TEAM_ID,
+								        C.WELL_COMMON_NAME,
+								        C.CONSTRUCTION_ID
+										FROM PC_CBS_CONTRACT A
+										INNER JOIN PC_CBS_NLZRPGB B ON B.CONTRACT_ID = A.CONTRACT_ID
+								        INNER JOIN V_CBS_SGJDJC C ON C.OP_TEAM=B.TEAM_ID and C.CONTRACT_ID= B.CONTRACT_ID
+										WHERE A.CONTRACT_ID in ${whc}   AND B.AUDIT_TAB = 1    AND C.COMPLETE_TIME IS not null    AND substr(C.CYDID, 0,8)=A.UNIT_ID
+										order by A.EFFECTIVE_DATE ,B.TEAM_ID,C.WELL_COMMON_NAME
+								  ) QQ 
+								  GROUP BY CONTRACT_ID,TEAM_ID
+						)WW ON AA.CONTRACT_ID=WW.CONTRACT_ID AND AA.TEAM_ID=WW.TEAM_ID
+						ORDER BY AA.CONTRACT_ID,AA.TEAM_ID
+	</select>
+    <select id="jxpg_newSelect2" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity">
+	
+			SELECT A.CONTRACT_ID FROM PC_CBS_CONTRACT A
+			INNER JOIN PC_CBS_NLZRPGB B ON B.CONTRACT_ID = A.CONTRACT_ID
+			LEFT  JOIN(SELECT * from PC_CBS_UPLOAD_FILES WHERE PC_CBS_UPLOAD_FILES.FILETYPE ='HSE承诺书')QQ ON QQ.CONTRACT_ID = A.CONTRACT_ID
+			WHERE  A.CONTRACT_ID in ${whc}    AND QQ.FILEURI IS NULL
+	   </select>
+    <select id="jxpg_newSelect3" parameterType="com.cyrj.jxzy.entity.Constractor.CbsFj6Entity"
+            resultType="com.cyrj.jxzy.entity.Constractor.CbsFj6Entity">
+	  SELECT M.PGYJJBZ,M.BZF,M.WTZXS,M.JCWTXS,N.JS, CASE WHEN JS*WTZXS =0 THEN round(BZF*1.00,2) ELSE round(BZF*(1-JCWTXS/(JS*WTZXS)),2) END SDF, '检查问题项数'||M.JCWTXS||',完工量'||N.JS  bz   from (
+		SELECT U.PGYJJBZ,U.BZF,U.WTZXS,CASE WHEN P.JCWTXS IS NULL THEN 0 ELSE P.JCWTXS END JCWTXS  from(
+		SELECT A.PGYJJBZ ,A.BZF, COUNT(*) WTZXS	FROM (SELECT *  FROM PC_CBS_FJ6 WHERE OILFIELD=#{oilfield}) A
+		LEFT  JOIN (SELECT *  FROM PC_CBS_FJ4 WHERE OILFIELD=#{oilfield}) B ON B.JCXM1 = A.JCXM1 AND B.JCXM2 = A.JCXM2 AND B.JCXM3 = A.JCXM3
+		GROUP BY A.PGYJJBZ,A.BZF )U
+		LEFT JOIN(SELECT F.PGYJJBZ , SUM(O.JCWTXS)JCWTXS from(
+		              SELECT    D.JCXM1, D.JCXM2, D.JCXM3, SUM(D.LJWTXS) JCWTXS	FROM PC_CBS_CONTRACT A
+							INNER JOIN PC_CBS_NLZRPGB B ON B.CONTRACT_ID = A.CONTRACT_ID
+					        INNER JOIN V_CBS_SGJDJC C ON C.OP_TEAM=B.TEAM_ID	and C.CONTRACT_ID= B.CONTRACT_ID						        
+                            INNER JOIN PC_CBS_SUP_INS_WTXS D ON D.CONSTRUCTION_ID=C.CONSTRUCTION_ID                         
+							WHERE  A.CONTRACT_ID in ${whc}   AND B.AUDIT_TAB = 1    AND C.COMPLETE_TIME IS not null  AND substr(C.CYDID, 0,8)=A.UNIT_ID						           
+							GROUP BY D.JCXM1,D.JCXM2,D.JCXM3 
+		            )O INNER JOIN (SELECT *  FROM PC_CBS_FJ6 WHERE OILFIELD=#{oilfield}) F  ON F.JCXM1=O.JCXM1 AND F.JCXM2=O.JCXM2 AND F.JCXM3=O.JCXM3
+		            GROUP BY F.PGYJJBZ)P ON P.PGYJJBZ=U.PGYJJBZ
+		)M,(	SELECT count(DISTINCT C.CONSTRUCTION_ID) JS FROM PC_CBS_CONTRACT A
+				INNER JOIN PC_CBS_NLZRPGB B ON B.CONTRACT_ID = A.CONTRACT_ID
+		        INNER JOIN V_CBS_SGJDJC C ON C.OP_TEAM=B.TEAM_ID	and C.CONTRACT_ID= B.CONTRACT_ID			
+			WHERE  A.CONTRACT_ID in ${whc}  AND B.AUDIT_TAB = 1      AND C.COMPLETE_TIME IS not null   AND substr(C.CYDID, 0,8)=A.UNIT_ID	
+				) N
+	   </select>
+    <select id="jxpg_newSelect4" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity"   resultType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity">
+			SELECT CASE WHEN QQ.zjs=0 THEN 0 ELSE ROUND(QQ.zts/QQ.zjs,2) END  sgzj_pj , '完工量'||QQ.zjs||',平均上传周期'||ROUND(QQ.zts/QQ.zjs,2)||'天'  sgzj_pj_bz FROM (
+					SELECT COUNT(*) zjs,SUM(ROUND(TO_NUMBER( trunc(CASE WHEN COMMIT_DATE IS NULL THEN SYSDATE ELSE COMMIT_DATE END, 'DD') - trunc(COMPLETE_TIME, 'DD'))))zts FROM	(SELECT  DISTINCT C.CONSTRUCTION_ID,C.COMMIT_DATE,C.COMPLETE_TIME    	FROM PC_CBS_CONTRACT A
+							INNER JOIN PC_CBS_NLZRPGB B ON B.CONTRACT_ID = A.CONTRACT_ID
+							INNER JOIN V_CBS_SGJDJC C ON C.OP_TEAM=B.TEAM_ID and C.CONTRACT_ID= B.CONTRACT_ID 
+							WHERE  A.CONTRACT_ID in ${whc}  AND B.AUDIT_TAB = 1  AND C.COMPLETE_TIME IS not null   AND substr(C.CYDID, 0,8)=A.UNIT_ID)
+					)QQ
+	     </select>
+    <select id="jxpg_newSelect5" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity" resultType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity">
+	     	 SELECT CASE WHEN QQ.zjs=0 THEN 0 ELSE ROUND(QQ.zts/QQ.zjs,2) END jj_pj, '完工量'||QQ.zjs||',平均交井周期'||ROUND(QQ.zts/QQ.zjs,2)||'天'  jj_pj_bz  FROM (
+				SELECT COUNT(*)	zjs,SUM(ROUND(TO_NUMBER( trunc(CASE WHEN WGJJSJ IS NULL THEN SYSDATE ELSE WGJJSJ END , 'DD') - trunc(COMPLETE_TIME, 'DD'))))zts
+					FROM(	
+			                  SELECT DISTINCT C.CONSTRUCTION_ID,D.WGJJSJ,C.COMPLETE_TIME	 FROM PC_CBS_CONTRACT A
+								INNER JOIN PC_CBS_NLZRPGB B ON B.CONTRACT_ID = A.CONTRACT_ID
+								INNER JOIN V_CBS_SGJDJC C ON C.OP_TEAM=B.TEAM_ID and C.CONTRACT_ID= B.CONTRACT_ID
+								 LEFT JOIN V_HANDOVER_MAINTAIN D ON D.SJID=C.CONSTRUCTION_ID
+								WHERE  A.CONTRACT_ID in  ${whc} AND B.AUDIT_TAB = 1    AND C.COMPLETE_TIME IS not null  	 AND substr(C.CYDID, 0,8)=A.UNIT_ID	)
+					)QQ	 
+	     </select>
+
+    <select id="jxpg_newSelect6" parameterType="com.cyrj.jxzy.entity.Constractor.Jxpg_Ht_DwEntity" resultType="int">
+	     SELECT count(DISTINCT C.CONSTRUCTION_ID) JS FROM PC_CBS_CONTRACT A
+				INNER JOIN PC_CBS_NLZRPGB B ON B.CONTRACT_ID = A.CONTRACT_ID
+		        INNER JOIN V_CBS_SGJDJC C ON C.OP_TEAM=B.TEAM_ID	and C.CONTRACT_ID= B.CONTRACT_ID			
+			WHERE  A.CONTRACT_ID in ${whc}   AND B.AUDIT_TAB = 1   AND C.COMPLETE_TIME IS not null   AND substr(C.CYDID, 0,8)=A.UNIT_ID	
+	     </select>
+
+</mapper>

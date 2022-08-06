@@ -1,0 +1,1297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydx.aqsc.dao.Security.JddtglDao">
+	<!-- 查询总页数 -->
+	<select id="count_jddtcx"
+		parameterType="com.sydx.aqsc.entity.Security.JddtglEntity"
+		resultType="int">
+		select count(design_id) from PC_V_SUPERVISE_DAILY_INFO
+		<where>
+			<if test="oilfield!=null and oilfield.length() &gt; 0">
+				and oilfield =#{oilfield}
+			</if>
+			<if test="plant_name!=null and plant_name.length() &gt; 0">
+				and plant_name =#{plant_name}
+			</if>
+			<if test="org_name!=null and org_name.length() &gt; 0">
+				and org_name =#{org_name}
+			</if>
+			<if test="stim_ii_name!=null and stim_ii_name.length() &gt; 0">
+				and stim_ii_name =#{stim_ii_name}
+			</if>
+			<if test="team_name!=null and team_name.length() &gt; 0">
+				and team_name like concat(concat('%',#{team_name}),'%')
+			</if>
+			<if test="search!=null and search.length() &gt; 0">
+				and well_unitid like concat(concat('%',#{search}),'%')
+			</if>
+			<if
+				test="well_common_name!=null and well_common_name.length() &gt; 0">
+				and well_common_name like
+				concat(concat('%',#{well_common_name}),'%')
+			</if>
+			<if
+				test="rq1!=null and rq1!='null'.toString() and rq1.length() &gt; 0 and rq2!=null and rq2!='null'.toString() and rq2.length() &gt; 0">
+				and (start_date between to_date(#{rq1},'yyyy-MM-dd') and
+				to_date(#{rq2},'yyyy-MM-dd'))
+			</if>
+			<if
+				test="rq1!=null and rq1!='null'.toString() and rq1.length() &gt; 0 and rq2==null ">
+				and start_date = to_date(#{rq1},'yyyy-MM-dd')
+			</if>
+		</where>
+	</select>
+	
+	<select id="count_jdjlcx"
+		parameterType="com.sydx.aqsc.entity.Security.JddtglEntity"
+		resultType="int">
+		select count(design_id) from pc_v_sup_sgdt_info
+		<where>
+			<if test="oilfield!=null and oilfield.length() &gt; 0">
+				and oilfield =#{oilfield}
+			</if>
+			<if test="cyc!=null and cyc.length() &gt; 0">
+				and cyc =#{cyc}
+			</if>
+			<if test="zyq!=null and zyq.length() &gt; 0">
+				and zyq =#{zyq}
+			</if>
+			<if test="cyd!=null and cyd.length() &gt; 0">
+				and cyd =#{cyd}
+			</if>
+			<if test="stim_i_name!=null and stim_i_name.length() &gt; 0">
+				and stim_i_name =#{stim_i_name}
+			</if>
+			<if test="stim_ii_name!=null and stim_ii_name.length() &gt; 0">
+				and stim_ii_name =#{stim_ii_name}
+			</if>
+			<if test="team_name!=null and team_name.length() &gt; 0">
+				and team_name like concat(concat('%',#{team_name}),'%')
+			</if>
+			<if
+				test="well_common_name!=null and well_common_name.length() &gt; 0">
+				and well_common_name like
+				concat(concat('%',#{well_common_name}),'%')
+			</if>
+			<if
+				test="start_date!=null and start_date.length() &gt; 0">
+				and start_date = to_date(#{start_date},'yyyy-MM-dd')
+			</if>
+		</where>
+	</select>
+	
+
+	<!-- 查询 -->
+	<select id="jddtcx_query"
+		parameterType="com.sydx.aqsc.entity.Security.JddtglEntity"
+		resultType="com.sydx.aqsc.entity.Security.JddtglEntity">
+		select * from
+		(select
+		oilfield,
+		design_id,
+		well_common_name,
+		well_id,
+		well_purpose,
+		well_unitid,
+		plant_name,
+		org_name,
+		stim_i_name,
+		stim_ii_name,
+		stim_key_id,
+		to_char(start_date,'yyyy-MM-dd') start_date,
+		to_char(end_date,'yyyy-MM-dd') end_date,
+		construction_name,
+		team_name,
+		team_unitid,
+		team_class,
+		reportflag,
+		to_char(update_date,'yyyy-MM-dd')
+		update_date,
+		rownum
+		row_num
+		from (select * from PC_V_SUPERVISE_DAILY_INFO
+		order by start_date desc)
+		<where>
+			<if test="design_id!=null and design_id.length() &gt; 0">
+				and design_id =#{design_id}
+			</if>
+			<if test="oilfield!=null and oilfield.length() &gt; 0">
+				and oilfield =#{oilfield}
+			</if>
+			<if test="plant_name!=null and plant_name.length() &gt; 0">
+				and plant_name =#{plant_name}
+			</if>
+			<if test="org_name!=null and org_name.length() &gt; 0">
+				and org_name =#{org_name}
+			</if>
+			<if test="stim_ii_name!=null and stim_ii_name.length() &gt; 0">
+				and stim_ii_name =#{stim_ii_name}
+			</if>
+			<if
+				test="rq1!=null and rq1!='null'.toString() and rq1.length() &gt; 0 and rq2!=null and rq2!='null'.toString() and rq2.length() &gt; 0">
+				and (start_date between to_date(#{rq1},'yyyy-MM-dd') and
+				to_date(#{rq2},'yyyy-MM-dd'))
+			</if>
+			<if
+				test="rq1!=null and rq1!='null'.toString() and rq1.length() &gt; 0 and rq2=='' ">
+				and start_date = to_date(#{rq1},'yyyy-MM-dd')
+			</if>
+			<if test="team_name!=null and team_name.length() &gt; 0">
+				and team_name like concat(concat('%',#{team_name}),'%')
+			</if>
+			<if test="search!=null and search.length() &gt; 0">
+				and well_unitid like concat(concat('%',#{search}),'%')
+			</if>
+			<if
+				test="well_common_name!=null and well_common_name.length() &gt; 0">
+				and well_common_name like
+				concat(concat('%',#{well_common_name}),'%')
+			</if>
+		</where>
+		)
+		<where>
+			<if test="endRow!=0">
+				row_num&lt;= #{endRow}
+			</if>
+			<if test="startRow!=0">
+				and row_num &gt;= #{startRow}
+			</if>
+		</where>
+	</select>
+	
+		<select id="jdjlcx_query"
+		parameterType="com.sydx.aqsc.entity.Security.JddtglEntity"
+		resultType="com.sydx.aqsc.entity.Security.JddtglEntity">
+		select * from
+		(select
+		oilfield,
+		design_id,
+		well_common_name,
+		well_id,
+		well_purpose,
+		well_unitid,
+		cyc,
+		zyq,
+		cyd,
+		stim_i_name,
+		stim_ii_name,
+		stim_key_id,
+		to_char(start_date,'yyyy-MM-dd') start_date,
+		to_char(end_date,'yyyy-MM-dd') end_date,
+		construction_name,
+		team_name,
+		team_unitid,
+		team_flag,
+		team_class,
+		to_char(update_date,'yyyy-MM-dd')
+		update_date,
+		data_no,
+		rownum
+		row_num
+		from (select * from PC_V_SUP_SGDT_INFO
+		order by start_date asc)
+		<where>
+			<if test="design_id!=null and design_id.length() &gt; 0">
+				and design_id =#{design_id}
+			</if>
+			<if test="oilfield!=null and oilfield.length() &gt; 0">
+				and oilfield =#{oilfield}
+			</if>
+			<if test="cyc!=null and cyc.length() &gt; 0">
+				and cyc =#{cyc}
+			</if>
+			<if test="zyq!=null and zyq.length() &gt; 0">
+				and zyq =#{zyq}
+			</if>
+			<if test="cyd!=null and cyd.length() &gt; 0">
+				and cyd =#{cyd}
+			</if>
+			<if test="stim_i_name!=null and stim_i_name.length() &gt; 0">
+				and stim_i_name =#{stim_i_name}
+			</if>
+			<if test="stim_ii_name!=null and stim_ii_name.length() &gt; 0">
+				and stim_ii_name =#{stim_ii_name}
+			</if>
+			<if test="team_name!=null and team_name.length() &gt; 0">
+				and team_name like concat(concat('%',#{team_name}),'%')
+			</if>
+			<if
+				test="well_common_name!=null and well_common_name.length() &gt; 0">
+				and well_common_name like
+				concat(concat('%',#{well_common_name}),'%')
+			</if>
+			<if
+				test="start_date!=null and start_date.length() &gt; 0">
+				and start_date = to_date(#{start_date},'yyyy-MM-dd')
+			</if>
+		</where>
+		)
+		<where>
+			<if test="endRow!=0">
+				row_num&lt;= #{endRow}
+			</if>
+			<if test="startRow!=0">
+				and row_num &gt;= #{startRow}
+			</if>
+		</where>
+	</select>
+
+	<select id="jddtxq_query"
+		parameterType="com.sydx.aqsc.entity.Security.JddtglEntity"
+		resultType="com.sydx.aqsc.entity.Security.JddtglEntity">
+		select
+		to_char(daily_date,'yyyy-MM-dd') daily_date,
+		daily_content,
+		note
+		from pc_v_supervise_daily_data
+		<where>
+			<if test="design_id!=null and design_id.length() &gt; 0">
+				and design_id =#{design_id}
+			</if>
+			order by daily_date asc
+		</where>
+	</select>
+	
+		<select id="gxxq_query"
+		parameterType="com.sydx.aqsc.entity.Security.JddtglEntity"
+		resultType="com.sydx.aqsc.entity.Security.JddtglEntity">
+		select
+		design_id,
+		gxmc,
+		to_char(kssj,'yyyy-MM-dd') kssj
+		from pc_v_sup_sggx_data
+		<where>
+			<if test="design_id!=null and design_id.length() &gt; 0">
+				and design_id =#{design_id}
+			</if>
+			order by kssj asc
+		</where>
+	</select>
+	
+	<select id="jdjl_query"
+		parameterType="com.sydx.aqsc.entity.Security.JddtglEntity"
+		resultType="com.sydx.aqsc.entity.Security.JddtglEntity">
+		select
+		to_char(daily_date,'yyyy-MM-dd') daily_date,
+		daily_content
+		from pc_v_sup_sgdt_data
+		<where>
+			<if test="design_id!=null and design_id.length() &gt; 0">
+				and design_id =#{design_id}
+			</if>
+			order by daily_date asc
+		</where>
+	</select>
+	
+		<select id="zydtxq_query"
+		parameterType="com.sydx.aqsc.entity.Security.JddtglEntity"
+		resultType="com.sydx.aqsc.entity.Security.JddtglEntity">
+		select
+		cyc,
+		zyq,
+		cyd,
+		well_common_name,
+		construction_name,
+		team_name,
+		to_char(start_date,'yyyy-MM-dd') start_date,
+		to_char(daily_date,'yyyy-MM-dd') daily_date,
+		daily_content
+		from pc_v_sup_sgdt_data
+		<where>
+			<if test="design_id!=null and design_id.length() &gt; 0">
+				and design_id =#{design_id}
+			</if>
+			order by daily_date asc
+		</where>
+	</select>
+
+	<select id="selectByParam1" resultType="java.util.HashMap">
+		select a.id,a.unitname
+		from PC_V_SYS_UNIT_CODE2 a
+		where LENGTH(a.id)=#{params} and a.ID like
+		#{id}||'%' and uniteproperty!='内部气' and (a.uniteproperty1='1' or
+		LENGTH(a.id)=5) order by a.order_id
+	</select>
+
+	<select id="selectByParam3" resultType="java.util.HashMap">
+		select substr(WELL_UNITID,1,${params}) unit,
+		COUNT(1) nl
+		from
+		PC_V_SUPERVISE_DAILY_INFO
+		where
+		<choose>
+			<when
+				test="rq3!=null and rq3!='null'.toString() and rq3.length() &gt; 0 and rq4!=null and rq4!='null'.toString() and rq4.length() &gt; 0">
+				WELL_UNITID like #{id}||'%' and (start_date between
+				to_date(#{rq3},'yyyy-MM-dd') and
+				to_date(#{rq4},'yyyy-MM-dd')) and
+				TEAM_CLASS is not null
+			</when>
+			<otherwise>
+				WELL_UNITID like #{id}||'%'
+				and start_date BETWEEN
+				TO_DATE(#{rq1}, 'yyyy-mm-dd') and
+				TO_DATE(#{rq2}, 'yyyy-mm-dd')
+				and
+				TEAM_CLASS is not null
+			</otherwise>
+		</choose>
+		GROUP BY substr(WELL_UNITID,1,${params})
+	</select>
+	
+	<select id="selectByParam33" resultType="java.util.HashMap">
+		select substr(WELL_UNITID,1,${params}) unit,
+		COUNT(1) nl
+		from
+		PC_V_SUP_SGDT_INFO
+		where
+		<choose>
+			<when
+				test="rq3!=null and rq3!='null'.toString() and rq3.length() &gt; 0 and rq4!=null and rq4!='null'.toString() and rq4.length() &gt; 0">
+				WELL_UNITID like #{id}||'%' and (start_date between
+				to_date(#{rq3},'yyyy-MM-dd') and
+				to_date(#{rq4},'yyyy-MM-dd')) and
+				TEAM_CLASS is not null
+			</when>
+			<otherwise>
+				WELL_UNITID like #{id}||'%'
+				and start_date BETWEEN
+				TO_DATE(#{rq1}, 'yyyy-mm-dd') and
+				TO_DATE(#{rq2}, 'yyyy-mm-dd')
+				and
+				TEAM_CLASS is not null
+			</otherwise>
+		</choose>
+		GROUP BY substr(WELL_UNITID,1,${params})
+	</select>
+
+	<!-- 新标记数据统计 -->
+	<select id="selectByParam8" resultType="java.util.HashMap">
+		select substr(WELL_UNITID,1,${params}) unit,
+		COUNT(1) hj,
+		nvl(sum(case
+		when INSTR(REPORTFLAG, '_oil_')>0 then 1 end),0) yxj,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'cs_oil_')>0 then 1 end),0) ycs,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'dx_oil_')>0 then 1 end),0) ydx,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'bf_oil_')>0 then 1 end),0) ybffj,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'wh_oil_')>0 then 1 end),0) ywh,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'tc_oil_')>0 then 1 end),0) yxjtc,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, '_water_')>0 then 1 end),0) sxj,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'cs_water_')>0 then 1 end),0) scs,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'dx_water_')>0 then 1 end),0) sdx,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'bf_water_')>0 then 1 end),0) sbffj,
+		nvl(sum(case
+		when INSTR(REPORTFLAG, 'wh_water_')>0 then 1 end),0) swh,
+		nvl(sum(case
+		when INSTR(REPORTFLAG, 'tz_water_')>0 then 1 end),0) stzz,
+		nvl(sum(case when INSTR(REPORTFLAG, '_gas_')>0 then 1 end),0) qxj,
+		nvl(sum(case when INSTR(REPORTFLAG, 'cs_gas_')>0 then 1 end),0) qcs,
+		nvl(sum(case when INSTR(REPORTFLAG, 'dx_gas_')>0 then 1 end),0) qdx,
+		nvl(sum(case when INSTR(REPORTFLAG, 'bf_gas_')>0 then 1 end),0) qbffj,
+		nvl(sum(case when INSTR(REPORTFLAG, 'wh_gas_')>0 then 1 end),0) qwh,
+		nvl(sum(case when INSTR(REPORTFLAG, 'tc_gas_')>0 then 1 end),0) qxjtc,
+		nvl(sum(case when INSTR(REPORTFLAG, 'qt_gas_')>0 then 1 end),0) qqt,
+		nvl(sum(case TEAM_CLASS when '集团' then 1 end),0) jt,
+		nvl(sum(case
+		TEAM_CLASS when '内部' then 1 end),0) nb,
+		nvl(sum(case TEAM_CLASS when
+		'民营' then 1 end),0) my
+		from PC_V_SUPERVISE_DAILY_INFO
+		where
+		<choose>
+			<when
+				test="rq3!=null and rq3!='null'.toString() and rq3.length() &gt; 0 and rq4!=null and rq4!='null'.toString() and rq4.length() &gt; 0">
+				WELL_UNITID like #{id}||'%' and (start_date between
+				to_date(#{rq3},'yyyy-MM-dd') and
+				to_date(#{rq4},'yyyy-MM-dd')) and
+				TEAM_CLASS is not null
+			</when>
+			<otherwise>
+				WELL_UNITID like #{id}||'%' and start_date =
+				to_date(#{rq5},'yyyy-MM-dd') and
+				TEAM_CLASS is not null
+			</otherwise>
+		</choose>
+		GROUP BY substr(WELL_UNITID,1,${params})
+	</select>
+	
+	<!-- 新标记数据统计 -->
+	<select id="selectByParam88" resultType="java.util.HashMap">
+		select substr(WELL_UNITID,1,${params}) unit,
+		COUNT(1) hj,
+		nvl(sum(case TEAM_CLASS when '大修' then 1 end),0) dx,
+		nvl(sum(case TEAM_CLASS when '小修' then 1 end),0) xx,
+		nvl(sum(case TEAM_CLASS when '带压' then 1 end),0) dy
+		from PC_V_SUP_SGDT_INFO
+		where
+		<choose>
+			<when
+				test="rq3!=null and rq3!='null'.toString() and rq3.length() &gt; 0 and rq4!=null and rq4!='null'.toString() and rq4.length() &gt; 0">
+				WELL_UNITID like #{id}||'%' and (start_date between
+				to_date(#{rq3},'yyyy-MM-dd') and
+				to_date(#{rq4},'yyyy-MM-dd')) and
+				TEAM_CLASS is not null
+			</when>
+			<otherwise>
+				WELL_UNITID like #{id}||'%' and (start_date between
+				to_date(#{rq1},'yyyy-MM-dd') and
+				to_date(#{rq2},'yyyy-MM-dd')) and 
+				TEAM_CLASS is not null
+			</otherwise>
+		</choose>
+		GROUP BY substr(WELL_UNITID,1,${params})
+	</select>
+
+	<!-- 新穿透单井 -->
+	<select id="selectByParam6" resultType="java.util.HashMap">
+		select * from(select k.*,rownum row_num from (
+		select
+		a.well_common_name,
+		a.design_id,
+		a.plant_name,
+		a.org_name,
+		a.stim_i_name,
+		a.stim_ii_name,
+		a.construction_name,
+		a.team_name,
+		to_char(a.start_date,'yyyy-mm-dd')start_date,
+		(case well_purpose when
+		'1' then '油井' when '3' then '水井' when '2' then '气井' end) jb
+		from
+		PC_V_SUPERVISE_DAILY_INFO a
+		where
+		<choose>
+			<when
+				test="rq3!=null and rq3!='null'.toString() and rq3.length() &gt; 0 and rq4!=null and rq4!='null'.toString() and rq4.length() &gt; 0">
+				WELL_UNITID like #{id}||'%' and (start_date between
+				to_date(#{rq3},'yyyy-MM-dd') and
+				to_date(#{rq4},'yyyy-MM-dd')) and
+				TEAM_CLASS is not null
+			</when>
+			<otherwise>
+				WELL_UNITID like #{id}||'%' and start_date =
+				to_date(#{rq5},'yyyy-MM-dd') and
+				TEAM_CLASS is not null
+			</otherwise>
+		</choose>
+		<if test='measure_class=="yxj"'>and INSTR(REPORTFLAG, '_oil_')>0</if>
+		<if test='measure_class=="ycs"'>and INSTR(REPORTFLAG, 'cs_oil_')>0</if>
+		<if test='measure_class=="ydx"'>and INSTR(REPORTFLAG, 'dx_oil_')>0</if>
+		<if test='measure_class=="ybffj"'>and INSTR(REPORTFLAG, 'bf_oil_')>0</if>
+		<if test='measure_class=="ywh"'>and INSTR(REPORTFLAG, 'wh_oil_')>0</if>
+		<if test='measure_class=="yxjtc"'>and INSTR(REPORTFLAG, 'tc_oil_')>0</if>
+		<if test='measure_class=="sxj"'>and INSTR(REPORTFLAG, '_water_')>0</if>
+		<if test='measure_class=="scs"'>and INSTR(REPORTFLAG, 'cs_water_')>0</if>
+		<if test='measure_class=="sdx"'>and INSTR(REPORTFLAG, 'dx_water_')>0</if>
+		<if test='measure_class=="sbffj"'>and INSTR(REPORTFLAG, 'bf_water_')>0</if>
+		<if test='measure_class=="swh"'>and INSTR(REPORTFLAG, 'wh_water_')>0</if>
+		<if test='measure_class=="stzz"'>and INSTR(REPORTFLAG, 'tz_water_')>0</if>
+		<if test='measure_class=="qxj"'>and INSTR(REPORTFLAG, '_gas_')>0</if>
+		<if test='measure_class=="qcs"'>and INSTR(REPORTFLAG, 'cs_gas_')>0</if>
+		<if test='measure_class=="qdx"'>and INSTR(REPORTFLAG, 'dx_gas_')>0</if>
+		<if test='measure_class=="qbffj"'>and INSTR(REPORTFLAG, 'bf_gas_')>0</if>
+		<if test='measure_class=="qwh"'>and INSTR(REPORTFLAG, 'wh_gas_')>0</if>
+		<if test='measure_class=="qxjtc"'>and INSTR(REPORTFLAG, 'tc_gas_')>0</if>
+		<if test='measure_class=="qqt"'>and INSTR(REPORTFLAG, 'qt_gas_')>0</if>
+		<if test='measure_class=="jt"'>and TEAM_CLASS = '集团'</if>
+		<if test='measure_class=="nb"'>and TEAM_CLASS = '内部'</if>
+		<if test='measure_class=="my"'>and TEAM_CLASS = '民营'</if>
+		order by start_date desc
+		) k where rownum &lt;=#{endRow})where row_num
+		&gt;= #{startRow}
+	</select>
+	
+	<!-- 新穿透单井 -->
+	<select id="selectByParam66" resultType="java.util.HashMap">
+		select * from(select k.*,rownum row_num from (
+		select
+		a.well_common_name,
+		a.design_id,
+		a.cyc,
+		a.zyq,
+		a.cyd,
+		a.stim_i_name,
+		a.stim_ii_name,
+		a.construction_name,
+		a.team_name,
+		to_char(a.start_date,'yyyy-mm-dd')start_date,
+		a.well_purpose
+		from
+		pc_v_sup_sgdt_info a
+		where
+		<choose>
+			<when
+				test="rq3!=null and rq3!='null'.toString() and rq3.length() &gt; 0 and rq4!=null and rq4!='null'.toString() and rq4.length() &gt; 0">
+				WELL_UNITID like #{id}||'%' and (start_date between
+				to_date(#{rq3},'yyyy-MM-dd') and
+				to_date(#{rq4},'yyyy-MM-dd')) and
+				TEAM_CLASS is not null
+			</when>
+			<otherwise>
+				WELL_UNITID like #{id}||'%' and (start_date between
+				to_date(#{rq1},'yyyy-MM-dd') and
+				to_date(#{rq2},'yyyy-MM-dd')) and 
+				TEAM_CLASS is not null
+			</otherwise>
+		</choose>
+		<if test='measure_class=="dx"'>and TEAM_CLASS = '大修'</if>
+		<if test='measure_class=="xx"'>and TEAM_CLASS = '小修'</if>
+		<if test='measure_class=="dy"'>and TEAM_CLASS = '带压'</if>
+		order by start_date desc
+		) k where rownum &lt;=#{endRow})where row_num
+		&gt;= #{startRow}
+	</select>
+
+	<select id="jddtbc_query"
+		parameterType="com.sydx.aqsc.entity.Security.JddtglEntity"
+		resultType="com.sydx.aqsc.entity.Security.JddtglEntity">
+		select
+		*
+		from pc_supervise_data
+		<where>
+			<if test="design_id!=null and design_id.length() &gt; 0">
+				and design_id =#{design_id}
+			</if>
+			order by update_date asc
+		</where>
+	</select>
+
+	<!-- 插入数据 -->
+	<insert id="insertJddtxx"
+		parameterType="com.sydx.aqsc.entity.Security.JdryglEntity">
+		insert into
+		pc_supervise_data(
+		monitor_id,
+		design_id,
+		update_userid,
+		update_date,
+		unit_name,
+		true_name,
+		supervise_date,
+		supervise_text,
+		supervise_type,
+		note
+		)
+		values(
+		#{monitor_id,jdbcType=VARCHAR},
+		#{design_id,jdbcType=VARCHAR},
+		#{update_userid,jdbcType=VARCHAR},
+		sysdate,
+		#{unit_name,jdbcType=VARCHAR},
+		#{true_name,jdbcType=VARCHAR},
+		#{supervise_date,jdbcType=VARCHAR},
+		#{supervise_text,jdbcType=VARCHAR},
+		#{supervise_type,jdbcType=VARCHAR},
+		#{note,jdbcType=VARCHAR}
+		)
+	</insert>
+
+	<select id="jddtlyb_query"
+		parameterType="com.sydx.aqsc.entity.Security.JddthdEntity"
+		resultType="com.sydx.aqsc.entity.Security.JddthdEntity">
+		select
+		design_id,
+		message_id,
+		to_char(message_date,'yyyy-MM-dd')
+		message_date,
+		message_truename,
+		message_userid,
+		message_text,
+		to_char(reply_date,'yyyy-MM-dd') reply_date,
+		reply_truename,
+		reply_userid,
+		reply_text,
+		reply_op
+		from PC_SUPERVISE_MESSAGE
+		<where>
+			<if test="design_id!=null and design_id.length() &gt; 0">
+				and design_id =#{design_id}
+			</if>
+			order by message_date asc
+		</where>
+	</select>
+
+	<!-- 插入数据 -->
+	<insert id="insertJddtly"
+		parameterType="com.sydx.aqsc.entity.Security.JddthdEntity">
+		insert into
+		PC_SUPERVISE_MESSAGE(
+		design_id,
+		message_id,
+		message_date,
+		message_truename,
+		message_userid,
+		message_text,
+		reply_op
+		)
+		values(
+		#{design_id,jdbcType=VARCHAR},
+		#{message_id,jdbcType=VARCHAR},
+		TO_DATE(#{message_date},'yyyy-MM-dd'),
+		#{message_truename,jdbcType=VARCHAR},
+		#{message_userid,jdbcType=VARCHAR},
+		#{message_text,jdbcType=VARCHAR},
+		#{reply_op,jdbcType=VARCHAR}
+		)
+	</insert>
+
+	<!-- 更新修改 -->
+	<update id="updately"
+		parameterType="com.sydx.aqsc.entity.Security.JddthdEntity">
+		update PC_SUPERVISE_MESSAGE
+		set
+		reply_date=TO_DATE(#{reply_date},'yyyy-MM-dd'),
+		reply_truename=#{reply_truename,jdbcType=VARCHAR},
+		reply_text=#{reply_text,jdbcType=VARCHAR},
+		reply_op=#{reply_op,jdbcType=VARCHAR},
+		reply_userid=#{reply_userid,jdbcType=VARCHAR}
+		where message_id
+		=#{message_id}
+	</update>
+
+	<select id="fjgx_query"
+		parameterType="com.sydx.aqsc.entity.Security.JddthdEntity"
+		resultType="com.sydx.aqsc.entity.Security.JddthdEntity">
+		select
+		design_id,
+		step_id,
+		to_char(apply_date,'yyyy-MM-dd') apply_date,
+		step_name,
+		step_code,
+		node,
+		to_char(audit_date,'yyyy-MM-dd') audit_date,
+		audit_truename,
+		audit_userid,
+		audit_text,
+		(case audit_code when
+		'1' then '审核中' when '3' then '未通过' when '2' then '已通过' end) audit_code
+		from pc_supervise_steps
+		<where>
+			<if test="design_id!=null and design_id.length() &gt; 0">
+				and design_id =#{design_id}
+			</if>
+			<if test="audit_code!=null and audit_code.length() &gt; 0">
+				and audit_code=#{audit_code}
+			</if>
+			order by apply_date asc
+		</where>
+	</select>
+	
+	<!-- 插入数据 -->
+	<insert id="insertFjgx"
+		parameterType="com.sydx.aqsc.entity.Security.JddthdEntity">
+		insert into
+		pc_supervise_steps(
+		design_id,
+		step_id,
+		apply_date,
+		step_name,
+		step_code,
+		node,
+		audit_code
+		)
+		values(
+		#{design_id,jdbcType=VARCHAR},
+		#{step_id,jdbcType=VARCHAR},
+		TO_DATE(#{apply_date},'yyyy-MM-dd'),
+		#{step_name,jdbcType=VARCHAR},
+		#{step_code,jdbcType=VARCHAR},
+		#{node,jdbcType=VARCHAR},
+		#{audit_code,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<!-- 更新修改 -->
+	<update id="updateFjgx"
+		parameterType="com.sydx.aqsc.entity.Security.JddthdEntity">
+		update pc_supervise_steps
+		set
+		apply_date=TO_DATE(#{apply_date},'yyyy-MM-dd'),
+		step_code=#{step_code,jdbcType=VARCHAR},
+		step_name=#{step_name,jdbcType=VARCHAR},
+		node=#{node,jdbcType=VARCHAR},
+		audit_code = #{audit_code,jdbcType=VARCHAR}
+		where step_id
+		=#{step_id}
+	</update>
+	
+		<!-- 更新修改 -->
+	<update id="updateFjgxSh"
+		parameterType="com.sydx.aqsc.entity.Security.JddthdEntity">
+		update pc_supervise_steps
+		set
+		audit_date=TO_DATE(#{audit_date},'yyyy-MM-dd'),
+		audit_text=#{audit_text,jdbcType=VARCHAR},
+		audit_truename=#{audit_truename,jdbcType=VARCHAR},
+		audit_userid=#{audit_userid,jdbcType=VARCHAR},
+		audit_code = #{audit_code,jdbcType=VARCHAR}
+		where step_id
+		=#{step_id}
+	</update>
+	
+	<!-- 新标记数据统计 -->
+	<select id="selectByParam10" resultType="java.util.HashMap">
+		select substr(WELL_UNITID,1,${params}) unit,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'cs_')>0 then 1 end),0) jxcs,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'dx_')>0 then 1 end),0) jxdx,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'bf_')>0 then 1 end),0) jxbf,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'wh_')>0 then 1 end),0) jxwh,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'tc_oil_')>0 then 1 end),0) jxtc,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'tz_water_')>0 then 1 end),0) jxtz,
+		nvl(sum(case when sfdy is not null then 1 end),0) jxdy,
+		nvl(sum(case when 
+		INSTR(REPORTFLAG, 'qt_gas_')>0 or INSTR(REPORTFLAG, '_meaother')>0
+    	then 1 end),0) jxqt,
+    	nvl(sum(case
+		when design_id is not null then 1 end),0) jxzs,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'cs_')>0 and MONITOR_ID is not null then 1 end),0) jdcs,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'dx_')>0 and MONITOR_ID is not null then 1 end),0) jddx,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'bf_')>0 and MONITOR_ID is not null then 1 end),0) jdbf,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'wh_')>0 and MONITOR_ID is not null then 1 end),0) jdwh,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'tc_oil_')>0 and MONITOR_ID is not null then 1 end),0) jdtc,
+		nvl(sum(case when
+		INSTR(REPORTFLAG, 'tz_water_')>0 and MONITOR_ID is not null then 1 end),0) jdtz,
+		nvl(sum(case when sfdy is not null and MONITOR_ID is not null then 1 end),0) jddy,
+		nvl(sum(case when 
+		(INSTR(REPORTFLAG, 'qt_gas_')>0 or INSTR(REPORTFLAG, '_meaother')>0) and MONITOR_ID is not null 
+    	then 1 end),0) jdqt,
+    	nvl(sum(case
+		when MONITOR_ID is not null  then 1 end),0) jdzs
+		from pc_v_supervise_statistics
+		where
+		
+				WELL_UNITID like #{id}||'%' and  to_char(start_date,'yyyy-MM') like concat(concat('%',#{month}),'%') and
+				TEAM_CLASS is not null
+		GROUP BY substr(WELL_UNITID,1,${params})
+	</select>
+	
+	<!-- 新穿透单井 -->
+	<select id="selectByParam11" resultType="java.util.HashMap">
+		select * from(select k.*,rownum row_num from (
+		select
+		a.well_common_name,
+		a.design_id,
+		a.plant_name,
+		a.org_name,
+		a.stim_i_name,
+		a.stim_ii_name,
+		a.construction_name,
+		a.team_name,
+		to_char(a.start_date,'yyyy-mm-dd')start_date,
+		(case well_purpose when
+		'1' then '油井' when '3' then '水井' when '2' then '气井' end) jb
+		from
+		PC_V_SUPERVISE_STATISTICS a
+		where
+		WELL_UNITID like #{id}||'%' and  to_char(start_date,'yyyy-MM') like concat(concat('%',#{month}),'%') and
+				TEAM_CLASS is not null
+		<if test='measure_class=="jxcs"'>and INSTR(REPORTFLAG, 'cs_')>0</if>
+		<if test='measure_class=="jxdx"'>and INSTR(REPORTFLAG, 'dx_')>0</if>
+		<if test='measure_class=="jxbf"'>and INSTR(REPORTFLAG, 'bf_')>0</if>
+		<if test='measure_class=="jxwh"'>and INSTR(REPORTFLAG, 'wh_')>0</if>
+		<if test='measure_class=="jxtc"'>and INSTR(REPORTFLAG, 'tc_oil_')>0</if>
+		<if test='measure_class=="jxtz"'>and INSTR(REPORTFLAG, 'tz_water_')>0</if>
+		<if test='measure_class=="jxdy"'>and sfdy is not null</if>
+		<if test='measure_class=="jxqt"'>and (INSTR(REPORTFLAG, 'qt_gas_')>0 or INSTR(REPORTFLAG, '_meaother')>0)</if>
+		<if test='measure_class=="jxzs"'>and design_id is not null</if>
+		<if test='measure_class=="jdcs"'>and INSTR(REPORTFLAG, 'cs_')>0 and MONITOR_ID is not null</if>
+		<if test='measure_class=="jddx"'>and INSTR(REPORTFLAG, 'dx_')>0 and MONITOR_ID is not null</if>
+		<if test='measure_class=="jdbf"'>and INSTR(REPORTFLAG, 'bf_')>0 and MONITOR_ID is not null</if>
+		<if test='measure_class=="jdwh"'>and INSTR(REPORTFLAG, 'wh_')>0 and MONITOR_ID is not null</if>
+		<if test='measure_class=="jdtc"'>and INSTR(REPORTFLAG, 'tc_oil_')>0 and MONITOR_ID is not null</if>
+		<if test='measure_class=="jdtz"'>and INSTR(REPORTFLAG, 'tz_water_')>0 and MONITOR_ID is not null</if>
+		<if test='measure_class=="jddy"'>and sfdy is not null and MONITOR_ID is not null</if>
+		<if test='measure_class=="jdqt"'>and (INSTR(REPORTFLAG, 'qt_gas_')>0 or INSTR(REPORTFLAG, '_meaother')>0) and MONITOR_ID is not null</if>
+		<if test='measure_class=="jdzs"'>and MONITOR_ID is not null</if>
+		order by start_date desc
+		) k where rownum &lt;=#{endRow})where row_num
+		&gt;= #{startRow}
+	</select>
+	
+		<select id="jdtj_query"
+		parameterType="com.sydx.aqsc.entity.Security.JddtglEntity"
+		resultType="com.sydx.aqsc.entity.Security.JddtglEntity">
+		select
+		*
+		from pc_v_supervise_data
+		<where>
+			<if test="design_id!=null and design_id.length() &gt; 0">
+				and design_id =#{design_id}
+			</if>
+			order by update_date asc
+		</where>
+	</select>
+	
+		<!-- 根据id删除 -->
+	<delete id="delJd"
+		parameterType="com.sydx.aqsc.entity.Security.JddtglEntity">
+		delete from pc_supervise_add
+		where
+		design_id=#{design_id}
+	</delete>
+	
+	<!-- 插入数据 -->
+	<insert id="insertJd"
+		parameterType="com.sydx.aqsc.entity.Security.JdryglEntity">
+		insert into
+		pc_supervise_add(
+		design_id,
+		seq_no,
+		sp_name,
+		sup_text,
+		sup_date,
+		data_no
+		)
+		values(
+		#{design_id,jdbcType=VARCHAR},
+		#{seq_no,jdbcType=INTEGER},
+		#{sp_name,jdbcType=VARCHAR},
+		#{sup_text,jdbcType=VARCHAR},
+		TO_DATE(#{sup_date},'yyyy-MM-dd'),
+		#{data_no,jdbcType=INTEGER}
+		)
+	</insert>
+	
+	<select id="jdjl_query1"
+		parameterType="com.sydx.aqsc.entity.Security.JddtglEntity"
+		resultType="com.sydx.aqsc.entity.Security.JddtglEntity">
+		select
+		design_id,
+		seq_no,
+		sp_name,
+		sup_text,
+		to_char(sup_date,'yyyy-MM-dd') sup_date,
+		data_no	
+		from PC_SUPERVISE_ADD
+		<where>
+			<if test="design_id!=null and design_id.length() &gt; 0">
+				and design_id =#{design_id}
+			</if>
+			order by seq_no asc
+		</where>
+	</select>
+	
+		<!-- 更新修改 -->
+	<update id="updateJdjl"
+		parameterType="com.sydx.aqsc.entity.Security.JddtglEntity">
+		update PC_SUPERVISE_ADD
+		set
+		data_no=#{data_no,jdbcType=INTEGER}
+		where design_id
+		=#{design_id}
+	</update>
+	
+	<select id="count_jksb"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity"
+		resultType="int">
+		select count(deviceID) from PC_AQSC_CAM_INFO where  deviceVhost=#{deviceVhost}
+		<!-- <where>
+			<if test="oilfield!=null and oilfield.length() &gt; 0">
+				and oilfield =#{oilfield}
+			</if>
+			
+		</where> -->
+	</select>
+	
+	<select id="jksb_query"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity"
+		resultType="com.sydx.aqsc.entity.Security.CamEntity">
+		select * from
+		(select
+		id,
+	    deviceID,
+	    deviceIP,
+	    deviceUser,
+	    devicePwd,
+	    deviceVhost,
+	    to_char(updatetime,'yyyy-MM-dd hh24:mi:ss') updatetime,
+		rownum
+		row_num
+		from (select * from PC_AQSC_CAM_INFO where  deviceVhost=#{deviceVhost} order by deviceID asc)
+		 <where>
+			<if test="id!=null and id.length() &gt; 0">
+				and id =#{id}
+			</if>
+		</where> 
+		)
+		<where>
+			<if test="endRow!=0">
+				row_num&lt;= #{endRow}
+			</if>
+			<if test="startRow!=0">
+				and row_num &gt;= #{startRow}
+			</if>
+		</where>
+		order by deviceID asc
+	</select>
+	
+		<!-- 插入数据 -->
+	<insert id="updateJksb"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity">
+		insert into
+		PC_AQSC_CAM_INFO(
+        deviceID,
+        deviceIP,
+        deviceUser,
+        devicePwd,
+        deviceVhost,
+        id,
+        updatetime,
+        updateuser
+		)
+		values(
+        #{deviceID,jdbcType=VARCHAR},
+        #{deviceIP,jdbcType=VARCHAR},
+        #{deviceUser,jdbcType=VARCHAR},
+        #{devicePwd,jdbcType=VARCHAR},
+        #{deviceVhost,jdbcType=VARCHAR},
+        #{id,jdbcType=VARCHAR},
+        sysdate,
+        #{updateuser,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<insert id="insertPic"
+		parameterType="com.sydx.aqsc.entity.Security.JddtglEntity">
+		insert into
+		PC_SUPERVISE_PIC(
+		design_id,
+        pic_url,
+        time,
+        text
+		)
+		values(
+		#{design_id,jdbcType=VARCHAR},
+        #{pic_url,jdbcType=VARCHAR},
+        to_date(#{time},'yyyy-MM-dd hh24:mi:ss'),
+        #{text,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+		<select id="checkMaxId"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity"
+		resultType="com.sydx.aqsc.entity.Security.CamEntity">
+		select max(deviceid) as deviceid from PC_AQSC_CAM_INFO
+		<!-- <where>
+			<if test="oilfield!=null and oilfield.length() &gt; 0">
+				and oilfield =#{oilfield}
+			</if>
+			
+		</where> -->
+	</select>
+	
+		<!-- 更新修改 -->
+	<update id="updateSb"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity">
+		update PC_AQSC_CAM_INFO
+		set
+		deviceIP=#{deviceIP,jdbcType=VARCHAR},
+		deviceUser=#{deviceUser,jdbcType=VARCHAR},
+		devicePwd=#{devicePwd,jdbcType=VARCHAR},
+		updatetime =sysdate,
+        updateuser = #{updateuser,jdbcType=VARCHAR}
+		where id
+		=#{id}
+	</update>
+	
+		<delete id="delSb"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity">
+		delete from PC_AQSC_CAM_INFO
+		where
+		id=#{id}
+	</delete>
+	
+		<select id="jksbtd_query"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity"
+		resultType="com.sydx.aqsc.entity.Security.CamEntity">
+		select
+		deviceID,
+		channelID,
+		devicePort,
+		deviceParams,
+		deviceName,
+		devicetype,
+		binduser,
+		model,
+		manufacturer,
+		firmware,
+		to_char(updatetime,'yyyy-MM-dd hh24:mi:ss') updatetime,
+		if_online
+		from PC_AQSC_CAM_DATA 
+		 <where>
+			<if test="deviceID!=null and deviceID.length() &gt; 0">
+				and deviceID =#{deviceID}
+			</if>
+		</where> 
+		order by channelID asc
+	</select>
+	
+			<select id="checkMaxtdId"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity"
+		resultType="com.sydx.aqsc.entity.Security.CamEntity">
+		select max(channelid) as channelid from PC_AQSC_CAM_DATA
+		<!-- <where>
+			<if test="oilfield!=null and oilfield.length() &gt; 0">
+				and oilfield =#{oilfield}
+			</if>
+			
+		</where> -->
+	</select>
+	
+		<insert id="insertJksbtd"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity">
+		insert into
+		insert into
+		PC_AQSC_CAM_DATA(
+        deviceID,
+        channelID,
+		devicePort,
+		deviceParams,
+		deviceName,
+		devicetype,
+		binduser,
+		model,
+		manufacturer,
+		firmware,
+		updatetime,
+		updateuser,
+		if_online,
+		DEVICEVHOST
+		)
+		values(
+        #{deviceID,jdbcType=VARCHAR},
+        #{channelID,jdbcType=VARCHAR},
+        #{devicePort,jdbcType=VARCHAR},
+        #{deviceParams,jdbcType=VARCHAR},
+        #{deviceName,jdbcType=VARCHAR},
+        #{devicetype,jdbcType=VARCHAR},
+        #{binduser,jdbcType=VARCHAR},
+        #{model,jdbcType=VARCHAR},
+        #{manufacturer,jdbcType=VARCHAR},
+        #{firmware,jdbcType=VARCHAR},
+        sysdate,
+        #{updateuser,jdbcType=VARCHAR},
+        #{if_online,jdbcType=VARCHAR},
+        #{devicevhost,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+		<update id="updateJksbtd"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity">
+		update PC_AQSC_CAM_DATA
+		set
+		devicePort=#{devicePort,jdbcType=VARCHAR},
+        deviceParams=#{deviceParams,jdbcType=VARCHAR},
+        deviceName=#{deviceName,jdbcType=VARCHAR},
+        devicetype=#{devicetype,jdbcType=VARCHAR},
+        binduser=#{binduser,jdbcType=VARCHAR},
+        model=#{model,jdbcType=VARCHAR},
+        manufacturer=#{manufacturer,jdbcType=VARCHAR},
+        firmware=#{firmware,jdbcType=VARCHAR},
+        updatetime=sysdate,
+        updateuser=#{updateuser,jdbcType=VARCHAR},
+        if_online=#{if_online,jdbcType=VARCHAR}
+		where channelID
+		=#{channelID}
+	</update>
+	
+		<select id="count_sbtd"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity"
+		resultType="int">
+		select count(deviceID) from PC_AQSC_CAM_DATA  where  deviceVhost=#{deviceVhost}
+	</select>
+	
+	<select id="sbtd_query"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity"
+		resultType="com.sydx.aqsc.entity.Security.CamEntity">
+		select * from
+		(select
+	    deviceID,
+	    channelID,
+	    devicePort,
+		deviceParams,
+		deviceName,
+		devicetype,
+		binduser,
+		model,
+		manufacturer,
+		firmware,
+	    to_char(updatetime,'yyyy-MM-dd hh24:mi:ss') updatetime,
+		rownum
+		row_num
+		from (select * from PC_AQSC_CAM_DATA  where  deviceVhost=#{deviceVhost} order by deviceID ,channelID asc)
+		 <where>
+			<if test="channelID!=null and channelID.length() &gt; 0">
+				and channelID =#{channelID}
+			</if>
+		</where> 
+		)
+		<where>
+			<if test="endRow!=0">
+				row_num&lt;= #{endRow}
+			</if>
+			<if test="startRow!=0">
+				and row_num &gt;= #{startRow}
+			</if>
+		</where>
+		order by deviceID ,channelID asc
+	</select>
+	
+			<insert id="tdBindSave"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity">
+		insert into
+		PC_AQSC_CAM_DATA_UNIT(
+        deviceID,
+        channelID,
+		unit_id,
+		unit_name,
+		well_id,
+		well_common_name,
+		updatetime,
+		updateuser,
+		company_id,
+		company_name,
+		bs,
+		deviceVhost
+		)
+		values(
+        #{deviceID,jdbcType=VARCHAR},
+        #{channelID,jdbcType=VARCHAR},
+        #{unit_id,jdbcType=VARCHAR},
+        #{unit_name,jdbcType=VARCHAR},
+        #{well_id,jdbcType=VARCHAR},
+        #{well_common_name,jdbcType=VARCHAR},
+        sysdate,
+        #{updateuser,jdbcType=VARCHAR},
+        #{company_id,jdbcType=VARCHAR},
+        #{company_name,jdbcType=VARCHAR},
+        #{bs,jdbcType=VARCHAR},
+        #{deviceVhost,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+		<select id="td_bind_query"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity"
+		resultType="com.sydx.aqsc.entity.Security.CamEntity">
+		select
+	    deviceID,
+	    channelID,
+		well_id,
+		well_common_name,
+		unit_id,
+		unit_name,
+		company_id,
+		company_name,
+		bs,
+	    to_char(updatetime,'yyyy-MM-dd hh24:mi:ss') updatetime
+		from PC_AQSC_CAM_DATA_UNIT
+		 <where>
+			<if test="channelID!=null and channelID.length() &gt; 0">
+				and channelID =#{channelID} and well_id is null
+			</if>
+		</where> 
+	</select>
+	
+	
+	<update id="updateTeam"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity">
+		update PC_AQSC_CAM_DATA_UNIT
+		set
+		well_id=#{well_id,jdbcType=VARCHAR},
+        well_common_name=#{well_common_name,jdbcType=VARCHAR},
+        unit_id=#{unit_id,jdbcType=VARCHAR},
+        unit_name=#{unit_name,jdbcType=VARCHAR},
+        company_id=#{company_id,jdbcType=VARCHAR},
+        company_name=#{company_name,jdbcType=VARCHAR},
+        updatetime=sysdate,
+        updateuser=#{updateuser,jdbcType=VARCHAR}
+		where bs
+		=#{bs}
+	</update>
+	
+		<select id="selectJh"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity"
+		resultType="com.sydx.aqsc.entity.Security.CamEntity">
+		select
+		well_id,
+		well_common_name
+		from PC_V_SUP_SGDT_INFO
+		 <where>
+			<!-- <if test="channelID!=null and channelID.length() &gt; 0">
+				and channelID =#{channelID}
+			</if> -->
+		</where> 
+	</select>
+	
+	<select id="bdjh_query"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity"
+		resultType="com.sydx.aqsc.entity.Security.CamEntity">
+		select * from
+		(select
+	    deviceID,
+	    channelID,
+	    well_id,
+		well_common_name,
+		bs,
+	    to_char(updatetime,'yyyy-MM-dd hh24:mi:ss') updatetime,
+		rownum
+		row_num
+		from (select * from PC_AQSC_CAM_DATA_UNIT where well_id is not null)
+		 <where>
+			<if test="channelID!=null and channelID.length() &gt; 0">
+				and channelID =#{channelID} and well_id is not null
+			</if>
+		</where> 
+		)
+		<where>
+			<if test="endRow!=0">
+				row_num&lt;= #{endRow}
+			</if>
+			<if test="startRow!=0">
+				and row_num &gt;= #{startRow}
+			</if>
+		</where>
+	</select>
+	
+		
+		<select id="count_bdjh"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity"
+		resultType="int">
+		select count(well_id) from PC_AQSC_CAM_DATA_UNIT 
+		<where>
+			<if test="channelID!=null and channelID.length() &gt; 0">
+				and channelID =#{channelID} and well_id is not null
+			</if>
+		</where>
+	</select>
+	
+			<delete id="delJh"
+		parameterType="com.sydx.aqsc.entity.Security.CamEntity">
+		delete from PC_AQSC_CAM_DATA_UNIT
+		where
+		bs=#{bs}
+	</delete>
+	
+	
+
+</mapper>

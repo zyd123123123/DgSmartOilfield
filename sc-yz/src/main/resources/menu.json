@@ -1,0 +1,259 @@
+{
+    "menu": [{
+      "redirect": "",
+      "path": "/home",
+      "component": "home",
+      "route": "1",
+      "meta": {
+        "keepAlive": false,
+        "internalOrExternal": false,
+        "icon": "mdi-home-outline",
+        "title": "首页"
+      },
+      "name": "home",
+      "id": "1322510352537137153"
+    }, {
+      "redirect": "/sys/dict",
+      "path": "/sys",
+      "component": "sys",
+      "route": "1",
+      "children": [{
+        "path": "/sys/user",
+        "component": "sys/user",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "用户管理"
+        },
+        "name": "sys-user",
+        "id": "1322512556564197378"
+      }, {
+        "path": "/sys/role",
+        "component": "sys/role",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "角色管理"
+        },
+        "name": "sys-role",
+        "id": "1322512813356265474"
+      }, {
+        "path": "/sys/position",
+        "component": "sys/position",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "职位管理"
+        },
+        "name": "sys-position",
+        "id": "1322512939797753857"
+      }, {
+        "path": "/sys/catalog",
+        "component": "sys/catalog",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "分类目录"
+        },
+        "name": "sys-catalog",
+        "id": "1322513338608955394"
+      }, {
+        "path": "/sys/menu",
+        "component": "sys/menu",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "菜单管理"
+        },
+        "name": "sys-menu",
+        "id": "1322513475829805057"
+      }, {
+        "path": "/sys/quartz",
+        "component": "sys/quartz",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "定时任务"
+        },
+        "name": "sys-quartz",
+        "id": "1322513605668679681"
+      }, {
+        "path": "/sys/datasource",
+        "component": "sys/datasource",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "多数据源"
+        },
+        "name": "sys-datasource",
+        "id": "1322513736619044866"
+      }, {
+        "path": "/sys/log",
+        "component": "sys/log",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "系统日志"
+        },
+        "name": "sys-log",
+        "id": "1322513874989133825"
+      }, {
+        "path": "/sys/dict",
+        "component": "sys/dict",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "字典管理"
+        },
+        "name": "sys-dict",
+        "id": "1322514502884831233"
+      }, {
+        "path": "/sys/generate",
+        "component": "sys/generate",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "代码生成"
+        },
+        "name": "sys-generate",
+        "id": "1322517488704991233"
+      }],
+      "meta": {
+        "keepAlive": false,
+        "internalOrExternal": false,
+        "icon": "mdi-cog-outline",
+        "title": "系统管理"
+      },
+      "name": "sys",
+      "id": "1322510550504091650"
+    }, {
+      "redirect": "/bi/view",
+      "path": "/bi",
+      "component": "bi",
+      "route": "1",
+      "children": [{
+        "path": "/bi/view",
+        "component": "bi/view",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "视图管理"
+        },
+        "name": "bi-view",
+        "id": "1322518332271800321"
+      }, {
+        "path": "/bi/screen",
+        "component": "bi/screen",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "电子报告"
+        },
+        "name": "bi-screen",
+        "id": "1322518511003676674"
+      }],
+      "meta": {
+        "keepAlive": false,
+        "internalOrExternal": false,
+        "icon": "mdi-chart-areaspline",
+        "title": "数据可视化"
+      },
+      "name": "bi",
+      "id": "1322510958609870849"
+    }, {
+      "redirect": "/monitor/task",
+      "path": "/monitor",
+      "component": "monitor",
+      "route": "1",
+      "children": [{
+        "path": "/monitor/task",
+        "component": "monitor/task",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "定时任务"
+        },
+        "name": "monitor-task",
+        "id": "1322518627953455106"
+      }],
+      "meta": {
+        "keepAlive": false,
+        "internalOrExternal": false,
+        "icon": "mdi-monitor-eye",
+        "title": "系统监控"
+      },
+      "name": "monitor",
+      "id": "1322511142429437953"
+    }, {
+      "redirect": "/demo/demo1",
+      "path": "/demo",
+      "component": "demo",
+      "route": "1",
+      "children": [{
+        "path": "/demo/demo1",
+        "component": "demo/demo1",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "DEMO1"
+        },
+        "name": "demo-demo1",
+        "id": "1323515504739880962"
+      }, {
+        "path": "/demo/demo2",
+        "component": "demo/demo2",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "列过滤"
+        },
+        "name": "demo-demo2",
+        "id": "1322518835743469570"
+      }, {
+        "path": "/demo/demo3",
+        "component": "demo/demo3",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "左分类"
+        },
+        "name": "demo-demo3",
+        "id": "1322518940718510081"
+      }, {
+        "path": "/demo/demo4",
+        "component": "demo/demo4",
+        "route": "1",
+        "meta": {
+          "keepAlive": false,
+          "internalOrExternal": false,
+          "title": "GridTree"
+        },
+        "name": "demo-demo4",
+        "id": "1323236521490288641"
+      }],
+      "meta": {
+        "keepAlive": false,
+        "internalOrExternal": false,
+        "icon": "mdi-desktop-mac",
+        "title": "DEMO"
+      },
+      "name": "demo",
+      "id": "1322511342875226114"
+    }]
+  }

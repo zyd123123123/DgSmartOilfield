@@ -1,0 +1,670 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.SgjdjcDao">
+
+
+    <select id="listFlb" parameterType="com.cyrj.jxzy.entity.Constractor.CbsFj4Entity"
+            resultType="com.cyrj.jxzy.entity.Constractor.CbsFj4Entity">
+        select
+        jcxm1,
+        jcxm2,
+        jcxm3,
+        jdjcnr,
+        datatime,
+        id
+        from PC_CBS_FJ4  where  oilfield=#{oilfield}
+        <where>
+            <if test="jcxm1!=null   and jcxm1.length() &gt;0">
+                and PC_CBS_FJ4.jcxm1 in (${jcxm1})
+            </if>
+        </where>
+        order by id
+        <!-- to_number(regexp_substr(sort,'[0-9]*[0-9]',1)) -->
+    </select>
+    <!-- 根据id删除 -->
+    <delete id="deleteFlbSave" parameterType="com.cyrj.jxzy.entity.Constractor.CbsFj4Entity">
+delete from PC_CBS_FJ4   where  oilfield=#{oilfield}
+
+</delete>
+    <!-- 插入数据 -->
+    <insert id="insertFlbSave" parameterType="com.cyrj.jxzy.entity.Constractor.CbsFj4Entity">
+        insert into
+        PC_CBS_FJ4(
+        jcxm1,
+        jcxm2,
+        jcxm3,
+        jdjcnr,
+        datatime,
+        id,
+        oilfield
+        )
+        (
+        <foreach collection="entity_list" index="" item="item" separator="union all">
+            select
+            #{item.jcxm1,jdbcType=VARCHAR},
+            #{item.jcxm2,jdbcType=VARCHAR},
+            #{item.jcxm3,jdbcType=VARCHAR},
+            #{item.jdjcnr,jdbcType=VARCHAR},
+            sysdate,
+            #{item.id,jdbcType=INTEGER},
+            #{oilfield}
+            from dual
+        </foreach>
+        )
+    </insert>
+
+    <select id="contShowList" parameterType="com.cyrj.jxzy.entity.Constractor.Sgjdjc_J_ListEntity" resultType="int">
+        select count(*) from (
+        select DISTINCT CONSTRUCTION_ID from V_CBS_SGJDJC
+        where OILFIELD=#{oilfield} and  START_TIME is not null and (COMPLETE_TIME is  null or trunc(COMPLETE_TIME,'DD') &gt;=trunc(add_months(SYSDATE,-12),'DD') )
+        <if test="attribute !=null and attribute.length() &gt; 0 and attribute==1 ">
+            and op_team like #{search}||'%'
+        </if>
+        <if test="attribute !=null and attribute.length() &gt; 0 and attribute==2 ">
+            and cydid like #{search}||'%'
+        </if>
+        <if test="well_common_name!=null   and well_common_name.length() &gt;0">
+            and well_common_name like '%'||UPPER(#{well_common_name})||'%'
+        </if>
+        <if test="well_purpose!=null   and well_purpose.length() &gt;0">
+            and well_purpose like '%'||#{well_purpose}||'%'
+        </if>
+        <if test="sgdw!=null   and  sgdw.length() &gt;0">
+            AND op_team like #{sgdw}||'%'
+        </if>
+        <if test="scdw!=null   and scdw.length() &gt;0">
+            AND  CYDID LIKE '%'||#{scdw}||'%'
+        </if>
+        )
+    </select>
+    <select id="showList" parameterType="com.cyrj.jxzy.entity.Constractor.Sgjdjc_J_ListEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.Sgjdjc_J_ListEntity">
+
+        SELECT W.* from(
+        SELECT Z.* ,rownum row_num from (
+        select DISTINCT CONSTRUCTION_ID,DESIGN_NUM, WELL_COMMON_NAME,WELL_PURPOSE,SCDW,CYDID,SGDW,OP_TEAM,zylx,
+        to_char(COMPLETE_TIME,'yyyy-mm-dd')COMPLETE_TIME, to_char(START_TIME,'yyyy-mm-dd')START_TIME from V_CBS_SGJDJC
+        where OILFIELD=#{oilfield} and START_TIME is not null and (COMPLETE_TIME is null or trunc(COMPLETE_TIME,'DD')
+        &gt;=trunc(add_months(SYSDATE,-12),'DD') )
+        <if test="attribute !=null and attribute.length() &gt; 0 and attribute==1 ">
+            and op_team like #{search}||'%'
+        </if>
+        <if test="attribute !=null and attribute.length() &gt; 0 and attribute==2 ">
+            and cydid like #{search}||'%'
+        </if>
+        <if test="well_common_name!=null   and well_common_name.length() &gt;0">
+            and well_common_name like '%'||UPPER(#{well_common_name})||'%'
+        </if>
+        <if test="well_purpose!=null   and well_purpose.length() &gt;0">
+            and well_purpose like '%'||#{well_purpose}||'%'
+        </if>
+        <if test="sgdw!=null   and  sgdw.length() &gt;0">
+            AND op_team like #{sgdw}||'%'
+        </if>
+        <if test="scdw!=null   and scdw.length() &gt;0">
+            AND  CYDID LIKE '%'||#{scdw}||'%'
+        </if>
+        order by NVL (COMPLETE_TIME,'3333-3-3') DESC,start_time desc
+        ) Z )W
+        where row_num &lt;=#{endRow} and row_num &gt;= #{startRow}
+
+    </select>
+    <select id="listZylx" parameterType="com.cyrj.jxzy.entity.Constractor.Sgjdjc_J_ListEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.Sgjdjc_J_ListEntity">
+
+
+  select csdl,csxl,cslb,cssil,sjid from gysj_add where CONSTRUCTION_ID=#{construction_id}
+
+</select>
+
+
+
+    <insert id="insertSgjdjclrSave1" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity">
+
+insert into
+PC_CBS_SUPERVISION_INSPECTION(
+oilfield,
+JCID,
+TEAM_QUALIFICATION,
+WELL_COMMON_NAME,
+WELL_PURPOSE,
+ITEM_NAME,
+SGDW,
+JCZJ,
+JCR,
+JCSJ,
+SGDWFZR_JC,
+DATETIME,
+design_num,
+construction_id,
+TEAM_ID ,
+LRR ,
+SIGN
+)
+values 
+(
+#{oilfield,jdbcType=VARCHAR},
+#{jcid,jdbcType=VARCHAR},
+#{team_qualification,jdbcType=VARCHAR},
+#{well_common_name,jdbcType=VARCHAR},
+#{well_purpose,jdbcType=VARCHAR},
+#{item_name,jdbcType=VARCHAR},
+#{sgdw,jdbcType=VARCHAR},
+#{jczj,jdbcType=VARCHAR},
+#{jcr,jdbcType=VARCHAR},
+TO_DATE('${jcsj}','yyyy-MM-dd'),
+#{sgdwfzr_jc,jdbcType=VARCHAR},
+sysdate ,
+#{design_num,jdbcType=VARCHAR},
+#{construction_id,jdbcType=VARCHAR} ,
+#{op_team,jdbcType=VARCHAR},
+#{lrr,jdbcType=VARCHAR},
+'1'
+)
+</insert>
+
+    <insert id="insertSgjdjclrSave2" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity">
+        insert into
+        PC_CBS_SUP_INS_CONTENT(
+        oilfield,
+        jcid,
+        JCXM1,
+        JCXM2,
+        JCXM3,
+        CZWT,
+        JCR,
+        CZWTALLM,
+        datatime,
+        CREATE_USER_ID
+        )
+        (
+        <foreach collection="el" index="" item="item" separator="union all">
+            select
+            #{oilfield,jdbcType=VARCHAR},
+            #{item.jcid,jdbcType=VARCHAR},
+            #{item.jcxm1,jdbcType=VARCHAR},
+            #{item.jcxm2,jdbcType=VARCHAR},
+            #{item.jcxm3,jdbcType=VARCHAR},
+            #{item.czwt,jdbcType=VARCHAR},
+            #{item.jcr,jdbcType=VARCHAR},
+            #{item.czwtallm,jdbcType=INTEGER},
+            sysdate,
+            #{lrr,jdbcType=VARCHAR}
+            from dual
+        </foreach>
+        )
+    </insert>
+
+    <!--  <insert id="insertSgjdjclrSave2" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity">
+    insert into PC_CBS_SUP_INS_CONTENT(
+            jcid,
+            JCXM1,
+            JCXM2,
+            JCXM3,
+            JCNRID,
+            CZWT,
+            JCR,
+            ZGQK,
+            FCR,
+            datatime
+            )
+                (
+             <foreach collection="entity_list" index="" item="item" separator="union all">
+                 <if test="item.czwt!=null   and item.czwt.length() &gt;0">
+                select
+                    #{jcid,jdbcType=VARCHAR},
+                    #{item.jcxm1,jdbcType=VARCHAR},
+                    #{item.jcxm2,jdbcType=VARCHAR},
+                    #{item.jcxm3,jdbcType=VARCHAR},
+                    #{item.jcnrid,jdbcType=VARCHAR},
+                     #{item.czwt,jdbcType=VARCHAR},
+                    #{jcr,jdbcType=VARCHAR},
+                    #{item.zgqk,jdbcType=VARCHAR},
+                    #{fcr,jdbcType=VARCHAR},
+                    sysdate
+                  from dual
+               </if>
+            </foreach>
+            )
+    </insert>
+     -->
+    <delete id="deleteSgjdjclrSave" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity">
+
+  delete from PC_CBS_SUP_INS_WTXS  where CONSTRUCTION_ID=#{construction_id} 
+
+</delete>
+    <insert id="insertSgjdjclrSave3" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity">
+ insert into PC_CBS_SUP_INS_WTXS
+ (OILFIELD,CREATE_USER_ID, CONSTRUCTION_ID,WELL_COMMON_NAME,DESIGN_NUM,JCXM1,JCXM2,JCXM3,LJWTXS,DATETIME,ZXS,XH)
+	SELECT
+	'${oilfield}' OILFIELD,
+	'${lrr}' CREATE_USER_ID,
+	'${construction_id}' CONSTRUCTION_ID,
+	'${well_common_name}' WELL_COMMON_NAME,
+	'${design_num}' design_num,
+	 H.JCXM1,
+	 H.JCXM2,
+	 H.JCXM3,
+	 H.LJWTXS,
+	 sysdate,
+	 H. ZXS,
+	 H.xh 
+	 FROM(
+			SELECT ROWNUM xh ,F.jcxm1,F.jcxm2,F.jcxm3,F.ZXS ,
+			 CASE  WHEN  G.LJWTXS is NULL THEN 0 ELSE G.LJWTXS END LJWTXS FROM (
+					SELECT a.id, a.jcxm1,a.jcxm2,a.jcxm3,b.ZXS  FROM (
+						select id, jcxm1,jcxm2,jcxm3 FROM (
+								select id ,jcxm1,jcxm2,jcxm3,row_number() over(partition by jcxm1,jcxm2,jcxm3 order by id) row_number from (SELECT *  FROM PC_CBS_FJ4 WHERE OILFIELD=#{oilfield}) A
+						 ) WHERE row_number=1
+					) a
+					INNER JOIN (select jcxm1,jcxm2,jcxm3,COUNT(*) ZXS from  (SELECT *  FROM PC_CBS_FJ4 WHERE OILFIELD=#{oilfield}) A GROUP BY jcxm1,jcxm2,jcxm3 )b
+					ON a.jcxm1=b.jcxm1 and a.jcxm2=b.jcxm2 and a.jcxm3=b.jcxm3
+					ORDER BY a.id
+			)F
+			LEFT JOIN (SELECT Q.JCXM1,Q.JCXM2,Q.JCXM3,sum(CZWTALLM) LJWTXS FROM PC_CBS_SUPERVISION_INSPECTION W
+			INNER JOIN PC_CBS_SUP_INS_CONTENT Q  ON Q.JCID=W.JCID    WHERE W.CONSTRUCTION_ID=#{construction_id}
+			          GROUP BY Q.JCXM1,Q.JCXM2,Q.JCXM3) G
+			  ON F.jcxm1=G.jcxm1 and F.jcxm2=G.jcxm2 and F.jcxm3=G.jcxm3
+	) H
+
+</insert>
+    <!--
+    <insert id="insertSgjdjclrSave3" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity">
+     insert into PC_CBS_SUP_INS_WTXS
+     (DESIGN_NUM,CONSTRUCTION_ID,WELL_COMMON_NAME,JCXM1,JCXM2,JCXM3,LJWTXS,DATETIME)
+        SELECT
+        '${design_num}' DESIGN_NUM,
+        '${construction_id}' CONSTRUCTION_ID,
+        '${well_common_name}' WELL_COMMON_NAME,
+         A.JCXM1,
+         A.JCXM2,
+         A.JCXM3,
+         SUM(LJWTXS) LJWTXS,
+         sysdate
+         FROM(
+        SELECT
+        PC_CBS_SUP_INS_CONTENT.JCXM1,
+        PC_CBS_SUP_INS_CONTENT.JCXM2,
+        PC_CBS_SUP_INS_CONTENT.JCXM3,
+        PC_CBS_SUP_INS_CONTENT.LJWTXS
+        FROM PC_CBS_SUPERVISION_INSPECTION
+        INNER JOIN PC_CBS_SUP_INS_CONTENT ON PC_CBS_SUP_INS_CONTENT.JCID = PC_CBS_SUPERVISION_INSPECTION.JCID
+        WHERE
+        PC_CBS_SUPERVISION_INSPECTION.WELL_COMMON_NAME=#{well_common_name} AND
+        PC_CBS_SUPERVISION_INSPECTION.CONSTRUCTION_ID=#{construction_id}
+        and  CZWT IS NOT NULL ) A
+        GROUP BY A.JCXM1,A.JCXM2,A.JCXM3
+    </insert>
+    -->
+
+    <select id="contshowList_jl" parameterType="com.cyrj.jxzy.entity.Constractor.Sgjdjc_J_ListEntity" resultType="int">
+        select count(*) from (
+        select DISTINCT C.CONSTRUCTION_ID from PC_CBS_SUPERVISION_INSPECTION C
+        INNER JOIN V_CBS_SGJDJC a on c.CONSTRUCTION_ID =a.CONSTRUCTION_ID
+        <where> C.OILFIELD=#{oilfield}
+            <if test="sign!=null   and sign.length() &gt;0">
+                and c.sign= #{sign}
+            </if>
+
+            <if test="attribute!=null   and attribute.length() &gt;0 and attribute=='1'">
+                and c.TEAM_ID like #{search}||'%'
+            </if>
+            <if test="attribute!=null   and attribute.length() &gt;0 and attribute=='2'">
+                and a.cydid like #{search}||'%'
+            </if>
+            <if test="well_common_name!=null   and well_common_name.length() &gt;0">
+                and a.well_common_name like '%'||UPPER(#{well_common_name})||'%'
+            </if>
+            <if test="well_purpose!=null   and well_purpose.length() &gt;0">
+                and a.well_purpose like '%'||#{well_purpose}||'%'
+            </if>
+            <if test="scdw!=null   and scdw.length() &gt;0">
+                AND  a.CYDID LIKE '%'||#{scdw}||'%'
+            </if>
+            <if test="sgdw!=null   and  sgdw.length() &gt;0">
+                AND c.TEAM_ID like #{sgdw}||'%'
+            </if>
+        </where>
+        )
+    </select>
+    <select id="showList_jl" parameterType="com.cyrj.jxzy.entity.Constractor.Sgjdjc_J_ListEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.Sgjdjc_J_ListEntity">
+        SELECT W.* from(
+        SELECT Z.* ,rownum row_num from (
+        select DISTINCT * FROM(
+        select
+        c.DESIGN_NUM,
+        c.CONSTRUCTION_ID,
+        c.TEAM_QUALIFICATION,
+        c.WELL_COMMON_NAME,
+        c.WELL_PURPOSE,
+        c.ITEM_NAME,
+        c.SGDW,a.scdw ,
+        to_char(a.START_TIME,'yyyy-mm-dd')START_TIME,
+        to_char(a.COMPLETE_TIME,'yyyy-mm-dd')COMPLETE_TIME,
+        NVL (TO_CHAR (A .COMPLETE_TIME,'yyyy-mm-dd' ),'3333-3-3') COMPLETE_TIME2
+        from PC_CBS_SUPERVISION_INSPECTION C
+        INNER JOIN V_CBS_SGJDJC a on c.CONSTRUCTION_ID =a.CONSTRUCTION_ID
+        <where> C.OILFIELD=#{oilfield}
+            <if test="sign!=null   and sign.length() &gt;0">
+                and c.sign= #{sign}
+            </if>
+
+            <if test="attribute!=null   and attribute.length() &gt;0 and attribute=='1'">
+                and c.TEAM_ID like #{search}||'%'
+            </if>
+            <if test="attribute!=null   and attribute.length() &gt;0 and attribute=='2'">
+                and a.cydid like #{search}||'%'
+            </if>
+            <if test="well_common_name!=null   and well_common_name.length() &gt;0">
+                and a.well_common_name like '%'||UPPER(#{well_common_name})||'%'
+            </if>
+            <if test="well_purpose!=null   and well_purpose.length() &gt;0">
+                and a.well_purpose like '%'||#{well_purpose}||'%'
+            </if>
+            <if test="scdw!=null   and scdw.length() &gt;0">
+                AND  a.CYDID LIKE '%'||#{scdw}||'%'
+            </if>
+            <if test="sgdw!=null   and  sgdw.length() &gt;0">
+                AND c.TEAM_ID like #{sgdw}||'%'
+            </if>
+        </where>
+        ) ORDER BY COMPLETE_TIME2 DESC
+        ) Z )W
+        where row_num &lt;=#{endRow} and row_num &gt;= #{startRow}
+    </select>
+
+    <select id="jdjcmxList" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity"  resultType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity">
+        SELECT Z.* ,rownum row_num from (
+        SELECT
+        OILFIELD,
+        JCID,
+        DESIGN_NUM,
+        CONSTRUCTION_ID,
+        TEAM_ID,
+        TEAM_QUALIFICATION,
+        WELL_COMMON_NAME,
+        WELL_PURPOSE,
+        ITEM_NAME,
+        SGDW,
+        JCZJ,
+        JCR,
+        to_char(JCSJ,'yyyy-mm-dd')JCSJ,
+        SGDWFZR_JC,
+        FCJG,
+        FCR,
+        to_char(FCSJ,'yyyy-mm-dd')FCSJ,
+        SGDWFZR_FC,
+        ZGJG,
+        ZGR,
+        to_char(ZGSJ,'yyyy-mm-dd')ZGSJ,
+        SGDWFZR_ZG,
+        SIGN,
+        to_char(DATETIME,'yyyy-mm-dd')DATETIME,
+        LRR
+        FROM
+        PC_CBS_SUPERVISION_INSPECTION
+        where construction_id=#{construction_id}
+        <if test="sign!=null   and sign.length() &gt;0">
+            and sign= #{sign}
+        </if>
+        order by DATETIME desc
+        )Z
+    </select>
+
+    <select id="jcjl_liulanSelect" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity">
+		SELECT
+			OILFIELD,
+			JCID,
+			DESIGN_NUM,
+			CONSTRUCTION_ID,
+			TEAM_ID,
+			TEAM_QUALIFICATION,
+			WELL_COMMON_NAME,
+			WELL_PURPOSE,
+			ITEM_NAME,
+			SGDW,
+			JCZJ,
+			JCR,
+			 to_char(JCSJ,'yyyy-mm-dd')JCSJ,
+			SGDWFZR_JC,
+			ZGJG,
+			ZGR,
+			to_char(ZGSJ,'yyyy-mm-dd')ZGSJ,
+			SGDWFZR_ZG,
+			FCJG,
+			SGDWFZR_FC,
+			FCR,
+			to_char(FCSJ,'yyyy-mm-dd')FCSJ,
+			SGDWFZR_FC,
+			to_char(DATETIME,'yyyy-mm-dd')DATETIME,
+			LRR
+			FROM
+			PC_CBS_SUPERVISION_INSPECTION
+			where JCID=#{jcid}
+	</select>
+
+    <select id="jcjl_liulanList" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity">
+        SELECT
+        A.JCXM1,
+        A.JCXM2,
+        A.JCXM3,
+        b.CZWT,
+        b.JCR,
+        b.ZGQK,
+        b.ZGR,
+        b.FCQK,
+        b.FCR,
+        d.img_tab1,
+        d.img_tab2,
+        d.img_tab3
+        FROM PC_CBS_SUP_INS_WTXS A
+        INNER JOIN PC_CBS_SUPERVISION_INSPECTION c ON c.CONSTRUCTION_ID = A.CONSTRUCTION_ID
+        LEFT JOIN (SELECT * FROM PC_CBS_SUP_INS_CONTENT WHERE JCID =#{jcid}) b
+        ON b.JCXM1 = A.JCXM1 AND b.JCXM2 = A.JCXM2 AND b.JCXM3 = A.JCXM3
+        LEFT JOIN (
+        SELECT JCID ,JCXM1,JCXM2,JCXM3,
+        MAX(CASE TAB WHEN '1' THEN '1' ELSE '' END ) img_tab1,
+        MAX(CASE TAB WHEN '2' THEN '1' ELSE '' END ) img_tab2,
+        MAX(CASE TAB WHEN '3' THEN '1' ELSE '' END ) img_tab3
+        FROM PC_CBS_SUP_INS_IMG
+        WHERE JCID=#{jcid}
+        GROUP BY JCID ,JCXM1,JCXM2,JCXM3
+        )d ON d.JCXM1 = A.JCXM1 AND d.JCXM2 = A.JCXM2 AND d.JCXM3 = A.JCXM3
+        WHERE c.JCID =#{jcid}
+        ORDER BY A.XH
+    </select>
+    <delete id="jcjlRemove" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity">
+	
+	 begin	
+	 delete from PC_CBS_SUPERVISION_INSPECTION where JCID=#{jcid}; 
+	 delete from PC_CBS_SUP_INS_CONTENT where JCID=#{jcid};
+	 delete from PC_CBS_SUP_INS_WTXS where construction_id=#{construction_id};
+	 insert into PC_CBS_SUP_INS_WTXS
+         (CONSTRUCTION_ID,WELL_COMMON_NAME,DESIGN_NUM,JCXM1,JCXM2,JCXM3,LJWTXS,DATETIME,ZXS,XH)
+			SELECT 
+			'${construction_id}' CONSTRUCTION_ID,
+			'${well_common_name}' WELL_COMMON_NAME,
+			'${design_num}' design_num,
+			 H.JCXM1,
+			 H.JCXM2,
+			 H.JCXM3,
+			 H.LJWTXS,
+			 sysdate,
+			 H. ZXS,
+			 H.xh 
+			 FROM(
+					SELECT ROWNUM xh ,F.jcxm1,F.jcxm2,F.jcxm3,F.ZXS ,
+					 CASE  WHEN  G.LJWTXS is NULL THEN 0 ELSE G.LJWTXS END LJWTXS FROM (
+							SELECT a.id, a.jcxm1,a.jcxm2,a.jcxm3,b.ZXS  FROM (
+								select id, jcxm1,jcxm2,jcxm3 FROM (
+										select id ,jcxm1,jcxm2,jcxm3,row_number() over(partition by jcxm1,jcxm2,jcxm3 order by id) row_number from (SELECT *  FROM PC_CBS_FJ4 WHERE OILFIELD=#{oilfield}) A
+								 ) WHERE row_number=1
+							) a
+							INNER JOIN (select jcxm1,jcxm2,jcxm3,COUNT(*) ZXS from  (SELECT *  FROM PC_CBS_FJ4 WHERE OILFIELD=#{oilfield}) A GROUP BY jcxm1,jcxm2,jcxm3 )b
+							ON a.jcxm1=b.jcxm1 and a.jcxm2=b.jcxm2 and a.jcxm3=b.jcxm3
+							ORDER BY a.id
+					)F
+					LEFT JOIN (SELECT Q.JCXM1,Q.JCXM2,Q.JCXM3,COUNT(*) LJWTXS FROM PC_CBS_SUPERVISION_INSPECTION W
+					INNER JOIN PC_CBS_SUP_INS_CONTENT Q  ON Q.JCID=W.JCID    WHERE W.CONSTRUCTION_ID=#{construction_id}
+					          GROUP BY Q.JCXM1,Q.JCXM2,Q.JCXM3) G
+					  ON F.jcxm1=G.jcxm1 and F.jcxm2=G.jcxm2 and F.jcxm3=G.jcxm3
+			) H ;
+	 end;	
+	</delete>
+    <select id="sgjdjcjl_hzList" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity">
+	SELECT K.JCXM1,K.JCXM2,K.JCXM3,K.XH ,G.CZWT,G.JCR,G.ZGQK,G.ZGR,G.FCQK,G.FCR,G.JCSJ,G.FCSJ,G.ZGSJ FROM PC_CBS_SUP_INS_WTXS K
+		LEFT JOIN (
+				SELECT B.JCXM1,B.JCXM2,B.JCXM3,B.CZWT,B.JCR,B.ZGQK,B.ZGR,B.FCQK,B.FCR,to_char(A.JCSJ,'yyyy-mm-dd')JCSJ,to_char(A.FCSJ,'yyyy-mm-dd')FCSJ,to_char(A.ZGSJ,'yyyy-mm-dd')ZGSJ  
+				FROM PC_CBS_SUPERVISION_INSPECTION A
+				INNER JOIN PC_CBS_SUP_INS_CONTENT B ON B.JCID = A.JCID 
+				WHERE A.CONSTRUCTION_ID=#{construction_id}
+		 )G ON G.JCXM1=K.JCXM1 AND G.JCXM2=K.JCXM2 and G.JCXM3=K.JCXM3 
+		 	WHERE K.CONSTRUCTION_ID=#{construction_id}
+		ORDER BY K.XH,G.JCSJ	
+	  </select>
+
+    <select id="sgjdjcjl_hzSelect" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity">
+		SELECT
+			OILFIELD,
+			JCID,
+			DESIGN_NUM,
+			CONSTRUCTION_ID,
+			TEAM_ID,
+			TEAM_QUALIFICATION,
+			WELL_COMMON_NAME,
+			WELL_PURPOSE,
+			ITEM_NAME,
+			SGDW,
+			JCZJ,
+			JCR,
+			 to_char(JCSJ,'yyyy-mm-dd')JCSJ,
+			SGDWFZR_JC,
+			ZGJG,
+			FCR,
+			to_char(FCSJ,'yyyy-mm-dd')FCSJ,
+			SGDWFZR_FC,
+			to_char(DATETIME,'yyyy-mm-dd')DATETIME,
+			LRR
+			FROM
+			PC_CBS_SUPERVISION_INSPECTION
+			where CONSTRUCTION_ID=#{construction_id} and 	rownum=1
+	</select>
+    <delete id="deleteImage" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjcUploadEntity">
+	
+	delete from PC_CBS_SUP_INS_IMG where JCID=#{jcid} and JCXM1=#{jcxm1} and JCXM2=#{jcxm2} and JCXM3=#{jcxm3} and tab=#{tab}
+	
+	</delete>
+    <insert id="insertImage" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjcUploadEntity">
+
+        insert into
+        PC_CBS_SUP_INS_IMG(
+        OILFIELD,
+        IMGID,
+        JCID,
+        JCXM1,
+        JCXM2,
+        JCXM3,
+        fileuri,
+        fileoldname,
+        TAB,
+        INPERSON,
+        INTIME
+        )
+        (
+        <foreach collection="el" index="" item="item" separator="union all">
+            select
+            #{item.oilfield,jdbcType=VARCHAR},
+            #{item.imgid,jdbcType=VARCHAR},
+            #{item.jcid,jdbcType=VARCHAR},
+            #{item.jcxm1,jdbcType=VARCHAR},
+            #{item.jcxm2,jdbcType=VARCHAR},
+            #{item.jcxm3,jdbcType=VARCHAR},
+            #{item.fileuri,jdbcType=VARCHAR},
+            #{item.fileoldname,jdbcType=VARCHAR},
+            #{item.tab,jdbcType=VARCHAR},
+            #{item.inperson,jdbcType=VARCHAR},
+            sysdate
+            from dual
+        </foreach>
+        )
+    </insert>
+    <select id="imageView" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjcUploadEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.SgjdjcUploadEntity">
+	   select * from PC_CBS_SUP_INS_IMG  where JCID=#{jcid} and JCXM1=#{jcxm1} and JCXM2=#{jcxm2} and JCXM3=#{jcxm3} and tab=#{tab}
+	</select>
+
+    <select id="select" parameterType="com.cyrj.jxzy.entity.Constractor.Sgjdjc_J_ListEntity"
+            resultType="java.lang.String">
+	        select XM from PC_CBS_PERSON  where GW='队长' and TERMID=#{op_team} 
+	</select>
+
+    <update id="sgjdjczgUpdate1" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity">
+
+        update PC_CBS_SUPERVISION_INSPECTION
+        <set>
+            <if test="fcjg != null">
+                FCJG =#{fcjg,jdbcType=VARCHAR},
+            </if>
+            <if test="sgdwfzr_fc != null">
+                SGDWFZR_FC =#{sgdwfzr_fc,jdbcType=VARCHAR},
+            </if>
+            <if test="fcr != null">
+                FCR =#{fcr,jdbcType=VARCHAR},
+            </if>
+            <if test="fcsj != null">
+                FCSJ =TO_DATE('${fcsj}','yyyy-MM-dd'),
+            </if>
+            <if test="zgjg != null">
+                ZGJG =#{zgjg,jdbcType=VARCHAR},
+            </if>
+            <if test="sgdwfzr_zg != null">
+                SGDWFZR_ZG =#{sgdwfzr_zg,jdbcType=VARCHAR},
+            </if>
+            <if test="zgr != null">
+                ZGR =#{zgr,jdbcType=VARCHAR},
+            </if>
+            <if test="zgsj != null">
+                ZGSJ =TO_DATE('${zgsj}','yyyy-MM-dd'),
+            </if>
+            <if test="sign!= null">
+                SIGN=#{sign,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where JCID=#{jcid}
+    </update>
+    <update id="sgjdjczgUpdate2" parameterType="com.cyrj.jxzy.entity.Constractor.SgjdjclrEntity">
+
+        <foreach collection="entity_list" item="item" index="index" open="begin" close=";end;" separator=";">
+            UPDATE PC_CBS_SUP_INS_CONTENT
+            <set>
+                <if test="sign ==2">
+                    ZGQK=#{item.zgqk,jdbcType=VARCHAR},
+                    ZGR=#{zgr,jdbcType=VARCHAR},
+                </if>
+                <if test="sign ==3">
+                    FCQK=#{item.fcqk,jdbcType=VARCHAR},
+                    FCR=#{fcr,jdbcType=VARCHAR},
+                </if>
+            </set>
+            where JCID = #{item.jcid,jdbcType=VARCHAR} and JCXM1=#{item.jcxm1,jdbcType=VARCHAR}
+            and JCXM2=#{item.jcxm2,jdbcType=VARCHAR} and JCXM3=#{item.jcxm3,jdbcType=VARCHAR}
+        </foreach>
+
+    </update>
+
+    <!-- 查询厂级生产单位编码、名称-->
+    <select id="unit_select" parameterType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity"
+            resultType="com.cyrj.jxzy.entity.Constractor.PcUnitEntity">
+        SELECT id, UNITNAME from PC_SYS_UNIT_CODE   where   OILFIELD=#{oilfield} and parentid =#{parentid} and uniteproperty2 like '%生产%'
+        <if test="search!=null and search.length() &gt; 0 ">
+            and id like '%'|| #{search}||'%'
+        </if>
+        ORDER BY id
+
+    </select>
+</mapper>

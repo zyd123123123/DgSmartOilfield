@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.CommitmentDao">
+<!-- 代码自动生成，请核对数据类型 -->
+
+<select id="cnsflbSelect" resultType="com.cyrj.jxzy.entity.Constractor.CnsflbEntity">
+select
+content,
+sort,
+datatime
+from PC_CBS_FJ1 where  oilfield=#{oilfield}
+order by to_number(regexp_substr(sort,'[0-9]*[0-9]',1))
+
+</select>
+
+<delete id="cnsflbDelete" >
+	
+	delete from PC_CBS_FJ1  where  oilfield=#{oilfield}
+	
+	
+</delete>
+
+<!-- 插入数据 -->
+ <insert id="cnsflbInsert" parameterType="com.cyrj.jxzy.entity.Constractor.CnsflbEntity">
+	insert into
+	PC_CBS_FJ1(
+	content,
+	sort,
+	datatime,
+	 oilfield
+	)
+	(
+ <foreach collection="entity_list" index="" item="item" separator="union all">
+  select
+	#{item.content,},
+	#{item.sort,jdbcType=VARCHAR},
+	sysdate,
+	#{oilfield}
+  from dual
+  </foreach >
+	)
+</insert>
+
+</mapper>

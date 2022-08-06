@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.UploadFilesDao">
+	
+<!-- 查询照片数量 -->
+	<select id="countImage" parameterType="com.cyrj.jxzy.entity.Constractor.UploadFilesEntity" resultType="int">
+
+		SELECT COUNT (*) FROM PC_CBS_UPLOAD_FILES
+		WHERE 	id = #{id} AND filetype = #{filetype}
+	</select>
+	
+	
+<!-- 	查询照片 -->
+		<select id="listImageView" parameterType="com.cyrj.jxzy.entity.Constractor.UploadFilesEntity" resultType="com.cyrj.jxzy.entity.Constractor.UploadFilesEntity">
+
+		select
+			contract_id,
+			contractor_name,
+			team_qualification,
+			team_id,
+			filetype,
+			fileuri,
+			fileoldname,
+			upload_person,
+			datetime
+			from PC_CBS_UPLOAD_FILES
+			where  id = #{id} and filetype=#{filetype}
+	</select>
+<!-- 	删除照片 -->
+	<delete id="deleteImage" parameterType="com.cyrj.jxzy.entity.Constractor.UploadFilesEntity">
+	
+	
+	delete from PC_CBS_UPLOAD_FILES where id=#{id} and filetype=#{filetype}
+	
+	
+	</delete>
+	
+	<!-- 插入批量数据——上传合同照片 -->
+ <insert id="insertImage" parameterType="com.cyrj.jxzy.entity.Constractor.UploadFilesEntity">
+insert into
+PC_CBS_UPLOAD_FILES(
+id,
+OILFIELD,
+contract_id,
+contractor_name,
+team_id,
+team_qualification,
+filetype,
+fileuri,
+fileoldname,
+upload_person,
+datetime
+)
+(
+		 <foreach collection="el" index="" item="item" separator="union all">
+		  select
+		  	#{item.id,jdbcType=VARCHAR},
+			#{item.oilfield,jdbcType=VARCHAR},
+			#{item.contract_id,jdbcType=VARCHAR},
+			(select DWMC contractor_name from PC_CBS_COMPANY where DWDM=#{item.contractor_id}),
+			#{item.team_id,jdbcType=VARCHAR},
+			#{item.team_qualification,jdbcType=VARCHAR},
+			#{item.filetype,jdbcType=VARCHAR},
+			#{item.fileuri,jdbcType=VARCHAR},
+			#{item.fileoldname,jdbcType=VARCHAR},
+			#{item.upload_person,jdbcType=VARCHAR},
+			sysdate 
+		from dual
+		 </foreach> 
+ )
+</insert>
+</mapper>

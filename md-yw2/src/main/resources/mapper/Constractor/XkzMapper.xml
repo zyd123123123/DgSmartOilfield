@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cyrj.jxzy.dao.Constractor.XkzDao">
+	
+<!-- 查询照片数量 -->
+	<select id="countXkzsq" parameterType="com.cyrj.jxzy.entity.Constractor.NlpgshEntity" resultType="int">
+
+			SELECT count(*)  from (
+			  SELECT
+				PC_CBS_CONTRACT.CONTRACTOR_NAME,
+				PC_CBS_CONTRACT.UNIT_NAME,
+				PC_CBS_NLZRPGB.CONTRACT_ID,
+				PC_CBS_NLZRPGB.TEAM_QUALIFICATION 
+				FROM
+				PC_CBS_NLZRPGB
+				INNER JOIN PC_CBS_CONTRACT ON PC_CBS_CONTRACT.CONTRACT_ID = PC_CBS_NLZRPGB.CONTRACT_ID
+				INNER JOIN PC_SYS_UNIT_CODE ON PC_CBS_NLZRPGB.team_id = PC_SYS_UNIT_CODE.id
+				    left  JOIN (select *  from PC_CBS_PERMIT where AUDIT_TAB in ('1','2'))AA ON AA.TEAM_ID = PC_CBS_NLZRPGB.TEAM_ID and  AA.CONTRACT_ID =PC_CBS_NLZRPGB.CONTRACT_ID 
+			     where  PC_CBS_CONTRACT.oilfield=#{oilfield} and  PC_CBS_NLZRPGB.AUDIT_TAB ='1'  and AA.CONTRACT_ID IS null 
+			     and  PC_CBS_CONTRACT.WHETHER_TO_PERFORM = '否'
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>   
+			<if test="effective_dates!=null   and effective_dates.length() &gt;0">
+				 and to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy')=#{effective_dates}
+			</if>   
+     ) A
+	</select>
+	<select id="listXkzsq" parameterType="com.cyrj.jxzy.entity.Constractor.NlpgshEntity" resultType="com.cyrj.jxzy.entity.Constractor.NlpgshEntity">
+
+	SELECT * from(
+SELECT A.* ,rownum row_num  from (
+  SELECT
+	PC_CBS_CONTRACT.CONTRACTOR_NAME,
+	PC_CBS_CONTRACT.CONSTRUCTION_PROJECT,
+	PC_CBS_CONTRACT.CONTRACT_NAME,
+	PC_CBS_CONTRACT.CONTRACT_NUMBER,
+	PC_CBS_CONTRACT.UNIT_NAME,
+	PC_CBS_NLZRPGB.pgb_id,
+	PC_CBS_NLZRPGB.CONTRACT_ID,
+	PC_CBS_NLZRPGB.TEAM_QUALIFICATION,
+	PC_CBS_NLZRPGB.AUDIT_TAB,
+	PC_CBS_NLZRPGB.APPLY_PERSON,
+	PC_CBS_NLZRPGB.APPLY_TIME,
+	to_char(PC_CBS_NLZRPGB.APPLY_TIME,'yyyy-MM-dd') apply_times,
+	PC_CBS_NLZRPGB.team_id,
+	PC_SYS_UNIT_CODE.UNITNAME team_name ,
+	SJID 
+	FROM
+	PC_CBS_NLZRPGB
+	INNER JOIN PC_CBS_CONTRACT ON PC_CBS_CONTRACT.CONTRACT_ID = PC_CBS_NLZRPGB.CONTRACT_ID
+	INNER JOIN PC_SYS_UNIT_CODE ON PC_CBS_NLZRPGB.team_id = PC_SYS_UNIT_CODE.id
+    left  JOIN (select *  from PC_CBS_PERMIT where AUDIT_TAB in ('1','2'))AA ON AA.TEAM_ID = PC_CBS_NLZRPGB.TEAM_ID and  AA.CONTRACT_ID =PC_CBS_NLZRPGB.CONTRACT_ID 
+     where PC_CBS_CONTRACT.oilfield=#{oilfield} and  PC_CBS_NLZRPGB.AUDIT_TAB ='1' and AA.CONTRACT_ID IS null 
+     and  PC_CBS_CONTRACT.WHETHER_TO_PERFORM = '否' 
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>  
+			<if test="effective_dates!=null   and effective_dates.length() &gt;0">
+				 and to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy')=#{effective_dates}
+			</if>  
+      order by APPLY_TIME desc     
+     ) A
+)
+where 	row_num &lt;=#{endRow} and row_num	&gt;= #{startRow}
+	</select>
+	
+	<select id="xkzsqyz" parameterType="com.cyrj.jxzy.entity.Constractor.XkzhtEntity" resultType="com.cyrj.jxzy.entity.Constractor.XkzhtEntity">
+	
+		SELECT
+		PC_CBS_PERMIT.PERMIT_ID,
+		PC_CBS_PERMIT.CONTRACT_ID,
+		PC_CBS_PERMIT.DWDM,
+		PC_CBS_PERMIT.DWMC,
+		PC_CBS_PERMIT.TEAM_ID,
+		PC_CBS_PERMIT.TERM_NAME,
+		PC_CBS_PERMIT.TEAM_QUALIFICATION,
+		PC_CBS_PERMIT.APPLY_PERSON,
+		PC_CBS_PERMIT.OILFIELD,
+		PC_CBS_PERMIT.APPLY_TIME,
+		PC_CBS_PERMIT.AUDIT_TAB,
+		PC_CBS_PERMIT.AUDIT_PERSON,
+		PC_CBS_PERMIT.AUDIT_TIME,
+		PC_CBS_PERMIT.AUDIT_CAUSE,
+		PC_CBS_PERMIT.SCRAP_PERSON,
+		PC_CBS_PERMIT.SCRAP_TIME,
+		PC_CBS_PERMIT.SCRAP_CAUSE
+		FROM PC_CBS_PERMIT
+		WHERE PC_CBS_PERMIT.CONTRACT_ID =#{contract_id}
+		AND PC_CBS_PERMIT.TEAM_ID =#{team_id}
+		AND PC_CBS_PERMIT.AUDIT_TAB in ('1','2')  
+	</select>
+	<select id="contract" parameterType="java.lang.String" resultType="com.cyrj.jxzy.entity.Constractor.HtxxckEntity">
+	    SELECT
+			PC_CBS_CONTRACT.CONTRACT_ID,
+			PC_CBS_CONTRACT.CONTRACTOR_NAME,
+			CONTRACTOR_ID,
+			PC_CBS_CONTRACT.CONTRACT_NUMBER,
+			PC_CBS_CONTRACT.CONTRACT_NAME,
+			PC_CBS_CONTRACT.CONSTRUCTION_PROJECT,	
+			to_char(OPERATION_START_DATE,'yyyy-mm-dd')OPERATION_START_DATES,
+			PC_CBS_CONTRACT.OPERATION_START_DATE,
+			to_char(COMPLETION_DATE,'yyyy-mm-dd')COMPLETION_DATES,
+			PC_CBS_CONTRACT.COMPLETION_DATE,
+			PC_CBS_CONTRACT.WORKLOAD,
+			PC_CBS_CONTRACT.MONEY,
+			PC_CBS_CONTRACT.EFFECTIVE_DATE,
+			to_char(EFFECTIVE_DATE,'yyyy-mm-dd')EFFECTIVE_DATES
+			FROM
+			PC_CBS_CONTRACT
+			WHERE
+			PC_CBS_CONTRACT.CONTRACT_ID=#{0}
+	
+	</select>
+		<select id="term" parameterType="java.lang.String" resultType="com.cyrj.jxzy.entity.Constractor.XkzEntity">
+	SELECT * from(
+	SELECT 
+		SJID,
+		DWMC,
+		DWDM,
+		UNITNAME,
+		TERMNAME,
+		TERMID team_id,
+		DWLB,
+		BH,
+		DWZZBH,
+		JL,
+		DH,
+		FFBM,
+		SGXM,
+		SGQY 
+		FROM PC_CBS_QUALIFICATION_INFO 
+		WHERE TERMID=#{0} and AUDIT_TAB='2'
+		order by YXQ1 desc )
+	   where rownum=1
+
+	
+	</select>
+	<select id="person" parameterType="java.lang.String" resultType="com.cyrj.jxzy.entity.Constractor.Qualification_personEntity">
+
+		SELECT
+		DWMC,
+		TERMNAME,
+		GW,
+		XM,
+		SFZH,
+		JKZBH,
+		FILEURI
+		FROM
+		PC_CBS_PERSON
+		WHERE TERMID=#{0}
+	order by xh 
+	</select>
+	
+	<select id="zysb" parameterType="java.lang.String" resultType="com.cyrj.jxzy.entity.Constractor.ZysbEntity">
+select 
+	dwdm,
+	termid,
+	dwmc,
+	termname,
+	xhjcs,
+	zzcj,
+	cph,
+	sbm,
+	fileurl,
+	lrr,
+	lrsj,
+	oilfield,
+	zysbid,
+	sbbz,
+	sb,
+	tcrq,
+	TO_CHAR (tcrq, 'YYYY-MM-DD') stcrq 
+	from PC_CBS_EQUIPMENT_ZY   
+	where TERMID=#{0}  and sbbz='1' ORDER BY sbbz 
+</select>
+
+<select id="zyptsb" parameterType="java.lang.String" resultType="com.cyrj.jxzy.entity.Constractor.Xkz_sbEntity">
+
+ select * from PC_CBS_EQU_TERM where TERMID=#{termid} 
+
+</select>
+<insert id="insertXkzsqSave" parameterType="com.cyrj.jxzy.entity.Constractor.XkzhtEntity" >
+
+          insert into PC_CBS_PERMIT(
+				          OILFIELD,
+				        PERMIT_ID,
+						CONTRACT_ID,
+						DWDM,
+						DWMC,
+						TEAM_ID,
+						TERM_NAME,
+						TEAM_QUALIFICATION,
+						APPLY_PERSON,
+						APPLY_TIME,
+						AUDIT_TAB
+					)values
+					(
+					#{oilfield,jdbcType=VARCHAR},
+					#{permit_id,jdbcType=VARCHAR},
+					#{contract_id,jdbcType=VARCHAR},
+					#{dwdm,jdbcType=VARCHAR},
+					#{dwmc,jdbcType=VARCHAR},
+					#{team_id,jdbcType=VARCHAR},
+					#{term_name,jdbcType=VARCHAR},
+					#{team_qualification,jdbcType=VARCHAR},
+					#{apply_person,jdbcType=VARCHAR},
+					sysdate,
+					'1'					
+					)
+
+</insert>
+
+<select id="countXkzsh" parameterType="com.cyrj.jxzy.entity.Constractor.XkzshEntity" resultType="int">
+
+SELECT count(*) FROM PC_CBS_PERMIT 
+INNER JOIN PC_CBS_CONTRACT ON PC_CBS_CONTRACT.CONTRACT_ID = PC_CBS_PERMIT.CONTRACT_ID
+WHERE  PC_CBS_CONTRACT.oilfield=#{oilfield} and PC_CBS_PERMIT.AUDIT_TAB = #{audit_tab}
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>  
+	<if test="effective_dates!=null   and effective_dates.length() &gt;0">
+		 and to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy')=#{effective_dates}
+	</if>  
+</select>
+<select id="listXkzsh" parameterType="com.cyrj.jxzy.entity.Constractor.XkzshEntity" resultType="com.cyrj.jxzy.entity.Constractor.XkzshEntity">
+SELECT * from(
+SELECT A.* ,rownum row_num  from (
+SELECT
+	PC_CBS_PERMIT.PERMIT_ID,
+	PC_CBS_PERMIT.TEAM_ID,
+	PC_CBS_PERMIT.TERM_NAME,
+	PC_CBS_PERMIT.TEAM_QUALIFICATION,
+	PC_CBS_PERMIT.APPLY_TIME,
+	PC_CBS_CONTRACT.CONTRACT_ID,
+	PC_CBS_CONTRACT.CONTRACTOR_NAME,
+	PC_CBS_CONTRACT.CONTRACTOR_ID,
+	PC_CBS_CONTRACT.CONSTRUCTION_PROJECT,
+	PC_CBS_CONTRACT.CONTRACT_NAME,
+	PC_CBS_CONTRACT.CONTRACT_NUMBER,
+	PC_CBS_CONTRACT.unit_name
+	FROM PC_CBS_PERMIT
+	INNER JOIN PC_CBS_CONTRACT ON PC_CBS_CONTRACT.CONTRACT_ID = PC_CBS_PERMIT.CONTRACT_ID
+	WHERE PC_CBS_CONTRACT.oilfield=#{oilfield} and 
+	PC_CBS_PERMIT.AUDIT_TAB = #{audit_tab}
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>  
+	<if test="effective_dates!=null   and effective_dates.length() &gt;0">
+		 and to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy')=#{effective_dates}
+	</if>  
+	order BY PC_CBS_PERMIT.APPLY_TIME desc
+
+	     ) A
+)
+where 	row_num &lt;=#{endRow} and row_num	&gt;= #{startRow}
+</select>
+
+<update id="updateAuditSave"  parameterType="com.cyrj.jxzy.entity.Constractor.XkzshEntity">
+
+   update PC_CBS_PERMIT
+   
+   set AUDIT_TAB=#{audit_tab},
+      audit_cause=#{audit_cause,jdbcType=VARCHAR},
+      AUDIT_PERSON=#{audit_person},
+      AUDIT_TIME=sysdate
+    where  PERMIT_ID=#{permit_id}
+
+
+</update>
+
+<select id="countXkzck" parameterType="com.cyrj.jxzy.entity.Constractor.XkzshEntity" resultType="int">
+
+SELECT count(*) FROM PC_CBS_PERMIT 
+INNER JOIN PC_CBS_CONTRACT ON PC_CBS_CONTRACT.CONTRACT_ID = PC_CBS_PERMIT.CONTRACT_ID
+WHERE  PC_CBS_CONTRACT.oilfield=#{oilfield} and  PC_CBS_PERMIT.AUDIT_TAB =  '2' 
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>   
+	<if test="effective_dates!=null   and effective_dates.length() &gt;0">
+		 and to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy')=#{effective_dates}
+	</if>  
+</select>
+
+<select id="listXkzck" parameterType="com.cyrj.jxzy.entity.Constractor.XkzshEntity" resultType="com.cyrj.jxzy.entity.Constractor.XkzshEntity">
+SELECT * from(
+SELECT A.* ,rownum row_num  from (
+SELECT
+	PC_CBS_PERMIT.PERMIT_ID,
+	PC_CBS_PERMIT.TEAM_ID,
+	PC_CBS_PERMIT.TERM_NAME,
+	PC_CBS_PERMIT.TEAM_QUALIFICATION,
+	PC_CBS_PERMIT.APPLY_TIME,
+	PC_CBS_CONTRACT.CONTRACT_ID,
+	PC_CBS_CONTRACT.CONTRACTOR_NAME,
+	PC_CBS_CONTRACT.CONTRACTOR_ID,
+	PC_CBS_CONTRACT.CONSTRUCTION_PROJECT,
+	PC_CBS_CONTRACT.CONTRACT_NAME,
+	PC_CBS_CONTRACT.CONTRACT_NUMBER,
+	PC_CBS_CONTRACT.unit_name,
+	CASE WHEN  F.CONTRACT_ID is NOT NULL THEN '是' ELSE '否' END if_sc  ,
+	TO_CHAR (PC_CBS_PERMIT.AUDIT_TIME, 'YYYY-MM-DD') AUDIT_TIMES ,
+	PC_CBS_PERMIT.AUDIT_TAB ，
+	PC_CBS_PERMIT.SCRAP_CAUSE
+	FROM PC_CBS_PERMIT
+	INNER JOIN PC_CBS_CONTRACT ON PC_CBS_CONTRACT.CONTRACT_ID = PC_CBS_PERMIT.CONTRACT_ID
+	LEFT JOIN ( SELECT id,contract_id from PC_CBS_UPLOAD_FILES WHERE PC_CBS_UPLOAD_FILES.FILETYPE ='施工许可证'  group by id,contract_id ) F ON  F.id =PC_CBS_PERMIT.PERMIT_ID  
+	WHERE  PC_CBS_CONTRACT.oilfield=#{oilfield} and 
+	PC_CBS_PERMIT.AUDIT_TAB =  '2' 
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>   
+	<if test="effective_dates!=null   and effective_dates.length() &gt;0">
+		 and to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy')=#{effective_dates}
+	</if>  
+	order BY PC_CBS_PERMIT.AUDIT_TIME desc
+
+	     ) A
+)
+where 	row_num &lt;=#{endRow} and row_num	&gt;= #{startRow}
+</select>
+
+<select id="countxkzck_ht" parameterType="com.cyrj.jxzy.entity.Constractor.XkzshEntity" resultType="int">
+
+SELECT count(*) FROM (
+SELECT DISTINCT PC_CBS_PERMIT.CONTRACT_ID,PC_CBS_PERMIT.TEAM_ID FROM PC_CBS_PERMIT
+INNER JOIN PC_CBS_CONTRACT ON PC_CBS_CONTRACT.CONTRACT_ID = PC_CBS_PERMIT.CONTRACT_ID
+WHERE  PC_CBS_CONTRACT.oilfield=#{oilfield} and  PC_CBS_PERMIT.AUDIT_TAB in( '2' ,'3')
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>     
+	<if test="effective_dates!=null   and effective_dates.length() &gt;0">
+		 and to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy')=#{effective_dates}
+	</if>  
+  )
+</select>
+<select id="listxkzck_ht" parameterType="com.cyrj.jxzy.entity.Constractor.XkzshEntity" resultType="com.cyrj.jxzy.entity.Constractor.XkzshEntity">
+SELECT * from(
+SELECT A.* ,rownum row_num  from (
+SELECT CONTRACT_ID,CONTRACTOR_NAME,CONTRACTOR_ID,CONSTRUCTION_PROJECT,CONTRACT_NAME,CONTRACT_NUMBER,unit_name,COUNT(*) termnum FROM(
+SELECT
+DISTINCT PC_CBS_PERMIT.TEAM_ID,
+	PC_CBS_CONTRACT.CONTRACT_ID,
+	PC_CBS_CONTRACT.CONTRACTOR_NAME,
+	PC_CBS_CONTRACT.CONTRACTOR_ID,
+	PC_CBS_CONTRACT.CONSTRUCTION_PROJECT,
+	PC_CBS_CONTRACT.CONTRACT_NAME,
+	PC_CBS_CONTRACT.CONTRACT_NUMBER,
+	PC_CBS_CONTRACT.unit_name 
+	FROM PC_CBS_PERMIT
+	INNER JOIN PC_CBS_CONTRACT ON PC_CBS_CONTRACT.CONTRACT_ID = PC_CBS_PERMIT.CONTRACT_ID
+	WHERE  PC_CBS_CONTRACT.oilfield=#{oilfield} and 
+	PC_CBS_PERMIT.AUDIT_TAB in ('2' ,'3') 
+        	<if test="attribute!=null   and attribute.length() &gt;0 and attribute==1">
+				and CONTRACTOR_ID like #{search}||'%'
+			</if> 
+			<if test="attribute!=null   and attribute.length() &gt;0 and attribute==2">
+				and UNIT_ID like #{search}||'%'
+			</if> 
+    		 <if test="unit_id!=null   and unit_id.length() &gt;0">
+				and UNIT_ID = #{unit_id}
+			</if> 
+			<if test="contractor_id!=null   and contractor_id.length() &gt;0">
+				and CONTRACTOR_ID = #{contractor_id}
+			</if>  
+	<if test="effective_dates!=null   and effective_dates.length() &gt;0">
+		 and to_char(PC_CBS_CONTRACT.EFFECTIVE_DATE,'yyyy')=#{effective_dates}
+	</if>  
+	order BY PC_CBS_PERMIT.AUDIT_TIME desc
+)
+GROUP BY CONTRACT_ID,CONTRACTOR_NAME,CONTRACTOR_ID,CONSTRUCTION_PROJECT,CONTRACT_NAME,CONTRACT_NUMBER,unit_name
+	     ) A
+)
+where 	row_num &lt;=#{endRow} and row_num	&gt;= #{startRow}
+</select>
+
+<select id="listxkzck_term" parameterType="com.cyrj.jxzy.entity.Constractor.XkzshEntity" resultType="com.cyrj.jxzy.entity.Constractor.XkzshEntity">
+
+		select s.*,y.applynum  from (
+		SELECT
+			B.CONTRACT_ID,
+			B.CONTRACTOR_ID,
+			A.PERMIT_ID,
+			A.TEAM_ID term_id,
+			A.TERM_NAME,
+			A.TEAM_QUALIFICATION,
+			CASE WHEN  F.CONTRACT_ID is NOT NULL THEN '是' ELSE '否' END if_sc  ,
+			TO_CHAR (A.AUDIT_TIME, 'YYYY-MM-DD') AUDIT_TIMES ,
+			A.AUDIT_TAB ,
+		    row_number() over (partition by A.TEAM_ID order by A.AUDIT_TIME DESC ) as ro 	
+			FROM PC_CBS_PERMIT A
+			INNER JOIN PC_CBS_CONTRACT B ON A.CONTRACT_ID = B.CONTRACT_ID
+			LEFT JOIN ( SELECT id,contract_id from PC_CBS_UPLOAD_FILES WHERE PC_CBS_UPLOAD_FILES.FILETYPE ='施工许可证'  group by id,contract_id ) F ON  F.id =A.PERMIT_ID  
+			WHERE  B.CONTRACT_ID=#{contract_id} and A.AUDIT_TAB in ('2' ,'3') 
+		)s  
+		INNER JOIN (
+		SELECT B.CONTRACT_ID,	A.TEAM_ID ,COUNT(*) applynum
+			FROM PC_CBS_PERMIT A
+			INNER JOIN PC_CBS_CONTRACT B ON A.CONTRACT_ID = B.CONTRACT_ID
+			WHERE  B.CONTRACT_ID=#{contract_id} and A.AUDIT_TAB in ('2' ,'3') 
+		GROUP BY B.CONTRACT_ID,	A.TEAM_ID) Y ON y.CONTRACT_ID=S.CONTRACT_ID AND y.TEAM_ID=s.term_id
+	where s.ro = 1 
+
+</select>
+
+<select id="xkz_List" parameterType="com.cyrj.jxzy.entity.Constractor.XkzshEntity" resultType="com.cyrj.jxzy.entity.Constractor.XkzshEntity">
+
+		SELECT
+			B.CONTRACT_ID,
+			B.CONTRACTOR_ID,
+			A.PERMIT_ID,
+			A.TEAM_ID term_id,
+			A.TERM_NAME,
+			A.TEAM_QUALIFICATION,
+			CASE WHEN  F.CONTRACT_ID is NOT NULL THEN '是' ELSE '否' END if_sc  ,
+			TO_CHAR (A.AUDIT_TIME, 'YYYY-MM-DD') AUDIT_TIMES ,
+			A.AUDIT_TAB 
+			FROM PC_CBS_PERMIT A
+			INNER JOIN PC_CBS_CONTRACT B ON A.CONTRACT_ID = B.CONTRACT_ID
+			LEFT JOIN ( SELECT id,contract_id from PC_CBS_UPLOAD_FILES WHERE PC_CBS_UPLOAD_FILES.FILETYPE ='施工许可证'  group by id,contract_id ) F ON  F.id =A.PERMIT_ID  
+			WHERE  B.CONTRACT_ID=#{contract_id} and A.TEAM_ID=#{term_id}   and A.AUDIT_TAB in ('2' ,'3') 
+		   order by 	A.AUDIT_TIME desc
+</select>
+
+<update id="updatetRevokeSave" parameterType="com.cyrj.jxzy.entity.Constractor.XkzshEntity">
+
+  update PC_CBS_PERMIT
+   set AUDIT_TAB=#{audit_tab},
+   SCRAP_PERSON=#{audit_person},
+   SCRAP_TIME=sysdate,
+   SCRAP_CAUSE=#{audit_cause} 
+where  PERMIT_ID=#{permit_id}
+
+</update>
+
+<select id="nlpgfile" parameterType="com.cyrj.jxzy.entity.Constractor.XkzhtEntity" resultType="int">
+   
+SELECT  count(A.PGB_ID)  FROM PC_CBS_NLZRPGB A
+INNER JOIN PC_CBS_UPLOAD_FILES B ON  B.ID= A.PGB_ID
+ WHERE A.CONTRACT_ID=#{contract_id} and A.TEAM_ID =#{team_id} and A.AUDIT_TAB='1'
+</select>
+</mapper>
